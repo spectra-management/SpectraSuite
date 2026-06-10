@@ -11,7 +11,8 @@ import { Separator } from '@/components/ui/separator'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useEmployeesStore } from '@/store/employeesStore'
 import { toast } from '@/hooks/useToast'
-import { fetchHubstaffMembers } from '@/lib/connectors/hubstaff'
+import { testHubstaffToken, fetchHubstaffMembers } from '@/lib/connectors/hubstaff'
+import type { HubstaffOrganization } from '@/lib/connectors/hubstaff'
 import type { HubstaffMember } from '@/lib/connectors/types'
 import type { HubstaffMapping } from '@/types'
 
@@ -214,6 +215,7 @@ function HubstaffConnector() {
   const [testing, setTesting] = useState(false)
   const [members, setMembers] = useState<HubstaffMember[]>([])
   const [loadingMembers, setLoadingMembers] = useState(false)
+  const [availableOrgs, setAvailableOrgs] = useState<HubstaffOrganization[]>([])
 
   useEffect(() => {
     if (hubstaff.connected && hubstaff.accessToken && hubstaff.organizationId) {
@@ -226,16 +228,20 @@ function HubstaffConnector() {
   }, [hubstaff.connected, hubstaff.accessToken, hubstaff.organizationId])
 
   const handleTest = async () => {
-    if (!hubstaff.accessToken || !hubstaff.organizationId) {
+    if (!hubstaff.accessToken) {
       toast({ variant: 'destructive', title: t('errors.apiKeyMissing') })
       return
     }
     setTesting(true)
     try {
-      const fetched = await fetchHubstaffMembers(hubstaff.organizationId, hubstaff.accessToken)
-      setMembers(fetched)
+      // Test only the token — hit GET /v2/organizations (no org ID needed)
+      const orgs = await testHubstaffToken(hubstaff.accessToken)
+      setAvailableOrgs(orgs)
       updateHubstaff({ connected: true })
-      toast({ variant: 'success', title: t('connectors.status.connected') })
+      const orgHint = orgs.length > 0
+        ? `Token valid. Found ${orgs.length} org(s): ${orgs.map((o) => `${o.name} (ID: ${o.id})`).join(', ')}`
+        : 'Token valid. No organizations found.'
+      toast({ variant: 'success', title: t('connectors.status.connected'), description: orgHint })
     } catch (err) {
       updateHubstaff({ connected: false })
       const msg = err instanceof Error ? err.message : t('errors.connectionFailed')
@@ -276,8 +282,25 @@ function HubstaffConnector() {
           <Input
             placeholder={t('connectors.hubstaff.organizationIdPlaceholder')}
             value={hubstaff.organizationId}
-            onChange={(e) => updateHubstaff({ organizationId: e.target.value, connected: false })}
+            onChange={(e) => updateHubstaff({ organizationId: e.target.value })}
           />
+          {/* Show available orgs after a successful token test so user can pick the right ID */}
+          {availableOrgs.length > 0 && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-emerald-800">Available organizations — click to use:</p>
+              {availableOrgs.map((org) => (
+                <button
+                  key={org.id}
+                  type="button"
+                  onClick={() => updateHubstaff({ organizationId: String(org.id) })}
+                  className="flex w-full items-center justify-between rounded-md bg-white px-3 py-1.5 text-xs text-gray-800 border border-emerald-100 hover:bg-emerald-50 transition-colors"
+                >
+                  <span className="font-medium">{org.name}</span>
+                  <span className="font-mono text-gray-500">ID: {org.id}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <Button onClick={handleTest} disabled={testing} variant="outline">
           {testing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

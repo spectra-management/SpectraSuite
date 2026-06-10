@@ -10,6 +10,28 @@ function buildUrl(endpoint: string, token: string, extra?: Record<string, string
   return `/api/hubstaff?${params.toString()}`
 }
 
+export interface HubstaffOrganization {
+  id: number
+  name: string
+}
+
+/**
+ * Validates the token by listing accessible organizations.
+ * Uses GET /v2/organizations — same endpoint as a manual curl test.
+ * Does NOT require an org ID.
+ */
+export async function testHubstaffToken(
+  token: string,
+): Promise<HubstaffOrganization[]> {
+  const res = await fetch(buildUrl('organizations', token))
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
+    throw new Error(err.error ?? `Hubstaff error ${res.status}`)
+  }
+  const data = await res.json() as { organizations?: HubstaffOrganization[] }
+  return data.organizations ?? []
+}
+
 export async function fetchHubstaffMembers(
   orgId: string,
   token: string,
