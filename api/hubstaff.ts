@@ -5,7 +5,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { endpoint, token } = req.query
+  const { endpoint, token, ...extraParams } = req.query
 
   if (!endpoint || typeof endpoint !== 'string') {
     return res.status(400).json({ error: 'endpoint parameter is required' })
@@ -14,7 +14,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'token parameter is required' })
   }
 
-  const url = `https://api.hubstaff.com/v2/${endpoint}`
+  const qs = new URLSearchParams()
+  for (const [key, val] of Object.entries(extraParams)) {
+    if (typeof val === 'string') qs.append(key, val)
+  }
+  const queryString = qs.toString()
+  const url = `https://api.hubstaff.com/v2/${endpoint}${queryString ? `?${queryString}` : ''}`
 
   try {
     const response = await fetch(url, {

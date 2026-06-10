@@ -69,6 +69,7 @@ export interface PayrollCalculation {
   isrMonthly: number
   isrPeriod: number
   customDeductions: number
+  customDeductionsBreakdown: Array<{ name: string; amount: number }>
   totalDeductions: number
   netPay: number
 }

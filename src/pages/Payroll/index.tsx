@@ -1,11 +1,37 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DollarSign } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Link } from 'react-router-dom'
+import { PayrollStepper } from './components/PayrollStepper'
+import { StepPeriod } from './components/StepPeriod'
+import { StepHours } from './components/StepHours'
+import { StepCalculate } from './components/StepCalculate'
+import { StepApprove } from './components/StepApprove'
+import type { EmployeeHoursEntry, PayrollEntry, PayrollTotals } from '@/types'
+
+interface PeriodData {
+  startDate: string
+  endDate: string
+  frequency: 'biweekly' | 'weekly'
+  employeeHours: EmployeeHoursEntry[]
+}
+
+interface CalculatedData {
+  entries: PayrollEntry[]
+  totals: PayrollTotals
+}
 
 export default function Payroll() {
   const { t } = useTranslation()
+  const [step, setStep] = useState(0)
+  const [periodData, setPeriodData] = useState<PeriodData | null>(null)
+  const [reviewedHours, setReviewedHours] = useState<EmployeeHoursEntry[]>([])
+  const [calculatedData, setCalculatedData] = useState<CalculatedData | null>(null)
+
+  const steps = [
+    { key: 'period', label: t('payroll.steps.selectPeriod') },
+    { key: 'hours', label: t('payroll.steps.reviewHours') },
+    { key: 'calculate', label: t('payroll.steps.calculatePayroll') },
+    { key: 'approve', label: t('payroll.steps.approve') },
+  ]
 
   return (
     <div className="space-y-6">
@@ -13,18 +39,54 @@ export default function Payroll() {
         <h1 className="text-2xl font-bold text-gray-900">{t('payroll.title')}</h1>
         <p className="mt-1 text-sm text-gray-500">{t('payroll.subtitle')}</p>
       </div>
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50">
-            <DollarSign className="h-8 w-8 text-emerald-600" />
-          </div>
-          <p className="mt-4 font-medium text-gray-900">Payroll Processing</p>
-          <p className="mt-1 text-sm text-gray-500">Full payroll flow coming in Phase 5.</p>
-          <Button className="mt-4" asChild>
-            <Link to="/connectors">Configure Connectors First</Link>
-          </Button>
-        </CardContent>
-      </Card>
+
+      <PayrollStepper steps={steps} currentStep={step} />
+
+      {step === 0 && (
+        <StepPeriod
+          onNext={(data) => {
+            setPeriodData(data)
+            setReviewedHours(data.employeeHours)
+            setStep(1)
+          }}
+        />
+      )}
+
+      {step === 1 && periodData && (
+        <StepHours
+          employeeHours={reviewedHours}
+          startDate={periodData.startDate}
+          endDate={periodData.endDate}
+          onNext={(hours) => {
+            setReviewedHours(hours)
+            setStep(2)
+          }}
+          onBack={() => setStep(0)}
+        />
+      )}
+
+      {step === 2 && periodData && (
+        <StepCalculate
+          employeeHours={reviewedHours}
+          frequency={periodData.frequency}
+          onNext={(entries, totals) => {
+            setCalculatedData({ entries, totals })
+            setStep(3)
+          }}
+          onBack={() => setStep(1)}
+        />
+      )}
+
+      {step === 3 && periodData && calculatedData && (
+        <StepApprove
+          startDate={periodData.startDate}
+          endDate={periodData.endDate}
+          frequency={periodData.frequency}
+          entries={calculatedData.entries}
+          totals={calculatedData.totals}
+          onBack={() => setStep(2)}
+        />
+      )}
     </div>
   )
 }

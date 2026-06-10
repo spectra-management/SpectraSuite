@@ -1,0 +1,372 @@
+import { useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { ArrowLeft, Plus, Trash2, Pencil, CheckCircle2 } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { useEmployeesStore } from '@/store/employeesStore'
+import { useSettingsStore } from '@/store/settingsStore'
+import { toast } from '@/hooks/useToast'
+import { formatCurrency, formatDate, getInitials } from '@/lib/utils'
+import type { CustomDeduction } from '@/types'
+
+interface DeductionFormState {
+  name: string
+  type: 'fixed' | 'percentage'
+  amount: string
+  recurring: boolean
+  active: boolean
+}
+
+const EMPTY_FORM: DeductionFormState = {
+  name: '',
+  type: 'fixed',
+  amount: '',
+  recurring: true,
+  active: true,
+}
+
+export default function EmployeeProfile() {
+  const { id } = useParams<{ id: string }>()
+  const { t } = useTranslation()
+  const employees = useEmployeesStore((s) => s.employees)
+  const addDeduction = useEmployeesStore((s) => s.addDeduction)
+  const updateDeduction = useEmployeesStore((s) => s.updateDeduction)
+  const removeDeduction = useEmployeesStore((s) => s.removeDeduction)
+  const hubstaff = useSettingsStore((s) => s.hubstaff)
+
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [form, setForm] = useState<DeductionFormState>(EMPTY_FORM)
+
+  const employee = employees.find((e) => e.id === id)
+
+  if (!employee) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <p className="text-gray-500">Employee not found.</p>
+        <Button variant="outline" className="mt-4" asChild>
+          <Link to="/employees">{t('common.back')}</Link>
+        </Button>
+      </div>
+    )
+  }
+
+  const deductions = employee.customDeductions ?? []
+  const mapping = hubstaff.employeeMapping.find((m) => m.bambooEmployeeId === employee.id)
+
+  const openAdd = () => {
+    setEditingId(null)
+    setForm(EMPTY_FORM)
+    setDialogOpen(true)
+  }
+
+  const openEdit = (d: CustomDeduction) => {
+    setEditingId(d.id)
+    setForm({ name: d.name, type: d.type, amount: String(d.amount), recurring: d.recurring, active: d.active })
+    setDialogOpen(true)
+  }
+
+  const handleSave = () => {
+    if (!form.name.trim()) {
+      toast({ variant: 'destructive', title: t('errors.required') })
+      return
+    }
+    const amount = parseFloat(form.amount)
+    if (isNaN(amount) || amount < 0) {
+      toast({ variant: 'destructive', title: t('errors.invalidNumber') })
+      return
+    }
+    if (editingId) {
+      updateDeduction(employee.id, editingId, {
+        name: form.name.trim(),
+        type: form.type,
+        amount,
+        recurring: form.recurring,
+        active: form.active,
+      })
+    } else {
+      addDeduction(employee.id, {
+        name: form.name.trim(),
+        type: form.type,
+        amount,
+        recurring: form.recurring,
+        active: form.active,
+      })
+    }
+    toast({ variant: 'success', title: t('common.success') })
+    setDialogOpen(false)
+  }
+
+  const handleDelete = (deductionId: string) => {
+    removeDeduction(employee.id, deductionId)
+    toast({ title: t('common.success') })
+  }
+
+  const statusVariant = employee.status === 'Active' ? 'default' : employee.status === 'Inactive' ? 'secondary' : 'destructive'
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/employees">
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            {t('common.back')}
+          </Link>
+        </Button>
+      </div>
+
+      {/* Employee header card */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-5">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-xl font-bold text-emerald-700">
+              {getInitials(employee.firstName, employee.lastName)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-bold text-gray-900">
+                  {employee.firstName} {employee.lastName}
+                </h1>
+                <Badge variant={statusVariant}>
+                  {t(`employees.status.${employee.status.toLowerCase()}`)}
+                </Badge>
+              </div>
+              <p className="text-sm text-gray-500">{employee.jobTitle} {employee.department ? `· ${employee.department}` : ''}</p>
+              <p className="text-sm text-gray-400">{employee.workEmail}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Payroll info */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t('employees.profile.payrollInfo')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div>
+              <dt className="text-xs text-gray-500">{t('employees.profile.payRate')}</dt>
+              <dd className="mt-0.5 text-sm font-semibold text-gray-900">
+                {formatCurrency(employee.payRate)}/hr
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-gray-500">{t('employees.profile.hireDate')}</dt>
+              <dd className="mt-0.5 text-sm font-medium text-gray-900">
+                {formatDate(employee.hireDate)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-gray-500">{t('employees.profile.department')}</dt>
+              <dd className="mt-0.5 text-sm font-medium text-gray-900">
+                {employee.department || '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-gray-500">Employee ID</dt>
+              <dd className="mt-0.5 text-sm font-mono text-gray-600">{employee.id}</dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
+
+      {/* Hubstaff mapping */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t('employees.profile.hubstaffMapping')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {mapping ? (
+            <div className="flex items-center gap-2">
+              <Badge variant="default">
+                <CheckCircle2 className="mr-1 h-3 w-3" />
+                Mapped
+              </Badge>
+              <span className="text-sm text-gray-500">
+                Hubstaff user ID: <code className="font-mono">{mapping.hubstaffUserId}</code>
+              </span>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">
+              Not mapped.{' '}
+              <Link to="/connectors" className="text-emerald-600 hover:underline">
+                Configure in Connectors
+              </Link>
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Custom deductions */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">{t('employees.profile.deductions')}</CardTitle>
+            <Button size="sm" onClick={openAdd}>
+              <Plus className="mr-1 h-4 w-4" />
+              {t('employees.deductions.addDeduction')}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {deductions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <p className="text-sm text-gray-400">{t('employees.deductions.noDeductions')}</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={openAdd}>
+                <Plus className="mr-1 h-4 w-4" />
+                {t('employees.deductions.addDeduction')}
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t('employees.deductions.name')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t('employees.deductions.type')}</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{t('employees.deductions.amount')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t('employees.deductions.recurring')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Active</th>
+                    <th className="px-6 py-3" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {deductions.map((d) => (
+                    <tr key={d.id} className={`hover:bg-gray-50 transition-colors ${!d.active ? 'opacity-50' : ''}`}>
+                      <td className="px-6 py-3 font-medium text-gray-900">{d.name}</td>
+                      <td className="px-6 py-3">
+                        <Badge variant="secondary">
+                          {d.type === 'fixed' ? t('employees.deductions.fixedAmount') : t('employees.deductions.percentage')}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-3 text-right font-medium text-gray-900">
+                        {d.type === 'fixed' ? formatCurrency(d.amount) : `${d.amount}%`}
+                      </td>
+                      <td className="px-6 py-3">
+                        <Badge variant={d.recurring ? 'default' : 'secondary'}>
+                          {d.recurring ? t('employees.deductions.recurring') : t('employees.deductions.oneTime')}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-3">
+                        <Switch
+                          checked={d.active}
+                          onCheckedChange={(v) => updateDeduction(employee.id, d.id, { active: v })}
+                        />
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(d)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleDelete(d.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Vacation placeholder */}
+      <Card className="border-dashed border-gray-200 bg-gray-50">
+        <CardContent className="p-4">
+          <p className="text-sm text-gray-400">{t('employees.profile.vacationInfo')}</p>
+        </CardContent>
+      </Card>
+
+      {/* Deduction dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingId ? t('common.edit') : t('employees.deductions.addDeduction')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>{t('employees.deductions.name')}</Label>
+              <Input
+                placeholder="e.g. Loan, Uniform, Cooperative"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>{t('employees.deductions.type')}</Label>
+                <Select
+                  value={form.type}
+                  onValueChange={(v) => setForm((f) => ({ ...f, type: v as 'fixed' | 'percentage' }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">{t('employees.deductions.fixedAmount')}</SelectItem>
+                    <SelectItem value="percentage">{t('employees.deductions.percentage')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>
+                  {t('employees.deductions.amount')}
+                  {form.type === 'percentage' ? ' (%)' : ' (RD$)'}
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={form.amount}
+                  onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-gray-100 p-3">
+              <div>
+                <p className="text-sm font-medium text-gray-900">{t('employees.deductions.recurring')}</p>
+                <p className="text-xs text-gray-400">{t('employees.deductions.oneTime')}</p>
+              </div>
+              <Switch
+                checked={form.recurring}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, recurring: v }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleSave}>{t('common.save')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+

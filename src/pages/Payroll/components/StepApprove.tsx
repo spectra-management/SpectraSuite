@@ -1,0 +1,148 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { CheckCircle2, Loader2, DollarSign, Users, TrendingDown } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { usePayrollStore } from '@/store/payrollStore'
+import { toast } from '@/hooks/useToast'
+import { formatCurrency } from '@/lib/utils'
+import type { PayrollEntry, PayrollTotals } from '@/types'
+
+interface Props {
+  startDate: string
+  endDate: string
+  frequency: 'biweekly' | 'weekly'
+  entries: PayrollEntry[]
+  totals: PayrollTotals
+  onBack: () => void
+}
+
+export function StepApprove({ startDate, endDate, frequency, entries, totals, onBack }: Props) {
+  const { t } = useTranslation()
+  const addPayroll = usePayrollStore((s) => s.addPayroll)
+  const navigate = useNavigate()
+  const [approving, setApproving] = useState(false)
+  const [approved, setApproved] = useState(false)
+
+  const handleApprove = async () => {
+    setApproving(true)
+    await new Promise((r) => setTimeout(r, 600))
+    addPayroll({
+      startDate,
+      endDate,
+      frequency,
+      status: 'approved',
+      processedDate: new Date().toISOString().split('T')[0],
+      entries,
+      totals,
+    })
+    setApproved(true)
+    setApproving(false)
+    toast({ variant: 'success', title: t('payroll.approve.approved') })
+  }
+
+  const handleGoToHistory = () => navigate('/history')
+
+  if (approved) {
+    return (
+      <Card className="max-w-lg">
+        <CardContent className="flex flex-col items-center justify-center py-14 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+            <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+          </div>
+          <h2 className="mt-4 text-xl font-bold text-gray-900">{t('payroll.approve.approved')}</h2>
+          <p className="mt-2 text-sm text-gray-500">
+            Payroll for {startDate} – {endDate} has been approved.
+          </p>
+          <div className="mt-6 flex gap-3">
+            <Button onClick={handleGoToHistory}>{t('nav.history')}</Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              New Payroll
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-4 max-w-xl">
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('payroll.approve.title')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-xl bg-gray-50 p-4 space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Period</span>
+              <span className="font-medium text-gray-900">{startDate} – {endDate}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Frequency</span>
+              <span className="font-medium text-gray-900">{frequency}</span>
+            </div>
+            <div className="h-px bg-gray-200" />
+            <SummaryRow
+              icon={Users}
+              label={t('dashboard.employeeCount')}
+              value={String(totals.employeeCount)}
+              iconClass="text-purple-500 bg-purple-50"
+            />
+            <SummaryRow
+              icon={DollarSign}
+              label={t('dashboard.totalGross')}
+              value={formatCurrency(totals.totalGross)}
+              iconClass="text-gray-500 bg-gray-100"
+            />
+            <SummaryRow
+              icon={TrendingDown}
+              label={t('dashboard.totalDeductions')}
+              value={formatCurrency(totals.totalDeductions)}
+              iconClass="text-red-500 bg-red-50"
+            />
+            <div className="h-px bg-gray-200" />
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-gray-900">{t('dashboard.totalNet')}</span>
+              <span className="text-xl font-bold text-emerald-700">{formatCurrency(totals.totalNet)}</span>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500">{t('payroll.approve.confirmMessage')}</p>
+
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onBack}>{t('common.back')}</Button>
+            <Button onClick={handleApprove} disabled={approving}>
+              {approving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+              {t('payroll.approve.approve')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function SummaryRow({
+  icon: Icon,
+  label,
+  value,
+  iconClass,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: string
+  iconClass: string
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className={`flex h-6 w-6 items-center justify-center rounded-md ${iconClass}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+        <span className="text-sm text-gray-600">{label}</span>
+      </div>
+      <span className="text-sm font-medium text-gray-900">{value}</span>
+    </div>
+  )
+}
