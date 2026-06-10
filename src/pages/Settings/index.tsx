@@ -192,7 +192,7 @@ function FiscalTab() {
   const handleReset = () => {
     resetFiscalParameters()
     setForm({ ...fiscal })
-    toast({ title: 'Reset to defaults' })
+    toast({ title: t('settings.fiscal.resetToDefaults') })
   }
 
   return (

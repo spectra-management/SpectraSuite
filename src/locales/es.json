@@ -112,6 +112,9 @@
       "payrollInfo": "Información de Nómina",
       "deductions": "Deducciones Personalizadas",
       "hubstaffMapping": "Mapeo Hubstaff",
+      "notMapped": "Sin mapeo.",
+      "configureConnectors": "Configurar en Conectores",
+      "mappedBadge": "Mapeado",
       "hireDate": "Fecha de Ingreso",
       "department": "Departamento",
       "jobTitle": "Cargo",
@@ -140,6 +143,8 @@
       "calculatePayroll": "Calcular",
       "approve": "Aprobar y Enviar"
     },
+    "noActiveEmployees": "No se encontraron empleados activos. Sincroniza desde BambooHR primero.",
+    "hubstaffNotConnected": "Hubstaff no conectado — las horas comenzarán en 0 para entrada manual.",
     "period": {
       "title": "Período de Pago",
       "startDate": "Fecha de inicio",
@@ -212,11 +217,13 @@
     },
     "viewPayroll": "Ver nómina",
     "resendPayStubs": "Reenviar comprobantes",
-    "noHistory": "No hay historial de nómina aún"
+    "noHistory": "No hay historial de nómina aún",
+    "sendingProgress": "Enviando comprobantes… {{done}}/{{total}}"
   },
   "connectors": {
     "title": "Conectores",
     "subtitle": "Gestiona tus integraciones con servicios externos",
+    "loadingMembers": "Cargando miembros...",
     "bamboohr": {
       "title": "BambooHR",
       "description": "Sincroniza datos de empleados desde BambooHR",

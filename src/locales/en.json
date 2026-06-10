@@ -112,6 +112,9 @@
       "payrollInfo": "Payroll Information",
       "deductions": "Custom Deductions",
       "hubstaffMapping": "Hubstaff Mapping",
+      "notMapped": "Not mapped.",
+      "configureConnectors": "Configure in Connectors",
+      "mappedBadge": "Mapped",
       "hireDate": "Hire Date",
       "department": "Department",
       "jobTitle": "Job Title",
@@ -140,6 +143,8 @@
       "calculatePayroll": "Calculate",
       "approve": "Approve & Send"
     },
+    "noActiveEmployees": "No active employees found. Sync from BambooHR first.",
+    "hubstaffNotConnected": "Hubstaff not connected — hours will start at 0 for manual entry.",
     "period": {
       "title": "Pay Period",
       "startDate": "Start Date",
@@ -212,11 +217,13 @@
     },
     "viewPayroll": "View Payroll",
     "resendPayStubs": "Resend Pay Stubs",
-    "noHistory": "No payroll history yet"
+    "noHistory": "No payroll history yet",
+    "sendingProgress": "Sending pay stubs… {{done}}/{{total}}"
   },
   "connectors": {
     "title": "Connectors",
     "subtitle": "Manage your integrations with external services",
+    "loadingMembers": "Loading members...",
     "bamboohr": {
       "title": "BambooHR",
       "description": "Sync employee data from BambooHR",

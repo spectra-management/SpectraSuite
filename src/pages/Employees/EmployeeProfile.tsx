@@ -195,7 +195,7 @@ export default function EmployeeProfile() {
             <div className="flex items-center gap-2">
               <Badge variant="default">
                 <CheckCircle2 className="mr-1 h-3 w-3" />
-                Mapped
+                {t('employees.profile.mappedBadge')}
               </Badge>
               <span className="text-sm text-gray-500">
                 Hubstaff user ID: <code className="font-mono">{mapping.hubstaffUserId}</code>
@@ -203,9 +203,9 @@ export default function EmployeeProfile() {
             </div>
           ) : (
             <p className="text-sm text-gray-500">
-              Not mapped.{' '}
+              {t('employees.profile.notMapped')}{' '}
               <Link to="/connectors" className="text-emerald-600 hover:underline">
-                Configure in Connectors
+                {t('employees.profile.configureConnectors')}
               </Link>
             </p>
           )}

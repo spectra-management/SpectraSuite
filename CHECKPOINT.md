@@ -1,76 +1,62 @@
 # CHECKPOINT.md — Spectra Payroll System
 
 **Last updated:** 2026-06-10  
-**Current Phase:** Phase 1 COMPLETED, Phase 2 COMPLETED  
+**Current Phase:** Phase 9 (Final QA Pass) — all features built  
 **Git branch:** main  
-**Last commit:** chore: add .gitignore
+**Last commit:** feat: Phases 3-8
 
 ---
 
 ## Current State
 
-### Last Completed Task
-Phase 1 (full setup) and Phase 2 (payroll module) are complete and verified.
-
-**Files created:**
-- `.claude/agents/orchestrator.md`, `bug-hunter.md`, `designer.md`
-- `CLAUDE.md` — full project conventions
-- `package.json`, `tsconfig.*.json`, `vite.config.ts`, `tailwind.config.js`, `postcss.config.js`
-- `vercel.json`, `.env.example`, `.gitignore`
-- `src/i18n.ts` — react-i18next setup
-- `src/locales/en.json` + `es.json` — 100% complete, all strings
-- `src/types/index.ts` — all TypeScript interfaces
-- `src/lib/payroll/calculations.ts` — pure calculation functions
-- `src/lib/payroll/constants.ts` — default DR fiscal parameters
-- `src/lib/payroll/types.ts` — calculation types
-- `src/lib/payroll/__tests__/calculations.test.ts` — 20 passing tests
-- `src/lib/storage.ts` — localStorage abstraction
-- `src/lib/utils.ts` — utilities
-- `src/store/settingsStore.ts`, `employeesStore.ts`, `payrollStore.ts`
-- `src/components/ui/` — button, input, label, card, badge, select, toast, toaster
-- `src/components/layout/` — Sidebar, Header, Layout
-- `src/pages/` — Dashboard, Employees, Payroll, History, Connectors, Settings (all stubs)
-- `src/App.tsx`, `src/main.tsx`, `src/index.css`
-- `api/bamboohr.ts`, `api/hubstaff.ts`, `api/email.ts`
+Phases 1–8 are fully implemented. The system is functionally complete.
 
 ### Build Status
 - ✅ `npm run test:run` → 20/20 tests passing
 - ✅ `npm run typecheck` → clean
-- ✅ `npm run build` → success
+- ✅ `npm run build` → success (bundle warning for @react-pdf — not an error)
+
+### What's Built
+- **Fase 1:** Project setup, i18n (EN/ES 100%), agents, folder structure
+- **Fase 2:** Pure payroll calculations — AFP, SFS, ISR (4 brackets), OT, holidays, rounding
+- **Fase 3:** Connectors — BambooHR proxy, Hubstaff proxy (with query forwarding), email proxy, Hubstaff mapping UI, Email connector
+- **Fase 4:** Employee list with sync, employee profile page (`/employees/:id`), custom deductions CRUD
+- **Fase 5:** Full 4-step payroll flow (period → hours review → calculate → approve)
+- **Fase 6:** PDF pay stubs (bilingual), individual download, email send, batch send with progress
+- **Fase 7:** Complete settings — company/logo upload, payroll, fiscal params (editable ISR table), email template
+- **Fase 8:** Dashboard with AreaChart, history with expandable rows
 
 ---
 
-## Next Steps (in order)
+## Next Steps (Phase 9 — Final QA)
 
-1. **Phase 3 (remaining):** Hubstaff employee mapping UI — allow linking Hubstaff users to BambooHR employees with auto-match by email, manual override, and persisted mapping.
+1. **Bundle optimization:** Add `rollupOptions.output.manualChunks` to split `@react-pdf/renderer` into its own chunk. This reduces initial load time significantly.
 
-2. **Phase 4 (complete):** Employee profile page (`/employees/:id`) with:
-   - Personal/payroll info display
-   - Custom deductions management (add/edit/delete)
-   - Hubstaff mapping widget
+2. **i18n audit:** Verify zero hardcoded strings remain after all pages were built. Any strings in Dashboard's "BambooHR" warning and payroll step messages need translation keys.
 
-3. **Phase 5:** Full payroll processing flow:
-   - Step 1: Period selector (date range + frequency)
-   - Step 2: Hours review table (editable, source indicator)
-   - Step 3: Calculation display (per-employee breakdown)
-   - Step 4: Approve + send
+3. **Badge 'info' variant:** History page casts 'sent' status — add proper `info` variant to Badge component.
+
+4. **`addDeduction` function:** Store accepts `Omit<CustomDeduction, 'id'>` but internally uses `generateId()`. Verify the store's `generateId` function is correct (it is — confirmed in store code).
+
+5. **Final typecheck pass** after QA fixes.
 
 ---
 
-## Decisions Made (not in CLAUDE.md)
+## Known Issues / Technical Debt
 
-- `noUnusedLocals: true` and `noUnusedParameters: true` in tsconfig — strict mode enforced
-- `vitest/config` used (not `vite`) to properly type the `test` block in vite.config.ts
-- Toast `variant: 'success'` added as custom variant (not in shadcn default)
-- History page's `statusVariant` function handles `'sent'` as info (via 'default' cast) — minor type workaround; clean up when Badge gets 'info' variant properly
-- `@vercel/node` installed as devDependency for serverless function types
-- `i18next-browser-languagedetector` reads from `localStorage.spectra_language` (key matches STORAGE_KEYS prefix pattern)
+- Bundle size: 2.2MB unminified (698KB gzip) — acceptable for an internal tool, but can be improved with code splitting for @react-pdf/renderer
+- Badge component missing 'info' variant — using default cast as workaround in History page
+- Hubstaff weekly OT split uses period start as week start (may not align to calendar Mon–Sun) — documented limitation
+- `history.status` never updates to 'sent' after batch send — would need `updatePayroll` call in History page
+- No pagination on Employees table (would need with large employee counts)
 
 ---
 
-## Known Issues / Blockers
+## Decisions Made
 
-- `Badge` doesn't have an `'info'` variant yet (History page uses cast) — add in Phase 8 cleanup
-- Payroll page is a placeholder stub — full implementation in Phase 5
-- Employee profile page (`/employees/:id`) not yet routed — Phase 4
-- Email Settings tab is a placeholder — Phase 7
+- `@react-pdf/renderer` used for PDF (alternative: `pdf-lib` or jsPDF). render/toBlob is async; browser-safe.
+- ISR calculation: annualize by × periodsPerYear (24 biweekly / 52 weekly), compute annual ISR, divide back. Standard approach per DGII guidelines.
+- OT calculated per week within the period (not on total period hours) — correct per Código Laboral RD
+- Pay stubs support both EN and ES (configured in Settings → Email → Pay Stub Language)
+- Batch email uses sequential fetch (not parallel) to respect rate limits
+- localStorage prefix `spectra_` for all storage keys

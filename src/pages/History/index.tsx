@@ -14,7 +14,7 @@ import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/lib/pdf/generateP
 import { PayStubDocument } from '@/lib/pdf/payStubPdf'
 import type { PayrollPeriod, SendResult } from '@/types'
 
-function statusVariant(status: PayrollPeriod['status']): 'default' | 'secondary' | 'info' {
+function statusVariant(status: PayrollPeriod['status']): 'default' | 'secondary' | 'info' | 'warning' {
   if (status === 'approved') return 'default'
   if (status === 'sent') return 'info'
   return 'secondary'
@@ -32,6 +32,7 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
   const company = useSettingsStore((s) => s.company)
   const emailConfig = useSettingsStore((s) => s.email)
   const emailTemplate = useSettingsStore((s) => s.emailTemplate)
+  const updatePayroll = usePayrollStore((s) => s.updatePayroll)
   const [expanded, setExpanded] = useState(false)
   const [batch, setBatch] = useState<BatchStatus | null>(null)
   const [downloadingAll, setDownloadingAll] = useState(false)
@@ -163,6 +164,7 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
 
     const succeeded = results.filter((r) => r.success).length
     const failed = results.filter((r) => !r.success).length
+    if (succeeded > 0) updatePayroll(payroll.id, { status: 'sent' })
     toast({
       variant: succeeded > 0 ? 'success' : 'destructive',
       title: `${succeeded} ${t('payroll.approve.sent')}, ${failed} ${t('payroll.approve.failed')}`,
@@ -231,7 +233,7 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
           <td colSpan={7} className="px-6 pb-3">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>Sending pay stubs… {batch.done}/{batch.total}</span>
+                <span>{t('history.sendingProgress', { done: batch.done, total: batch.total })}</span>
                 <span>
                   {batch.results.filter((r) => r.success).length} {t('payroll.approve.sent')},
                   {' '}{batch.results.filter((r) => !r.success).length} {t('payroll.approve.failed')}

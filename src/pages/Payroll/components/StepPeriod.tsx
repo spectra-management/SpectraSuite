@@ -49,7 +49,7 @@ export function StepPeriod({ onNext }: Props) {
 
     const activeEmployees = employees.filter((e) => e.status === 'Active')
     if (activeEmployees.length === 0) {
-      toast({ variant: 'destructive', title: 'No active employees found. Sync from BambooHR first.' })
+      toast({ variant: 'destructive', title: t('payroll.noActiveEmployees') })
       return
     }
 
@@ -136,7 +136,7 @@ export function StepPeriod({ onNext }: Props) {
         </div>
         {!hubstaff.connected && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
-            Hubstaff not connected — hours will start at 0 for manual entry.
+            {t('payroll.hubstaffNotConnected')}
           </div>
         )}
         <Button onClick={handleFetch} disabled={loading} className="w-full">

@@ -288,7 +288,7 @@ function HubstaffConnector() {
           loadingMembers ? (
             <div className="flex items-center gap-2 text-sm text-gray-500 pt-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Loading members...
+              {t('connectors.loadingMembers')}
             </div>
           ) : members.length > 0 ? (
             <HubstaffMapping hubstaffMembers={members} />
