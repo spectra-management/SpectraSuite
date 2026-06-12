@@ -7,7 +7,7 @@
 
 ---
 
-## System Status: COMPLETE ✅
+## System Status: COMPLETE + POST-LAUNCH IMPROVEMENTS ✅
 
 All phases (1–9) implemented and verified.
 
@@ -39,6 +39,16 @@ All phases (1–9) implemented and verified.
 3. Vercel automatically detects framework (Vite) from `vercel.json`
 
 ---
+
+## Post-Launch Improvements Applied (2026-06-12)
+
+- BambooHR sync → custom report endpoint (fixes payRate, hireDate, status)
+- Employee pay rate: currency-aware display (USD/$, DOP/RD$, empty=Not set amber)
+- Status: uses employmentHistoryStatus (Active/Inactive/Terminated correctly)
+- Employees table: Department/JobTitle/Status filters + accent-insensitive search
+- Sortable columns: Name, Pay Rate, Hire Date (click header to toggle asc/desc)
+- Employee Reports modal: Directory, Compensation, Headcount templates
+- CSV + PDF export (lazy-loaded PDF, applies active filters, company branding)
 
 ## Known Technical Debt (low priority)
 
