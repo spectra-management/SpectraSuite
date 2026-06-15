@@ -1,8 +1,28 @@
+// Flat representation used internally after normalisation from raw API response
 export interface HubstaffMember {
   id: number
   name: string
   email: string
   status: string
+}
+
+// Actual shape returned by GET /v2/organizations/{id}/members
+// Each element nests the user under a `user` key, not at the top level
+export interface HubstaffMemberRaw {
+  user_id: number
+  user: {
+    id: number
+    name: string
+    email: string
+    status?: string
+  }
+}
+
+// User record embedded in the daily_activities response
+export interface HubstaffActivityUser {
+  id: number
+  name: string
+  email: string
 }
 
 export interface HubstaffDailyActivity {
@@ -13,11 +33,12 @@ export interface HubstaffDailyActivity {
 
 export interface HubstaffActivitiesResponse {
   daily_activities: HubstaffDailyActivity[]
+  users?: HubstaffActivityUser[]
   pagination?: { page: number; page_size: number; total: number }
 }
 
 export interface HubstaffMembersResponse {
-  members: HubstaffMember[]
+  members: HubstaffMemberRaw[]
 }
 
 export interface BambooEmployee {

@@ -1,4 +1,5 @@
-import type { HubstaffMembersResponse, HubstaffMember, WeeklyHours } from './types'
+import type { HubstaffMembersResponse, HubstaffMember, HubstaffActivityUser, WeeklyHours } from './types'
+export type { HubstaffActivityUser }
 import { roundHalfUp } from '@/lib/payroll/calculations'
 
 const ACCESS_TOKEN_MARGIN_MS = 5 * 60 * 1000  // skip exchange if token expires within 5 min
@@ -107,7 +108,17 @@ export async function fetchHubstaffMembers(
     throw new Error(err.error ?? `Hubstaff error ${res.status}`)
   }
   const data = await res.json() as HubstaffMembersResponse
-  return { members: data.members ?? [], tokenUpdate }
+  // Hubstaff v2 nests user info under member.user, not at the top level
+  const members: HubstaffMember[] = (data.members ?? [])
+    .filter((m) => m?.user)
+    .map((m) => ({
+      id: m.user.id ?? m.user_id,
+      name: m.user.name ?? '',
+      email: m.user.email ?? '',
+      status: m.user.status ?? 'active',
+    }))
+  console.log('[hubstaff] fetchHubstaffMembers → raw count:', data.members?.length ?? 0, 'parsed:', members.length)
+  return { members, tokenUpdate }
 }
 
 export interface EmployeeHoursMap {
@@ -121,7 +132,7 @@ export async function fetchHoursForPeriod(
   endDate: string,
   otThreshold: number,
   frequency: 'biweekly' | 'weekly',
-): Promise<{ hoursMap: EmployeeHoursMap; tokenUpdate: HubstaffTokenUpdate }> {
+): Promise<{ hoursMap: EmployeeHoursMap; users: HubstaffActivityUser[]; tokenUpdate: HubstaffTokenUpdate }> {
   if (!startDate || !endDate) {
     throw new Error('Period dates are required to fetch Hubstaff hours')
   }
@@ -134,8 +145,13 @@ export async function fetchHoursForPeriod(
     const err = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
     throw new Error(err.error ?? `Hubstaff error ${res.status}`)
   }
-  const data = await res.json() as { daily_activities?: Array<{ user_id: number; date: string; tracked: number }> }
+  const data = await res.json() as {
+    daily_activities?: Array<{ user_id: number; date: string; tracked: number }>
+    users?: HubstaffActivityUser[]
+  }
   const activities = data.daily_activities ?? []
+  const users = data.users ?? []
+  console.log('[hubstaff] fetchHoursForPeriod → activities:', activities.length, 'users:', users.length, users.map(u => u.email))
 
   const userDailyHours: Record<string, Record<string, number>> = {}
   for (const activity of activities) {
@@ -162,7 +178,7 @@ export async function fetchHoursForPeriod(
     }
   }
 
-  return { hoursMap, tokenUpdate }
+  return { hoursMap, users, tokenUpdate }
 }
 
 function groupDailyIntoWeeks(

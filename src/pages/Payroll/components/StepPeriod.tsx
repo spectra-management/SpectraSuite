@@ -10,8 +10,9 @@ import { useSettingsStore } from '@/store/settingsStore'
 import { useEmployeesStore } from '@/store/employeesStore'
 import { toast } from '@/hooks/useToast'
 import { fetchHoursForPeriod } from '@/lib/connectors/hubstaff'
+import type { HubstaffActivityUser } from '@/lib/connectors/hubstaff'
 import { roundHalfUp } from '@/lib/payroll/calculations'
-import type { EmployeeHoursEntry } from '@/types'
+import type { Employee, EmployeeHoursEntry } from '@/types'
 
 interface Props {
   onNext: (data: {
@@ -20,6 +21,31 @@ interface Props {
     frequency: 'biweekly' | 'weekly'
     employeeHours: EmployeeHoursEntry[]
   }) => void
+}
+
+function normalizeForMatch(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toUpperCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function findHubstaffUserForEmployee(
+  emp: Employee,
+  hubUsers: HubstaffActivityUser[],
+): HubstaffActivityUser | undefined {
+  // a) exact email match
+  if (emp.workEmail) {
+    const byEmail = hubUsers.find(
+      (u) => u.email?.toLowerCase() === emp.workEmail.toLowerCase(),
+    )
+    if (byEmail) return byEmail
+  }
+  // b) normalized full-name match
+  const empName = normalizeForMatch(`${emp.firstName} ${emp.lastName}`)
+  return hubUsers.find((u) => u.name && normalizeForMatch(u.name) === empName)
 }
 
 export function StepPeriod({ onNext }: Props) {
@@ -58,6 +84,7 @@ export function StepPeriod({ onNext }: Props) {
 
     setLoading(true)
     let hoursMap: Record<string, { regular: number; ot: number; total: number }> = {}
+    let hubUsers: HubstaffActivityUser[] = []
 
     if (hubstaff.connected && hubstaff.refreshToken && hubstaff.organizationId) {
       try {
@@ -74,7 +101,15 @@ export function StepPeriod({ onNext }: Props) {
           frequency,
         )
         hoursMap = result.hoursMap
-        // Save rotated tokens
+        hubUsers = result.users
+
+        // Diagnostic
+        console.log('[StepPeriod] BambooHR hourly employees:', activeEmployees.map((e) => ({
+          id: e.id, name: `${e.firstName} ${e.lastName}`, email: e.workEmail,
+        })))
+        console.log('[StepPeriod] Hubstaff users from activities:', hubUsers)
+        console.log('[StepPeriod] hoursMap user IDs:', Object.keys(hoursMap))
+
         const { tokenUpdate } = result
         if (tokenUpdate.newRefreshToken || tokenUpdate.newAccessToken) {
           updateHubstaff({
@@ -90,11 +125,29 @@ export function StepPeriod({ onNext }: Props) {
     }
 
     const employeeHours: EmployeeHoursEntry[] = activeEmployees.map((emp) => {
-      const mapping = hubstaff.employeeMapping.find((m) => m.bambooEmployeeId === emp.id)
-      const hubstaffData = mapping ? hoursMap[mapping.hubstaffUserId] : undefined
+      // 1. Try saved mapping from Connectors settings
+      const savedMapping = hubstaff.employeeMapping.find((m) => m.bambooEmployeeId === emp.id)
+      let hubstaffUserId: string | undefined = savedMapping?.hubstaffUserId || undefined
+      let hubstaffData = hubstaffUserId ? hoursMap[hubstaffUserId] : undefined
+
+      // 2. On-the-fly match from users embedded in the activities response
+      //    (covers the case where Connectors mapping hasn't been configured)
+      if (!hubstaffUserId && hubUsers.length > 0) {
+        const matched = findHubstaffUserForEmployee(emp, hubUsers)
+        if (matched) {
+          hubstaffUserId = String(matched.id)
+          hubstaffData = hoursMap[hubstaffUserId]
+          console.log(`[StepPeriod] on-the-fly match: ${emp.firstName} ${emp.lastName} → Hubstaff user ${matched.name} (${matched.id})`)
+        }
+      }
+
+      if (!hubstaffUserId) {
+        console.log(`[StepPeriod] no match: ${emp.firstName} ${emp.lastName} (${emp.workEmail})`)
+      }
+
       return {
         employeeId: emp.id,
-        hubstaffUserId: mapping?.hubstaffUserId,
+        hubstaffUserId,
         regularHours: roundHalfUp(hubstaffData?.regular ?? 0, 2),
         otHours: roundHalfUp(hubstaffData?.ot ?? 0, 2),
         holidayHours: 0,
