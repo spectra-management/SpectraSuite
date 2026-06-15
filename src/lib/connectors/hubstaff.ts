@@ -1,4 +1,4 @@
-import type { HubstaffMembersResponse, HubstaffMember, HubstaffActivityUser, WeeklyHours } from './types'
+import type { HubstaffMember, HubstaffActivityUser, WeeklyHours } from './types'
 export type { HubstaffActivityUser }
 import { roundHalfUp } from '@/lib/payroll/calculations'
 
@@ -77,7 +77,7 @@ export async function testHubstaffToken(tokenState: HubstaffTokenState): Promise
     throw new Error(err.error ?? `Hubstaff error ${meRes.status}`)
   }
 
-  // Use the fresh access token (if we just exchanged) for the second call — avoids a second exchange
+  // Use the fresh access token for the second call — avoids a second exchange
   const updatedState: HubstaffTokenState = {
     refreshToken: tokenUpdate.newRefreshToken ?? tokenState.refreshToken,
     cachedAccessToken: tokenUpdate.newAccessToken ?? tokenState.cachedAccessToken,
@@ -98,6 +98,17 @@ export async function testHubstaffToken(tokenState: HubstaffTokenState): Promise
   }
 }
 
+// Loose type for the raw /members response — handles both API shapes:
+//   Shape A (inline):    { members: [{ user_id, user: { id, name, email } }] }
+//   Shape B (sideloaded): { members: [{ user_id }], users: [{ id, name, email }] }
+interface MembersRaw {
+  members?: Array<{
+    user_id: number
+    user?: { id?: number; name?: string; email?: string; status?: string } | null
+  }>
+  users?: Array<{ id: number; name: string; email?: string }>
+}
+
 export async function fetchHubstaffMembers(
   orgId: string,
   tokenState: HubstaffTokenState,
@@ -107,22 +118,48 @@ export async function fetchHubstaffMembers(
     const err = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
     throw new Error(err.error ?? `Hubstaff error ${res.status}`)
   }
-  const data = await res.json() as HubstaffMembersResponse
-  // Hubstaff v2 nests user info under member.user, not at the top level
-  const members: HubstaffMember[] = (data.members ?? [])
-    .filter((m) => m?.user)
+
+  const data = await res.json() as MembersRaw
+
+  // Log first element of raw response for structure verification
+  const firstMember = data.members?.[0]
+  console.log('[hubstaff] /members raw first element:', JSON.stringify(firstMember))
+  console.log('[hubstaff] /members root keys:', Object.keys(data))
+
+  // Shape A: user details nested inline under member.user
+  let members: HubstaffMember[] = (data.members ?? [])
+    .filter((m) => m?.user?.id != null)
     .map((m) => ({
-      id: m.user.id ?? m.user_id,
-      name: m.user.name ?? '',
-      email: m.user.email ?? '',
-      status: m.user.status ?? 'active',
+      id: m.user!.id ?? m.user_id,
+      name: m.user!.name ?? '',
+      email: m.user!.email ?? '',
+      status: m.user!.status ?? 'active',
     }))
-  console.log('[hubstaff] fetchHubstaffMembers → raw count:', data.members?.length ?? 0, 'parsed:', members.length)
+
+  // Shape B: user details sideloaded at root-level users array (match by user_id)
+  if (members.length === 0 && (data.users ?? []).length > 0) {
+    const userById = new Map((data.users ?? []).map((u) => [u.id, u]))
+    members = (data.members ?? [])
+      .map((m) => {
+        const u = userById.get(m.user_id)
+        return u ? { id: u.id, name: u.name, email: u.email ?? '', status: 'active' } : null
+      })
+      .filter((m): m is HubstaffMember => m !== null)
+  }
+
+  console.log('[hubstaff] fetchHubstaffMembers → raw members:', data.members?.length ?? 0, 'parsed:', members.length)
   return { members, tokenUpdate }
 }
 
 export interface EmployeeHoursMap {
   [userId: string]: { regular: number; ot: number; total: number }
+}
+
+// Loose type for the raw /activities/daily response
+interface ActivitiesRaw {
+  daily_activities?: Array<{ user_id: number; date: string; tracked: number }>
+  users?: Array<{ id: number; name: string; email?: string }>
+  members?: Array<{ user_id: number; user?: { id?: number; name?: string; email?: string } | null }>
 }
 
 export async function fetchHoursForPeriod(
@@ -145,13 +182,35 @@ export async function fetchHoursForPeriod(
     const err = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
     throw new Error(err.error ?? `Hubstaff error ${res.status}`)
   }
-  const data = await res.json() as {
-    daily_activities?: Array<{ user_id: number; date: string; tracked: number }>
-    users?: HubstaffActivityUser[]
-  }
+
+  const data = await res.json() as ActivitiesRaw
+
+  // Log root keys and user/member counts for structure verification
+  console.log('[hubstaff] /activities/daily root keys:', Object.keys(data))
+  console.log('[hubstaff] users array length:', data.users?.length ?? 'key missing')
+  console.log('[hubstaff] first activity:', JSON.stringify(data.daily_activities?.[0]))
+
   const activities = data.daily_activities ?? []
-  const users = data.users ?? []
-  console.log('[hubstaff] fetchHoursForPeriod → activities:', activities.length, 'users:', users.length, users.map(u => u.email))
+
+  // Primary: root-level users array (confirmed in Hubstaff v2 spec)
+  let users: HubstaffActivityUser[] = (data.users ?? []).map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email ?? '',
+  }))
+
+  // Fallback: members sideloaded in activities response (some API versions)
+  if (users.length === 0 && (data.members ?? []).length > 0) {
+    users = (data.members ?? [])
+      .filter((m) => m?.user?.id != null)
+      .map((m) => ({
+        id: m.user!.id!,
+        name: m.user!.name ?? '',
+        email: m.user!.email ?? '',
+      }))
+  }
+
+  console.log('[hubstaff] fetchHoursForPeriod → activities:', activities.length, 'users resolved:', users.length)
 
   const userDailyHours: Record<string, Record<string, number>> = {}
   for (const activity of activities) {
