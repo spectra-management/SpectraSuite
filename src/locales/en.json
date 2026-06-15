@@ -339,7 +339,9 @@
       "allMapped": "All hourly employees are mapped to a Hubstaff user.",
       "autoSuggestByName": "Auto-suggest by name similarity",
       "fuzzyDone": "Suggested {{count}} match(es) based on name similarity",
-      "fuzzyNoNames": "No Hubstaff user names available for fuzzy matching"
+      "fuzzyNoNames": "No Hubstaff user names available for fuzzy matching",
+      "searchHubstaff": "Search Hubstaff users…",
+      "searchBamboo": "Search employees…"
     },
     "email": {
       "title": "Email",

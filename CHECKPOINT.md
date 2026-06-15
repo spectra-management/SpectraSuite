@@ -38,6 +38,8 @@ All phases (1–9) implemented and verified.
 | Employees page: Active filter by default, 3-option status (Active / Inactive+Terminated / All), localStorage persistence | `src/pages/Employees/index.tsx` |
 | Levenshtein fuzzy-match button in mapping panel "By BambooHR Employee" view | `src/pages/Connectors/index.tsx` |
 | Enhanced diagnostic log in findHubstaffUserForEmployee (shows all compared names when match fails) | `src/pages/Payroll/components/StepPeriod.tsx` |
+| Pagination in fetchHubstaffMembers (20 pages × 100 = 2000 members, was truncating at 100) | `src/lib/connectors/hubstaff.ts` |
+| SearchableSelect combobox in mapping panel (search by name+email, replaces shadcn Select for 100+ lists) | `src/pages/Connectors/index.tsx` |
 | Pagination loop in fetchHoursForPeriod (50 pages × 500 records, token rotation between pages) | `src/lib/connectors/hubstaff.ts` |
 | Mapping panel two-view toggle: "By Hubstaff User" + "By BambooHR Employee" with orange badge for unmapped count | `src/pages/Connectors/index.tsx` |
 | Manual Hubstaff↔BambooHR mapping UI with User #ID display, auto-match-by-name button, progress counter, info note | `src/pages/Connectors/index.tsx` |

@@ -339,7 +339,9 @@
       "allMapped": "Todos los empleados por hora están mapeados a un usuario de Hubstaff.",
       "autoSuggestByName": "Auto-sugerir por similitud de nombre",
       "fuzzyDone": "Se sugirieron {{count}} coincidencia(s) por similitud de nombre",
-      "fuzzyNoNames": "No hay nombres de usuarios de Hubstaff disponibles para comparación"
+      "fuzzyNoNames": "No hay nombres de usuarios de Hubstaff disponibles para comparación",
+      "searchHubstaff": "Buscar usuarios de Hubstaff…",
+      "searchBamboo": "Buscar empleados…"
     },
     "email": {
       "title": "Correo Electrónico",

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, XCircle, Loader2, Plug, Link2, Mail, Wand2, Info } from 'lucide-react'
+import { CheckCircle2, XCircle, Loader2, Plug, Link2, Mail, Wand2, Info, ChevronDown, Search } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -116,6 +116,97 @@ function BambooHRConnector() {
         </Button>
       </CardContent>
     </Card>
+  )
+}
+
+// Searchable dropdown — replaces shadcn Select when the option list is large (100+)
+interface SearchOption { value: string; label: string; sublabel?: string }
+
+function SearchableSelect({
+  value,
+  options,
+  onChange,
+  clearLabel,
+  searchPlaceholder = 'Search…',
+}: {
+  value: string
+  options: SearchOption[]
+  onChange: (v: string) => void
+  clearLabel: string
+  searchPlaceholder?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+
+  const filtered = query
+    ? options.filter(
+        (o) =>
+          o.label.toLowerCase().includes(query.toLowerCase()) ||
+          o.sublabel?.toLowerCase().includes(query.toLowerCase()),
+      )
+    : options
+
+  const selected = options.find((o) => o.value === value)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-8 w-full items-center justify-between gap-1 rounded-md border border-gray-200 bg-white px-2 text-xs text-gray-900 hover:bg-gray-50"
+      >
+        <span className="truncate text-left">{selected ? selected.label : clearLabel}</span>
+        <ChevronDown className="h-3 w-3 shrink-0 text-gray-400" />
+      </button>
+
+      {open && (
+        <>
+          {/* Backdrop */}
+          <div className="fixed inset-0 z-10" onClick={() => { setOpen(false); setQuery('') }} />
+          <div className="absolute left-0 top-9 z-20 w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+            {/* Search input */}
+            <div className="flex items-center gap-1.5 border-b border-gray-100 px-2 py-1.5">
+              <Search className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+              <input
+                autoFocus
+                type="text"
+                placeholder={searchPlaceholder}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full bg-transparent text-xs outline-none placeholder:text-gray-400"
+              />
+            </div>
+            {/* Options list */}
+            <div className="max-h-52 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => { onChange(''); setOpen(false); setQuery('') }}
+                className="w-full px-3 py-1.5 text-left text-xs text-gray-400 hover:bg-gray-50"
+              >
+                {clearLabel}
+              </button>
+              {filtered.map((o) => (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => { onChange(o.value); setOpen(false); setQuery('') }}
+                  className={[
+                    'w-full px-3 py-1.5 text-left text-xs transition-colors',
+                    o.value === value ? 'bg-emerald-50 text-emerald-700' : 'text-gray-900 hover:bg-gray-50',
+                  ].join(' ')}
+                >
+                  <p className="font-medium truncate">{o.label}</p>
+                  {o.sublabel && <p className="text-[10px] text-gray-400 truncate">{o.sublabel}</p>}
+                </button>
+              ))}
+              {filtered.length === 0 && (
+                <p className="px-3 py-2 text-xs text-gray-400">No results</p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -329,6 +420,11 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
           {localMapping.map((m) => {
             const member = hubstaffMembers.find((h) => String(h.id) === m.hubstaffUserId)
             const displayName = member?.name || `User #${m.hubstaffUserId}`
+            const bambooOptions: SearchOption[] = activeEmployees.map((e) => ({
+              value: e.id,
+              label: `${e.firstName} ${e.lastName}`,
+              sublabel: e.workEmail,
+            }))
             return (
               <div key={m.hubstaffUserId} className="flex items-center gap-3">
                 <div className="flex-1 min-w-0">
@@ -337,15 +433,13 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
                 </div>
                 <Link2 className="h-4 w-4 shrink-0 text-gray-300" />
                 <div className="w-56">
-                  <Select value={m.bambooEmployeeId || NONE} onValueChange={(v) => handleHubChange(m.hubstaffUserId, v)}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>{t('connectors.hubstaff.unmatched')}</SelectItem>
-                      {activeEmployees.map((e) => (
-                        <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    value={m.bambooEmployeeId}
+                    options={bambooOptions}
+                    onChange={(v) => handleHubChange(m.hubstaffUserId, v)}
+                    clearLabel={t('connectors.hubstaff.unmatched')}
+                    searchPlaceholder={t('connectors.hubstaff.searchBamboo')}
+                  />
                 </div>
                 {m.autoMatched && (
                   <Badge variant="default" className="shrink-0 text-xs">{t('connectors.hubstaff.autoMatched')}</Badge>
@@ -373,6 +467,11 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
               const currentHub = localMapping.find(
                 (m) => m.bambooEmployeeId === emp.id && m.hubstaffUserId,
               )
+              const hubOptions: SearchOption[] = hubstaffMembers.map((h) => ({
+                value: String(h.id),
+                label: h.name || `User #${h.id}`,
+                sublabel: h.email || undefined,
+              }))
               return (
                 <div key={emp.id} className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
@@ -383,20 +482,13 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
                   </div>
                   <Link2 className="h-4 w-4 shrink-0 text-gray-300" />
                   <div className="w-56">
-                    <Select
-                      value={currentHub?.hubstaffUserId || NONE}
-                      onValueChange={(v) => handleBambooChange(emp.id, v)}
-                    >
-                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NONE}>{t('connectors.hubstaff.unmatched')}</SelectItem>
-                        {hubstaffMembers.map((h) => (
-                          <SelectItem key={h.id} value={String(h.id)}>
-                            {h.name || `User #${h.id}`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      value={currentHub?.hubstaffUserId ?? ''}
+                      options={hubOptions}
+                      onChange={(v) => handleBambooChange(emp.id, v)}
+                      clearLabel={t('connectors.hubstaff.unmatched')}
+                      searchPlaceholder={t('connectors.hubstaff.searchHubstaff')}
+                    />
                   </div>
                 </div>
               )

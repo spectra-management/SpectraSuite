@@ -98,32 +98,82 @@ export async function testHubstaffToken(tokenState: HubstaffTokenState): Promise
   }
 }
 
-// Loose type for the raw /members response — handles both API shapes:
+// Loose type for a single page from GET /organizations/{id}/members
+// Handles both API shapes:
 //   Shape A (inline):    { members: [{ user_id, user: { id, name, email } }] }
 //   Shape B (sideloaded): { members: [{ user_id }], users: [{ id, name, email }] }
+//   Shape C (flat):       { members: [{ user_id }] }
 interface MembersRaw {
   members?: Array<{
     user_id: number
     user?: { id?: number; name?: string; email?: string; status?: string } | null
   }>
   users?: Array<{ id: number; name: string; email?: string }>
+  pagination?: { next_page_start_id?: number | null }
 }
+
+const MAX_MEMBER_PAGES = 20  // 20 × 100 = 2 000 members max
 
 export async function fetchHubstaffMembers(
   orgId: string,
   tokenState: HubstaffTokenState,
 ): Promise<{ members: HubstaffMember[]; tokenUpdate: HubstaffTokenUpdate }> {
-  // include[]=users asks Hubstaff to sideload user details; works on some API plans
-  const { res, tokenUpdate } = await fetchHubstaff(`organizations/${orgId}/members`, tokenState, { 'include[]': 'users' })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
-    throw new Error(err.error ?? `Hubstaff error ${res.status}`)
-  }
+  type RawMember = NonNullable<MembersRaw['members']>[number]
 
-  const data = await res.json() as MembersRaw
+  const allRaw: RawMember[] = []
+  const sideloadedUsers = new Map<number, { name: string; email: string }>()
+  let finalTokenUpdate: HubstaffTokenUpdate = { newRefreshToken: null, newAccessToken: null, newAccessTokenExpiry: null }
+  let currentState = tokenState
+  let pageStartId: number | null = 0
+  let pageCount = 0
 
-  // Shape A: user details nested inline under member.user
-  let members: HubstaffMember[] = (data.members ?? [])
+  do {
+    const extraParams: Record<string, string> = {
+      'include[]': 'users',
+      'page[limit]': '100',
+    }
+    if (pageStartId) extraParams['page_start_id'] = String(pageStartId)
+
+    const { res, tokenUpdate } = await fetchHubstaff(`organizations/${orgId}/members`, currentState, extraParams)
+
+    // Propagate token rotation so subsequent pages reuse the new access token
+    if (tokenUpdate.newAccessToken) {
+      currentState = {
+        refreshToken: tokenUpdate.newRefreshToken ?? currentState.refreshToken,
+        cachedAccessToken: tokenUpdate.newAccessToken,
+        cachedAccessTokenExpiry: tokenUpdate.newAccessTokenExpiry ?? undefined,
+      }
+      finalTokenUpdate = tokenUpdate
+    } else if (pageCount === 0) {
+      finalTokenUpdate = tokenUpdate
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
+      throw new Error(err.error ?? `Hubstaff error ${res.status}`)
+    }
+
+    const data = await res.json() as MembersRaw
+
+    if (pageCount === 0) {
+      console.log(
+        '[hubstaff] /members page 1 — members:', data.members?.length ?? 0,
+        '| root users key:', !!data.users, '| root users count:', data.users?.length ?? 0,
+        '| first member keys:', JSON.stringify(Object.keys(data.members?.[0] ?? {})),
+      )
+    }
+
+    allRaw.push(...(data.members ?? []))
+    for (const u of data.users ?? []) sideloadedUsers.set(u.id, { name: u.name, email: u.email ?? '' })
+
+    pageStartId = data.pagination?.next_page_start_id ?? null
+    pageCount++
+  } while (pageStartId && pageCount < MAX_MEMBER_PAGES)
+
+  console.log(`[hubstaff] fetchHubstaffMembers — ${allRaw.length} total members across ${pageCount} page(s)`)
+
+  // Shape A: inline member.user
+  let members: HubstaffMember[] = allRaw
     .filter((m) => m?.user?.id != null)
     .map((m) => ({
       id: m.user!.id ?? m.user_id,
@@ -132,36 +182,21 @@ export async function fetchHubstaffMembers(
       status: m.user!.status ?? 'active',
     }))
 
-  // Shape B: user details sideloaded at root-level users array (match by user_id)
-  if (members.length === 0 && (data.users ?? []).length > 0) {
-    const userById = new Map((data.users ?? []).map((u) => [u.id, u]))
-    members = (data.members ?? [])
-      .map((m) => {
-        const u = userById.get(m.user_id)
-        return u ? { id: u.id, name: u.name, email: u.email ?? '', status: 'active' } : null
-      })
-      .filter((m): m is HubstaffMember => m !== null)
+  // Shape B: sideloaded root-level users array
+  if (members.length === 0 && sideloadedUsers.size > 0) {
+    members = allRaw.map((m) => {
+      const u = sideloadedUsers.get(m.user_id)
+      return { id: m.user_id, name: u?.name ?? '', email: u?.email ?? '', status: 'active' }
+    })
   }
 
-  // Shape C: flat members with no user details (API returned user_id only)
-  // Return stub records so the mapping UI can still show User #ID rows
-  if (members.length === 0 && (data.members ?? []).length > 0) {
-    members = (data.members ?? []).map((m) => ({
-      id: m.user_id,
-      name: '',    // no name available
-      email: '',   // no email available
-      status: 'active',
-    }))
+  // Shape C: flat members with no user details — return stubs so mapping UI shows User #ID
+  if (members.length === 0 && allRaw.length > 0) {
+    members = allRaw.map((m) => ({ id: m.user_id, name: '', email: '', status: 'active' }))
   }
 
-  // Report what include[]=users returned — helps diagnose whether the param is honoured
-  console.log(
-    '[hubstaff] /members response — members:', data.members?.length ?? 0,
-    '| root users key present:', !!data.users, '| root users count:', data.users?.length ?? 0,
-    '| first member keys:', JSON.stringify(Object.keys(data.members?.[0] ?? {})),
-  )
   console.log('[hubstaff] fetchHubstaffMembers → total:', members.length, 'hasNames:', members.some(m => !!m.name))
-  return { members, tokenUpdate }
+  return { members, tokenUpdate: finalTokenUpdate }
 }
 
 // ─── User profile cache ────────────────────────────────────────────────────────
