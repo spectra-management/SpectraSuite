@@ -192,7 +192,8 @@
       "frequency": "Frecuencia de pago",
       "biweekly": "Quincenal",
       "weekly": "Semanal",
-      "fetchData": "Obtener datos"
+      "fetchData": "Obtener datos",
+      "selectPeriodFirst": "Selecciona un período primero"
     },
     "review": {
       "title": "Revisar Horas",

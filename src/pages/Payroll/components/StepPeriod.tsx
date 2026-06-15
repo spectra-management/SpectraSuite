@@ -154,9 +154,9 @@ export function StepPeriod({ onNext }: Props) {
             {t('payroll.hubstaffNotConnected')}
           </div>
         )}
-        <Button onClick={handleFetch} disabled={loading} className="w-full">
+        <Button onClick={handleFetch} disabled={loading || !startDate || !endDate} className="w-full">
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {t('payroll.period.fetchData')}
+          {!startDate || !endDate ? t('payroll.period.selectPeriodFirst') : t('payroll.period.fetchData')}
         </Button>
       </CardContent>
     </Card>

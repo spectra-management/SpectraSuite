@@ -192,7 +192,8 @@
       "frequency": "Payment Frequency",
       "biweekly": "Bi-weekly",
       "weekly": "Weekly",
-      "fetchData": "Fetch Data"
+      "fetchData": "Fetch Data",
+      "selectPeriodFirst": "Select a pay period first"
     },
     "review": {
       "title": "Review Hours",

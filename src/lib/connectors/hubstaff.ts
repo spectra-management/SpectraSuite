@@ -118,10 +118,13 @@ export async function fetchHoursForPeriod(
   otThreshold: number,
   frequency: 'biweekly' | 'weekly',
 ): Promise<{ hoursMap: EmployeeHoursMap; tokenUpdate: HubstaffTokenUpdate }> {
+  if (!startDate || !endDate) {
+    throw new Error('Period dates are required to fetch Hubstaff hours')
+  }
   const { res, tokenUpdate } = await fetchHubstaff(
     `organizations/${orgId}/activities/daily`,
     tokenState,
-    { date_from: startDate, date_to: endDate, 'page[size]': '1000' },
+    { 'date[start]': startDate, 'date[stop]': endDate, 'page[size]': '1000' },
   )
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
