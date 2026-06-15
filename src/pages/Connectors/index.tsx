@@ -140,7 +140,10 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
     return result
   })
 
-  const handleChange = (hubstaffUserId: string, bambooEmployeeId: string) => {
+  const NONE = '__none__'
+
+  const handleChange = (hubstaffUserId: string, v: string) => {
+    const bambooEmployeeId = v === NONE ? '' : v
     setLocalMapping((prev) =>
       prev.map((m) =>
         m.hubstaffUserId === hubstaffUserId
@@ -178,14 +181,14 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
               <Link2 className="h-4 w-4 shrink-0 text-gray-300" />
               <div className="w-56">
                 <Select
-                  value={m.bambooEmployeeId}
+                  value={m.bambooEmployeeId || NONE}
                   onValueChange={(v) => handleChange(m.hubstaffUserId, v)}
                 >
                   <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder={t('connectors.hubstaff.unmatched')} />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('connectors.hubstaff.unmatched')}</SelectItem>
+                    <SelectItem value={NONE}>{t('connectors.hubstaff.unmatched')}</SelectItem>
                     {activeEmployees.map((e) => (
                       <SelectItem key={e.id} value={e.id}>
                         {e.firstName} {e.lastName}
