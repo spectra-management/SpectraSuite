@@ -113,7 +113,8 @@
       "allStatuses": "Todos los Estados",
       "clearFilters": "Limpiar Filtros",
       "activeFilters": "{{count}} filtro activo",
-      "activeFilters_plural": "{{count}} filtros activos"
+      "activeFilters_plural": "{{count}} filtros activos",
+      "inactiveTerminated": "Inactivo / Terminado"
     },
     "reports": {
       "title": "Reportes de Empleados",
@@ -335,7 +336,10 @@
       "noNamesNote": "Hubstaff no devolvió nombres de usuario para esta organización. Usa el ID de usuario (mostrado como \"User #ID\") para identificar miembros desde el panel de Hubstaff, luego selecciona el empleado correspondiente a la derecha.",
       "byHubstaff": "Por usuario Hubstaff",
       "byBamboo": "Por empleado BambooHR",
-      "allMapped": "Todos los empleados por hora están mapeados a un usuario de Hubstaff."
+      "allMapped": "Todos los empleados por hora están mapeados a un usuario de Hubstaff.",
+      "autoSuggestByName": "Auto-sugerir por similitud de nombre",
+      "fuzzyDone": "Se sugirieron {{count}} coincidencia(s) por similitud de nombre",
+      "fuzzyNoNames": "No hay nombres de usuarios de Hubstaff disponibles para comparación"
     },
     "email": {
       "title": "Correo Electrónico",

@@ -43,7 +43,9 @@ export default function Employees() {
   const [search, setSearch] = useState('')
   const [deptFilter, setDeptFilter] = useState('all')
   const [titleFilter, setTitleFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<string>(
+    () => localStorage.getItem('spectra_employees_status_filter') ?? 'Active',
+  )
   const [sortCol, setSortCol] = useState<SortCol | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [page, setPage] = useState(1)
@@ -63,7 +65,7 @@ export default function Employees() {
   const activeFilterCount = [
     deptFilter !== 'all',
     titleFilter !== 'all',
-    statusFilter !== 'all',
+    statusFilter !== 'Active',   // 'Active' is the default, not a filter override
     !!search,
   ].filter(Boolean).length
 
@@ -71,7 +73,9 @@ export default function Employees() {
     setSearch('')
     setDeptFilter('all')
     setTitleFilter('all')
-    setStatusFilter('all')
+    const defaultStatus = 'Active'
+    setStatusFilter(defaultStatus)
+    localStorage.setItem('spectra_employees_status_filter', defaultStatus)
     setPage(1)
   }
 
@@ -92,7 +96,8 @@ export default function Employees() {
         if (q && !normalize(`${e.firstName} ${e.lastName} ${e.workEmail}`).includes(q)) return false
         if (deptFilter !== 'all' && e.department !== deptFilter) return false
         if (titleFilter !== 'all' && e.jobTitle !== titleFilter) return false
-        if (statusFilter !== 'all' && e.status !== statusFilter) return false
+        if (statusFilter === 'Active' && e.status !== 'Active') return false
+        if (statusFilter === 'not-active' && e.status === 'Active') return false
         return true
       })
       .sort((a, b) => {
@@ -112,8 +117,9 @@ export default function Employees() {
     setPage(1)
   }
 
-  const handleFilterChange = (setter: (v: string) => void) => (v: string) => {
+  const handleFilterChange = (setter: (v: string) => void, persistKey?: string) => (v: string) => {
     setter(v)
+    if (persistKey) localStorage.setItem(persistKey, v)
     setPage(1)
   }
 
@@ -199,15 +205,14 @@ export default function Employees() {
             </Select>
 
             {/* Status filter */}
-            <Select value={statusFilter} onValueChange={handleFilterChange(setStatusFilter)}>
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder={t('employees.filters.allStatuses')} />
+            <Select value={statusFilter} onValueChange={handleFilterChange(setStatusFilter, 'spectra_employees_status_filter')}>
+              <SelectTrigger className="w-44">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('employees.filters.allStatuses')}</SelectItem>
                 <SelectItem value="Active">{t('employees.status.active')}</SelectItem>
-                <SelectItem value="Inactive">{t('employees.status.inactive')}</SelectItem>
-                <SelectItem value="Terminated">{t('employees.status.terminated')}</SelectItem>
+                <SelectItem value="not-active">{t('employees.filters.inactiveTerminated')}</SelectItem>
+                <SelectItem value="all">{t('employees.filters.allStatuses')}</SelectItem>
               </SelectContent>
             </Select>
 

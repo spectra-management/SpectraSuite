@@ -128,6 +128,21 @@ function normalizeForMatch(s: string): string {
     .trim()
 }
 
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length
+  const dp: number[] = Array.from({ length: n + 1 }, (_, j) => j)
+  for (let i = 1; i <= m; i++) {
+    let prev = dp[0]
+    dp[0] = i
+    for (let j = 1; j <= n; j++) {
+      const tmp = dp[j]
+      dp[j] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[j], dp[j - 1])
+      prev = tmp
+    }
+  }
+  return dp[n]
+}
+
 type MappingView = 'by-hubstaff' | 'by-bamboo'
 
 function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMember[] }) {
@@ -205,6 +220,44 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
       }),
     )
     toast({ title: t('connectors.hubstaff.autoMatchDone') })
+  }
+
+  const handleFuzzyMatch = () => {
+    const membersWithNames = hubstaffMembers.filter((h) => !!h.name)
+    if (membersWithNames.length === 0) {
+      toast({ variant: 'destructive', title: t('connectors.hubstaff.fuzzyNoNames') })
+      return
+    }
+    let matched = 0
+    setLocalMapping((prev) => {
+      let updated = [...prev]
+      for (const emp of unmappedHourly) {
+        const empName = normalizeForMatch(`${emp.firstName} ${emp.lastName}`)
+        let best: HubstaffMember | undefined
+        let bestDist = Infinity
+        for (const h of membersWithNames) {
+          const d = levenshtein(empName, normalizeForMatch(h.name))
+          if (d < bestDist) { bestDist = d; best = h }
+        }
+        // Accept if distance ≤ 40% of the longer string (tolerates short typos / missing accents)
+        const threshold = Math.ceil(Math.max(empName.length, best ? normalizeForMatch(best.name).length : 0) * 0.4)
+        if (best && bestDist <= threshold) {
+          const hubId = String(best.id)
+          updated = updated.map((m) =>
+            m.bambooEmployeeId === emp.id ? { ...m, bambooEmployeeId: '', autoMatched: false } : m,
+          )
+          const idx = updated.findIndex((m) => m.hubstaffUserId === hubId)
+          if (idx >= 0) {
+            updated = updated.map((m, i) => i === idx ? { ...m, bambooEmployeeId: emp.id, autoMatched: true } : m)
+          } else {
+            updated = [...updated, { hubstaffUserId: hubId, bambooEmployeeId: emp.id, autoMatched: true }]
+          }
+          matched++
+        }
+      }
+      return updated
+    })
+    toast({ title: t('connectors.hubstaff.fuzzyDone', { count: matched }) })
   }
 
   const handleSave = () => {
@@ -305,7 +358,14 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
 
       {/* VIEW B: By BambooHR Employee (shows unmapped hourly employees) */}
       {viewMode === 'by-bamboo' && (
-        <div className="space-y-2">
+        <div className="space-y-3">
+          {unmappedHourly.length > 0 && (
+            <Button size="sm" variant="outline" onClick={handleFuzzyMatch}>
+              <Wand2 className="mr-1.5 h-3.5 w-3.5" />
+              {t('connectors.hubstaff.autoSuggestByName')}
+            </Button>
+          )}
+          <div className="space-y-2">
           {unmappedHourly.length === 0 ? (
             <p className="py-3 text-xs text-gray-400">{t('connectors.hubstaff.allMapped')}</p>
           ) : (
@@ -342,6 +402,7 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
               )
             })
           )}
+          </div>
         </div>
       )}
 

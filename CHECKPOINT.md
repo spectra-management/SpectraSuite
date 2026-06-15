@@ -1,6 +1,6 @@
 # CHECKPOINT.md — Spectra Payroll System
 
-**Last updated:** 2026-06-15  
+**Last updated:** 2026-06-16  
 **Current Phase:** SYSTEM COMPLETE — Post-launch bug fixes  
 **Git branch:** main  
 **Last commit:** fix: Hubstaff bracket params + payType Hourly filter
@@ -34,6 +34,10 @@ All phases (1–9) implemented and verified.
 
 ## Post-launch fixes (2026-06-12 → 2026-06-15)
 
+| OT threshold default: 44h → 40h | `src/lib/payroll/constants.ts` |
+| Employees page: Active filter by default, 3-option status (Active / Inactive+Terminated / All), localStorage persistence | `src/pages/Employees/index.tsx` |
+| Levenshtein fuzzy-match button in mapping panel "By BambooHR Employee" view | `src/pages/Connectors/index.tsx` |
+| Enhanced diagnostic log in findHubstaffUserForEmployee (shows all compared names when match fails) | `src/pages/Payroll/components/StepPeriod.tsx` |
 | Pagination loop in fetchHoursForPeriod (50 pages × 500 records, token rotation between pages) | `src/lib/connectors/hubstaff.ts` |
 | Mapping panel two-view toggle: "By Hubstaff User" + "By BambooHR Employee" with orange badge for unmapped count | `src/pages/Connectors/index.tsx` |
 | Manual Hubstaff↔BambooHR mapping UI with User #ID display, auto-match-by-name button, progress counter, info note | `src/pages/Connectors/index.tsx` |

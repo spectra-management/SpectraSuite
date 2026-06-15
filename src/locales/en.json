@@ -113,7 +113,8 @@
       "allStatuses": "All Statuses",
       "clearFilters": "Clear Filters",
       "activeFilters": "{{count}} filter active",
-      "activeFilters_plural": "{{count}} filters active"
+      "activeFilters_plural": "{{count}} filters active",
+      "inactiveTerminated": "Inactive / Terminated"
     },
     "reports": {
       "title": "Employee Reports",
@@ -335,7 +336,10 @@
       "noNamesNote": "Hubstaff did not return user names for this organization. Use the User ID (shown as \"User #ID\") to identify members from your Hubstaff admin panel, then select the matching employee on the right.",
       "byHubstaff": "By Hubstaff User",
       "byBamboo": "By BambooHR Employee",
-      "allMapped": "All hourly employees are mapped to a Hubstaff user."
+      "allMapped": "All hourly employees are mapped to a Hubstaff user.",
+      "autoSuggestByName": "Auto-suggest by name similarity",
+      "fuzzyDone": "Suggested {{count}} match(es) based on name similarity",
+      "fuzzyNoNames": "No Hubstaff user names available for fuzzy matching"
     },
     "email": {
       "title": "Email",

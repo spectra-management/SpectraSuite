@@ -35,6 +35,7 @@ function normalizeForMatch(s: string): string {
 function findHubstaffUserForEmployee(
   emp: Employee,
   hubUsers: HubstaffActivityUser[],
+  debug = false,
 ): HubstaffActivityUser | undefined {
   // a) exact email match
   if (emp.workEmail) {
@@ -45,7 +46,17 @@ function findHubstaffUserForEmployee(
   }
   // b) normalized full-name match
   const empName = normalizeForMatch(`${emp.firstName} ${emp.lastName}`)
-  return hubUsers.find((u) => u.name && normalizeForMatch(u.name) === empName)
+  const byName = hubUsers.find((u) => u.name && normalizeForMatch(u.name) === empName)
+  if (byName) return byName
+
+  if (debug) {
+    console.log(`[match] FAILED for "${emp.firstName} ${emp.lastName}" (${emp.workEmail})`)
+    console.log(`  BambooHR normalized name: "${empName}"`)
+    console.log(`  Hubstaff users compared (${hubUsers.length} total):`,
+      hubUsers.map((u) => ({ id: u.id, name: u.name, normName: u.name ? normalizeForMatch(u.name) : '', email: u.email })),
+    )
+  }
+  return undefined
 }
 
 export function StepPeriod({ onNext }: Props) {
@@ -158,7 +169,7 @@ export function StepPeriod({ onNext }: Props) {
       // 2. On-the-fly match from users embedded in the activities response
       //    (covers the case where Connectors mapping hasn't been configured)
       if (!hubstaffUserId && hubUsers.length > 0) {
-        const matched = findHubstaffUserForEmployee(emp, hubUsers)
+        const matched = findHubstaffUserForEmployee(emp, hubUsers, true)
         if (matched) {
           hubstaffUserId = String(matched.id)
           hubstaffData = hoursMap[hubstaffUserId]

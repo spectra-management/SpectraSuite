@@ -17,7 +17,7 @@ export const DEFAULT_FISCAL_PARAMETERS: FiscalParameters = {
 
 export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
   frequency: 'biweekly',
-  otThresholdHours: 44,
+  otThresholdHours: 40,
   otRatePercent: 35,
   holidayRatePercent: 100,
 }
