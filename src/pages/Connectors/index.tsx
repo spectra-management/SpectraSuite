@@ -128,11 +128,14 @@ function normalizeForMatch(s: string): string {
     .trim()
 }
 
+type MappingView = 'by-hubstaff' | 'by-bamboo'
+
 function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMember[] }) {
   const { t } = useTranslation()
   const employees = useEmployeesStore((s) => s.employees)
   const hubstaff = useSettingsStore((s) => s.hubstaff)
   const updateHubstaff = useSettingsStore((s) => s.updateHubstaff)
+  const [viewMode, setViewMode] = useState<MappingView>('by-hubstaff')
 
   const hasNames = hubstaffMembers.some((m) => !!m.name)
 
@@ -141,39 +144,57 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
     return hubstaffMembers.map((m) => {
       const existing = saved.find((s) => s.hubstaffUserId === String(m.id))
       if (existing) return existing
-
-      // Auto-match by email (only possible when API returns emails)
       let autoMatch = m.email
         ? employees.find((e) => e.workEmail?.toLowerCase() === m.email.toLowerCase())
         : undefined
-
-      // Auto-match by normalized full-name
       if (!autoMatch && m.name) {
         const hubName = normalizeForMatch(m.name)
         autoMatch = employees.find(
           (e) => normalizeForMatch(`${e.firstName} ${e.lastName}`) === hubName,
         )
       }
-
       return { hubstaffUserId: String(m.id), bambooEmployeeId: autoMatch?.id ?? '', autoMatched: !!autoMatch }
     })
   }
 
   const [localMapping, setLocalMapping] = useState<HubstaffMapping[]>(buildInitialMapping)
-
   const NONE = '__none__'
 
-  const handleChange = (hubstaffUserId: string, v: string) => {
+  // By-Hubstaff view: pick a BambooHR employee for a given Hubstaff user
+  const handleHubChange = (hubstaffUserId: string, v: string) => {
     const bambooEmployeeId = v === NONE ? '' : v
     setLocalMapping((prev) =>
       prev.map((m) => m.hubstaffUserId === hubstaffUserId ? { ...m, bambooEmployeeId, autoMatched: false } : m),
     )
   }
 
+  // By-BambooHR view: pick a Hubstaff user for a given BambooHR employee
+  const handleBambooChange = (empId: string, v: string) => {
+    const selectedHubId = v === NONE ? '' : v
+    setLocalMapping((prev) => {
+      // Remove this BambooHR employee from whatever Hubstaff slot they were in
+      let updated = prev.map((m) =>
+        m.bambooEmployeeId === empId ? { ...m, bambooEmployeeId: '', autoMatched: false } : m,
+      )
+      if (!selectedHubId) return updated
+      const idx = updated.findIndex((m) => m.hubstaffUserId === selectedHubId)
+      if (idx >= 0) {
+        // Update the existing slot for this Hubstaff user
+        updated = updated.map((m, i) =>
+          i === idx ? { ...m, bambooEmployeeId: empId, autoMatched: false } : m,
+        )
+      } else {
+        // Hubstaff user not in list yet — add new entry
+        updated = [...updated, { hubstaffUserId: selectedHubId, bambooEmployeeId: empId, autoMatched: false }]
+      }
+      return updated
+    })
+  }
+
   const handleAutoMatchByName = () => {
     setLocalMapping((prev) =>
       prev.map((m) => {
-        if (m.bambooEmployeeId) return m  // keep existing manual maps
+        if (m.bambooEmployeeId) return m
         const member = hubstaffMembers.find((h) => String(h.id) === m.hubstaffUserId)
         if (!member?.name) return m
         const hubName = normalizeForMatch(member.name)
@@ -192,73 +213,137 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
   }
 
   const activeEmployees = employees.filter((e) => e.status === 'Active')
+  const hourlyEmployees = activeEmployees.filter((e) => e.payType === 'Hourly')
   const mappedCount = localMapping.filter((m) => !!m.bambooEmployeeId).length
+  const unmappedHourly = hourlyEmployees.filter(
+    (e) => !localMapping.some((m) => m.bambooEmployeeId === e.id && m.hubstaffUserId),
+  )
 
   return (
     <div className="space-y-4">
       <Separator />
-      <div className="flex items-start justify-between gap-3">
+
+      {/* Header row */}
+      <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-sm font-medium text-gray-900">{t('connectors.hubstaff.mapping')}</p>
           <p className="text-xs text-gray-500 mt-0.5">
             {t('connectors.hubstaff.mappingProgress', { mapped: mappedCount, total: localMapping.length })}
           </p>
         </div>
-        {hasNames && (
-          <Button size="sm" variant="outline" onClick={handleAutoMatchByName} className="shrink-0">
-            <Wand2 className="mr-1.5 h-3.5 w-3.5" />
-            {t('connectors.hubstaff.autoMatchByName')}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {hasNames && viewMode === 'by-hubstaff' && (
+            <Button size="sm" variant="outline" onClick={handleAutoMatchByName}>
+              <Wand2 className="mr-1.5 h-3.5 w-3.5" />
+              {t('connectors.hubstaff.autoMatchByName')}
+            </Button>
+          )}
+          {/* View toggle */}
+          <div className="flex overflow-hidden rounded-lg border border-gray-200 text-xs">
+            {(['by-hubstaff', 'by-bamboo'] as MappingView[]).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setViewMode(v)}
+                className={[
+                  'relative px-3 py-1.5 font-medium transition-colors',
+                  viewMode === v ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:text-gray-800',
+                ].join(' ')}
+              >
+                {v === 'by-hubstaff' ? t('connectors.hubstaff.byHubstaff') : t('connectors.hubstaff.byBamboo')}
+                {v === 'by-bamboo' && unmappedHourly.length > 0 && (
+                  <span className="ml-1 rounded-full bg-orange-500 px-1.5 py-px text-[10px] font-bold text-white">
+                    {unmappedHourly.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Info note when Hubstaff API doesn't return names */}
-      {!hasNames && (
+      {/* Info note (no-names) */}
+      {!hasNames && viewMode === 'by-hubstaff' && (
         <div className="flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5">
-          <Info className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+          <Info className="h-3.5 w-3.5 shrink-0 text-blue-500 mt-0.5" />
           <p className="text-xs text-blue-700">{t('connectors.hubstaff.noNamesNote')}</p>
         </div>
       )}
 
-      <div className="space-y-2">
-        {localMapping.map((m) => {
-          const member = hubstaffMembers.find((h) => String(h.id) === m.hubstaffUserId)
-          const displayName = member?.name || `User #${m.hubstaffUserId}`
-          const displayEmail = member?.email || ''
-          return (
-            <div key={m.hubstaffUserId} className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{displayName}</p>
-                {displayEmail && <p className="text-xs text-gray-400 truncate">{displayEmail}</p>}
+      {/* VIEW A: By Hubstaff User */}
+      {viewMode === 'by-hubstaff' && (
+        <div className="space-y-2">
+          {localMapping.map((m) => {
+            const member = hubstaffMembers.find((h) => String(h.id) === m.hubstaffUserId)
+            const displayName = member?.name || `User #${m.hubstaffUserId}`
+            return (
+              <div key={m.hubstaffUserId} className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{displayName}</p>
+                  {member?.email && <p className="text-xs text-gray-400 truncate">{member.email}</p>}
+                </div>
+                <Link2 className="h-4 w-4 shrink-0 text-gray-300" />
+                <div className="w-56">
+                  <Select value={m.bambooEmployeeId || NONE} onValueChange={(v) => handleHubChange(m.hubstaffUserId, v)}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>{t('connectors.hubstaff.unmatched')}</SelectItem>
+                      {activeEmployees.map((e) => (
+                        <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {m.autoMatched && (
+                  <Badge variant="default" className="shrink-0 text-xs">{t('connectors.hubstaff.autoMatched')}</Badge>
+                )}
               </div>
-              <Link2 className="h-4 w-4 shrink-0 text-gray-300" />
-              <div className="w-56">
-                <Select
-                  value={m.bambooEmployeeId || NONE}
-                  onValueChange={(v) => handleChange(m.hubstaffUserId, v)}
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>{t('connectors.hubstaff.unmatched')}</SelectItem>
-                    {activeEmployees.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.firstName} {e.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {m.autoMatched && (
-                <Badge variant="default" className="shrink-0 text-xs">
-                  {t('connectors.hubstaff.autoMatched')}
-                </Badge>
-              )}
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* VIEW B: By BambooHR Employee (shows unmapped hourly employees) */}
+      {viewMode === 'by-bamboo' && (
+        <div className="space-y-2">
+          {unmappedHourly.length === 0 ? (
+            <p className="py-3 text-xs text-gray-400">{t('connectors.hubstaff.allMapped')}</p>
+          ) : (
+            unmappedHourly.map((emp) => {
+              const currentHub = localMapping.find(
+                (m) => m.bambooEmployeeId === emp.id && m.hubstaffUserId,
+              )
+              return (
+                <div key={emp.id} className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {emp.firstName} {emp.lastName}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">{emp.workEmail}</p>
+                  </div>
+                  <Link2 className="h-4 w-4 shrink-0 text-gray-300" />
+                  <div className="w-56">
+                    <Select
+                      value={currentHub?.hubstaffUserId || NONE}
+                      onValueChange={(v) => handleBambooChange(emp.id, v)}
+                    >
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>{t('connectors.hubstaff.unmatched')}</SelectItem>
+                        {hubstaffMembers.map((h) => (
+                          <SelectItem key={h.id} value={String(h.id)}>
+                            {h.name || `User #${h.id}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+      )}
 
       <Button size="sm" onClick={handleSave}>{t('connectors.hubstaff.saveMapping')}</Button>
     </div>

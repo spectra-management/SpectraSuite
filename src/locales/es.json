@@ -332,7 +332,10 @@
       "autoMatchByName": "Auto-match por nombre",
       "autoMatchDone": "Auto-match completado",
       "mappingProgress": "{{mapped}} de {{total}} usuarios de Hubstaff mapeados",
-      "noNamesNote": "Hubstaff no devolvió nombres de usuario para esta organización. Usa el ID de usuario (mostrado como \"User #ID\") para identificar miembros desde el panel de Hubstaff, luego selecciona el empleado correspondiente a la derecha."
+      "noNamesNote": "Hubstaff no devolvió nombres de usuario para esta organización. Usa el ID de usuario (mostrado como \"User #ID\") para identificar miembros desde el panel de Hubstaff, luego selecciona el empleado correspondiente a la derecha.",
+      "byHubstaff": "Por usuario Hubstaff",
+      "byBamboo": "Por empleado BambooHR",
+      "allMapped": "Todos los empleados por hora están mapeados a un usuario de Hubstaff."
     },
     "email": {
       "title": "Correo Electrónico",

@@ -332,7 +332,10 @@
       "autoMatchByName": "Auto-match by name",
       "autoMatchDone": "Auto-match complete",
       "mappingProgress": "{{mapped}} of {{total}} Hubstaff users mapped",
-      "noNamesNote": "Hubstaff did not return user names for this organization. Use the User ID (shown as \"User #ID\") to identify members from your Hubstaff admin panel, then select the matching employee on the right."
+      "noNamesNote": "Hubstaff did not return user names for this organization. Use the User ID (shown as \"User #ID\") to identify members from your Hubstaff admin panel, then select the matching employee on the right.",
+      "byHubstaff": "By Hubstaff User",
+      "byBamboo": "By BambooHR Employee",
+      "allMapped": "All hourly employees are mapped to a Hubstaff user."
     },
     "email": {
       "title": "Email",

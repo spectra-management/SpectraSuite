@@ -34,6 +34,8 @@ All phases (1–9) implemented and verified.
 
 ## Post-launch fixes (2026-06-12 → 2026-06-15)
 
+| Pagination loop in fetchHoursForPeriod (50 pages × 500 records, token rotation between pages) | `src/lib/connectors/hubstaff.ts` |
+| Mapping panel two-view toggle: "By Hubstaff User" + "By BambooHR Employee" with orange badge for unmapped count | `src/pages/Connectors/index.tsx` |
 | Manual Hubstaff↔BambooHR mapping UI with User #ID display, auto-match-by-name button, progress counter, info note | `src/pages/Connectors/index.tsx` |
 | "Needs Mapping" badge (orange) + unmapped-employees banner with link to Connectors in Review Hours | `src/pages/Payroll/components/StepHours.tsx` |
 | fetchHubstaffMembers: Shape C fallback (flat members, no user details) → stub records with User #ID | `src/lib/connectors/hubstaff.ts` |

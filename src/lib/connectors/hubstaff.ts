@@ -167,7 +167,10 @@ interface ActivitiesRaw {
   daily_activities?: Array<{ user_id: number; date: string; tracked: number }>
   users?: Array<{ id: number; name: string; email?: string }>
   members?: Array<{ user_id: number; user?: { id?: number; name?: string; email?: string } | null }>
+  pagination?: { next_page_start_id?: number | null }
 }
+
+const MAX_PAGES = 50  // safety limit — 50 × 500 = 25 000 activity records
 
 export async function fetchHoursForPeriod(
   orgId: string,
@@ -180,39 +183,63 @@ export async function fetchHoursForPeriod(
   if (!startDate || !endDate) {
     throw new Error('Period dates are required to fetch Hubstaff hours')
   }
-  const { res, tokenUpdate } = await fetchHubstaff(
-    `organizations/${orgId}/activities/daily`,
-    tokenState,
-    { 'date[start]': startDate, 'date[stop]': endDate, 'page[size]': '1000' },
-  )
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
-    throw new Error(err.error ?? `Hubstaff error ${res.status}`)
-  }
 
-  const data = await res.json() as ActivitiesRaw
-  const activities = data.daily_activities ?? []
+  const allActivities: Array<{ user_id: number; date: string; tracked: number }> = []
+  let activityUsers: HubstaffActivityUser[] = []
+  let finalTokenUpdate: HubstaffTokenUpdate = { newRefreshToken: null, newAccessToken: null, newAccessTokenExpiry: null }
+  let currentTokenState = tokenState
+  let pageStartId: number | null = 0   // 0 = first page sentinel (no page_start_id param)
+  let pageCount = 0
 
-  // Primary: root-level users array (confirmed in Hubstaff v2 spec)
-  let users: HubstaffActivityUser[] = (data.users ?? []).map((u) => ({
-    id: u.id,
-    name: u.name,
-    email: u.email ?? '',
-  }))
+  do {
+    const extraParams: Record<string, string> = {
+      'date[start]': startDate,
+      'date[stop]': endDate,
+      'page[limit]': '500',
+    }
+    if (pageStartId) extraParams['page_start_id'] = String(pageStartId)
 
-  // Fallback: members sideloaded in activities response (some API versions)
-  if (users.length === 0 && (data.members ?? []).length > 0) {
-    users = (data.members ?? [])
-      .filter((m) => m?.user?.id != null)
-      .map((m) => ({
-        id: m.user!.id!,
-        name: m.user!.name ?? '',
-        email: m.user!.email ?? '',
-      }))
-  }
+    console.log(`[hubstaff] activities page ${pageCount + 1}:`, `organizations/${orgId}/activities/daily`, extraParams)
+
+    const { res, tokenUpdate } = await fetchHubstaff(
+      `organizations/${orgId}/activities/daily`,
+      currentTokenState,
+      extraParams,
+    )
+
+    // Propagate token rotation so subsequent pages reuse the new access token
+    if (tokenUpdate.newAccessToken) {
+      currentTokenState = {
+        refreshToken: tokenUpdate.newRefreshToken ?? currentTokenState.refreshToken,
+        cachedAccessToken: tokenUpdate.newAccessToken,
+        cachedAccessTokenExpiry: tokenUpdate.newAccessTokenExpiry ?? undefined,
+      }
+      finalTokenUpdate = tokenUpdate
+    } else if (pageCount === 0) {
+      finalTokenUpdate = tokenUpdate
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
+      throw new Error(err.error ?? `Hubstaff error ${res.status}`)
+    }
+
+    const data = await res.json() as ActivitiesRaw
+    allActivities.push(...(data.daily_activities ?? []))
+
+    // Capture user roster from first page that includes it
+    if (activityUsers.length === 0 && (data.users ?? []).length > 0) {
+      activityUsers = (data.users ?? []).map((u) => ({ id: u.id, name: u.name, email: u.email ?? '' }))
+    }
+
+    pageStartId = data.pagination?.next_page_start_id ?? null
+    pageCount++
+  } while (pageStartId && pageCount < MAX_PAGES)
+
+  console.log(`[hubstaff] total activities collected: ${allActivities.length} (${pageCount} page(s))`)
 
   const userDailyHours: Record<string, Record<string, number>> = {}
-  for (const activity of activities) {
+  for (const activity of allActivities) {
     const uid = String(activity.user_id)
     const hours = activity.tracked / 3600
     if (!userDailyHours[uid]) userDailyHours[uid] = {}
@@ -236,7 +263,7 @@ export async function fetchHoursForPeriod(
     }
   }
 
-  return { hoursMap, users, tokenUpdate }
+  return { hoursMap, users: activityUsers, tokenUpdate: finalTokenUpdate }
 }
 
 function groupDailyIntoWeeks(
