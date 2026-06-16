@@ -3,7 +3,7 @@
 **Last updated:** 2026-06-15  
 **Current Phase:** SYSTEM COMPLETE — UX improvements  
 **Git branch:** main  
-**Last commit:** feat: complete paystub format + manager report PDF/CSV (cc86a888)
+**Last commit:** fix: DR quincena ISR rule + corrected ISR annualization formula (06d712ec)
 
 ---
 
@@ -29,6 +29,20 @@ All phases (1–9) implemented and verified.
 | 7 | Full settings (company/logo/payroll/fiscal params/email template) | ✅ |
 | 8 | Dashboard with AreaChart + history with expandable rows | ✅ |
 | 9 | QA pass: i18n completeness, bundle splitting, bug fixes | ✅ |
+
+---
+
+## ISR Quincena Rule Fix (2026-06-16)
+
+| Change | Files |
+|--------|-------|
+| **Formula correction**: ISR annualized from `gross × 24` (not `grossAfterTSS × 24`). Confirmed test case: Idaly Peña gross=28,000 → annual=672,000 → ISR=1,697.93/quincena | `src/lib/payroll/calculations.ts` |
+| **1st quincena**: `isrPeriod = 0` (deferred). `isrCalculated` stores the deferred amount. Net pay does NOT deduct ISR. Amber notice shown in StepCalculate. | `calculations.ts`, `StepCalculate.tsx` |
+| **2nd quincena**: `isrPeriod = isrCalculated + previousQuincenaIsr`. StepCalculate looks up 1st quincena payroll from history store (same month/year, startDate day=1); fallback = 2× current ISR if not found. Blue notice shown. | `StepCalculate.tsx` |
+| **Paystub PDF**: 1st quincena → "Tax ISR: 0 + amber note". 2nd quincena → 3 rows: ISR 1ra Quincena / ISR 2da Quincena / Total ISR Retenido | `payStubPdf.tsx`, `SinglePaystubModal.tsx` |
+| **Types**: `CalculationInput` + `CalculationResult` + `PayrollCalculation` get `isrCalculated` field. `quincena` and `previousQuincenaIsr` on input. | `types.ts`, `src/types/index.ts` |
+| **Tests**: 27 total (was 20). 7 new tests: quincena rule, formula, Idaly Peña case | `calculations.test.ts` |
+| **Known limitation**: OT threshold default was 44h in tests comments (now corrected to 40h) | constants.ts already correct |
 
 ---
 
