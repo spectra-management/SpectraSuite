@@ -1,12 +1,16 @@
 import { useState } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, Loader2, DollarSign, Users, TrendingDown } from 'lucide-react'
+import { CheckCircle2, Loader2, DollarSign, Users, TrendingDown, FileText, Table } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { usePayrollStore } from '@/store/payrollStore'
+import { useSettingsStore } from '@/store/settingsStore'
 import { toast } from '@/hooks/useToast'
 import { formatCurrency } from '@/lib/utils'
+import { generatePdfBlob, downloadBlob } from '@/lib/pdf/generatePdf'
+import { generatePayrollCSV, downloadCSV } from '@/lib/pdf/generateCsv'
 import type { PayrollEntry, PayrollTotals } from '@/types'
 
 interface Props {
@@ -19,11 +23,15 @@ interface Props {
 }
 
 export function StepApprove({ startDate, endDate, frequency, entries, totals, onBack }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const addPayroll = usePayrollStore((s) => s.addPayroll)
+  const company = useSettingsStore((s) => s.company)
   const navigate = useNavigate()
   const [approving, setApproving] = useState(false)
   const [approved, setApproved] = useState(false)
+  const [generatingReport, setGeneratingReport] = useState(false)
+
+  const lang = (i18n.language?.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
   const handleApprove = async () => {
     setApproving(true)
@@ -42,12 +50,61 @@ export function StepApprove({ startDate, endDate, frequency, entries, totals, on
     toast({ variant: 'success', title: t('payroll.approve.approved') })
   }
 
+  const handleManagerReportPdf = async () => {
+    setGeneratingReport(true)
+    try {
+      const { ManagerReportDocument } = await import('@/lib/pdf/managerReportPdf')
+      const element = React.createElement(ManagerReportDocument, {
+        startDate, endDate, frequency, entries, totals, company, lang,
+      })
+      const blob = await generatePdfBlob(element)
+      downloadBlob(blob, `ManagerReport_${startDate}_${endDate}.pdf`)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed'
+      toast({ variant: 'destructive', title: 'PDF generation failed', description: msg })
+    } finally {
+      setGeneratingReport(false)
+    }
+  }
+
+  const handleManagerReportCsv = () => {
+    const csv = generatePayrollCSV(startDate, endDate, entries)
+    downloadCSV(csv, `ManagerReport_${startDate}_${endDate}.csv`)
+  }
+
   const handleGoToHistory = () => navigate('/history')
+
+  const ReportButtons = () => (
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleManagerReportPdf}
+        disabled={generatingReport}
+        className="gap-1.5"
+      >
+        {generatingReport
+          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          : <FileText className="h-3.5 w-3.5" />
+        }
+        {t('payroll.managerReport.generate')} PDF
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleManagerReportCsv}
+        className="gap-1.5"
+      >
+        <Table className="h-3.5 w-3.5" />
+        {t('payroll.managerReport.downloadCsv')}
+      </Button>
+    </div>
+  )
 
   if (approved) {
     return (
       <Card className="max-w-lg">
-        <CardContent className="flex flex-col items-center justify-center py-14 text-center">
+        <CardContent className="flex flex-col items-center justify-center py-10 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
             <CheckCircle2 className="h-8 w-8 text-emerald-600" />
           </div>
@@ -55,11 +112,14 @@ export function StepApprove({ startDate, endDate, frequency, entries, totals, on
           <p className="mt-2 text-sm text-gray-500">
             Payroll for {startDate} – {endDate} has been approved.
           </p>
-          <div className="mt-6 flex gap-3">
-            <Button onClick={handleGoToHistory}>{t('nav.history')}</Button>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              New Payroll
-            </Button>
+          <div className="mt-5 flex flex-col items-center gap-3">
+            <div className="flex gap-3">
+              <Button onClick={handleGoToHistory}>{t('nav.history')}</Button>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                New Payroll
+              </Button>
+            </div>
+            <ReportButtons />
           </div>
         </CardContent>
       </Card>
@@ -70,7 +130,10 @@ export function StepApprove({ startDate, endDate, frequency, entries, totals, on
     <div className="space-y-4 max-w-xl">
       <Card>
         <CardHeader>
-          <CardTitle>{t('payroll.approve.title')}</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>{t('payroll.approve.title')}</CardTitle>
+            <ReportButtons />
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-xl bg-gray-50 p-4 space-y-3">

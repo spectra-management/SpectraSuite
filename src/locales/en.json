@@ -299,11 +299,20 @@
       "grossTotal": "GROSS TOTAL",
       "sfs": "Family Health Insurance (SFS)",
       "afp": "Pension Retention (AFP)",
+      "nightIncentive": "Night Incentive",
+      "payAdvance": "Pay Advance Deduction",
+      "dependentTSS": "Dependent TSS Retention",
+      "complementaryIns": "Complementary Insurance Dependent",
       "isr": "Tax Retention ISR (DGII)",
       "isrSalary": "Salary for the month applicable to ISR",
       "totalDeductions": "Total Deductions",
       "netIncome": "NET INCOME",
       "noEmail": "This employee has no email address"
+    },
+    "managerReport": {
+      "generate": "Manager Report",
+      "downloadPdf": "Download PDF",
+      "downloadCsv": "Download CSV"
     }
   },
   "history": {

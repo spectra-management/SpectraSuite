@@ -299,11 +299,20 @@
       "grossTotal": "TOTAL BRUTO",
       "sfs": "Seguro Familiar de Salud (SFS)",
       "afp": "Retención Pensión (AFP)",
+      "nightIncentive": "Incentivo Nocturno",
+      "payAdvance": "Adelanto de Sueldo",
+      "dependentTSS": "Retención TSS Dependiente",
+      "complementaryIns": "Seguro Complementario Dependiente",
       "isr": "Retención ISR (DGII)",
       "isrSalary": "Salario del mes aplicable a ISR",
       "totalDeductions": "Total Deducciones",
       "netIncome": "SALARIO NETO",
       "noEmail": "Este empleado no tiene dirección de email"
+    },
+    "managerReport": {
+      "generate": "Reporte Gerencial",
+      "downloadPdf": "Descargar PDF",
+      "downloadCsv": "Descargar CSV"
     }
   },
   "history": {

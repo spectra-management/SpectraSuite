@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import React from 'react'
-import { History as HistoryIcon, Download, Mail, Send, Loader2, ChevronDown, ChevronRight } from 'lucide-react'
+import { History as HistoryIcon, Download, Mail, Send, Loader2, ChevronDown, ChevronRight, FileText, Table } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +11,7 @@ import { useSettingsStore } from '@/store/settingsStore'
 import { toast } from '@/hooks/useToast'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/lib/pdf/generatePdf'
+import { generatePayrollCSV, downloadCSV } from '@/lib/pdf/generateCsv'
 import type { PayrollPeriod, SendResult, CompanySettings, EmailTemplate } from '@/types'
 import type { PayrollEntry } from '@/types'
 
@@ -44,7 +45,7 @@ interface BatchStatus {
 }
 
 function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const company = useSettingsStore((s) => s.company)
   const emailConfig = useSettingsStore((s) => s.email)
   const emailTemplate = useSettingsStore((s) => s.emailTemplate)
@@ -52,6 +53,8 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
   const [expanded, setExpanded] = useState(false)
   const [batch, setBatch] = useState<BatchStatus | null>(null)
   const [downloadingAll, setDownloadingAll] = useState(false)
+  const [generatingReport, setGeneratingReport] = useState(false)
+  const lang = (i18n.language?.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
   const handleDownloadPdf = async (entryIdx: number) => {
     const entry = payroll.entries[entryIdx]
@@ -65,7 +68,8 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
         emailTemplate.payStubLanguage,
       )
       const blob = await generatePdfBlob(element)
-      downloadBlob(blob, `paystub-${entry.employee.lastName}-${payroll.startDate}.pdf`)
+      const fname = `Paystub_${entry.employee.firstName}_${entry.employee.lastName}_${payroll.startDate}_${payroll.endDate}.pdf`
+      downloadBlob(blob, fname)
     } catch {
       toast({ variant: 'destructive', title: t('errors.pdfFailed') })
     }
@@ -199,13 +203,42 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
           emailTemplate.payStubLanguage,
         )
         const blob = await generatePdfBlob(element)
-        downloadBlob(blob, `paystub-${entry.employee.lastName}-${payroll.startDate}.pdf`)
+        const fname = `Paystub_${entry.employee.firstName}_${entry.employee.lastName}_${payroll.startDate}_${payroll.endDate}.pdf`
+        downloadBlob(blob, fname)
         await new Promise((r) => setTimeout(r, 300))
       } catch {
         // continue with next
       }
     }
     setDownloadingAll(false)
+  }
+
+  const handleManagerReportPdf = async () => {
+    setGeneratingReport(true)
+    try {
+      const { ManagerReportDocument } = await import('@/lib/pdf/managerReportPdf')
+      const element = React.createElement(ManagerReportDocument, {
+        startDate: payroll.startDate,
+        endDate: payroll.endDate,
+        frequency: payroll.frequency,
+        entries: payroll.entries,
+        totals: payroll.totals,
+        company,
+        lang,
+      })
+      const blob = await generatePdfBlob(element)
+      downloadBlob(blob, `ManagerReport_${payroll.startDate}_${payroll.endDate}.pdf`)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed'
+      toast({ variant: 'destructive', title: 'PDF generation failed', description: msg })
+    } finally {
+      setGeneratingReport(false)
+    }
+  }
+
+  const handleManagerReportCsv = () => {
+    const csv = generatePayrollCSV(payroll.startDate, payroll.endDate, payroll.entries)
+    downloadCSV(csv, `ManagerReport_${payroll.startDate}_${payroll.endDate}.csv`)
   }
 
   return (
@@ -232,12 +265,18 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
           </Badge>
         </td>
         <td className="px-6 py-4">
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={handleDownloadAll} disabled={downloadingAll}>
+          <div className="flex items-center gap-1 flex-wrap">
+            <Button variant="ghost" size="sm" onClick={handleDownloadAll} disabled={downloadingAll} title={t('payroll.approve.downloadAll')}>
               {downloadingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleSendAll}>
+            <Button variant="ghost" size="sm" onClick={handleSendAll} title={t('payroll.approve.sendAll')}>
               <Send className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleManagerReportPdf} disabled={generatingReport} title={t('payroll.managerReport.downloadPdf')}>
+              {generatingReport ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleManagerReportCsv} title={t('payroll.managerReport.downloadCsv')}>
+              <Table className="h-3.5 w-3.5" />
             </Button>
           </div>
         </td>

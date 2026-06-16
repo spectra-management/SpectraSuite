@@ -5,15 +5,9 @@ import {
   View,
   Image,
   StyleSheet,
-  Font,
 } from '@react-pdf/renderer'
 import type { PayrollEntry, CompanySettings } from '@/types'
 import { roundHalfUp } from '@/lib/payroll/calculations'
-
-Font.register({
-  family: 'Inter',
-  src: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2',
-})
 
 const EMERALD = '#059669'
 const EMERALD_DARK = '#065F46'
@@ -24,77 +18,89 @@ const GRAY_200 = '#E5E7EB'
 const GRAY_500 = '#6B7280'
 const GRAY_700 = '#374151'
 const GRAY_900 = '#111827'
-const RED = '#EF4444'
+const RED = '#DC2626'
 
-const styles = StyleSheet.create({
-  page: { fontFamily: 'Helvetica', fontSize: 9, padding: 32, backgroundColor: '#FFFFFF', color: GRAY_900 },
+const S = StyleSheet.create({
+  page: { fontFamily: 'Helvetica', fontSize: 8.5, padding: '28 36', backgroundColor: '#FFFFFF', color: GRAY_900 },
 
-  // Header
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, paddingBottom: 14, borderBottom: `1 solid ${GRAY_200}` },
-  headerLeft: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  logo: { width: 44, height: 44, borderRadius: 6, objectFit: 'contain' },
-  companyName: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: EMERALD },
-  companyInfo: { fontSize: 7.5, color: GRAY_500, marginTop: 2 },
+  // ── Header ──────────────────────────────────────────────────────────────────
+  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14, paddingBottom: 12, borderBottom: `1 solid ${GRAY_200}` },
+  logoWrap: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  logo: { width: 42, height: 42, borderRadius: 5, objectFit: 'contain' },
+  companyName: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: EMERALD, marginBottom: 2 },
+  companyMeta: { fontSize: 7.5, color: GRAY_500, marginTop: 1 },
   headerRight: { alignItems: 'flex-end' },
-  stubTitle: { fontSize: 14, fontFamily: 'Helvetica-Bold', color: GRAY_900, letterSpacing: 1 },
-  periodRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
-  periodLabel: { fontSize: 7.5, color: GRAY_500 },
-  periodValue: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: GRAY_700 },
+  stubTitle: { fontSize: 15, fontFamily: 'Helvetica-Bold', color: GRAY_900, letterSpacing: 1.5, marginBottom: 4 },
+  metaRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
+  metaLabel: { fontSize: 7.5, color: GRAY_500 },
+  metaValue: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: GRAY_700 },
 
-  // Employee box
-  employeeBox: { backgroundColor: GRAY_50, borderRadius: 6, padding: 10, marginBottom: 14, borderLeft: `3 solid ${EMERALD}` },
-  empName: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: GRAY_900, marginBottom: 4 },
-  empMetaRow: { flexDirection: 'row', gap: 16 },
-  empMeta: { fontSize: 7.5, color: GRAY_500 },
-  empMetaBold: { fontFamily: 'Helvetica-Bold', color: GRAY_700 },
+  // ── Employee box ────────────────────────────────────────────────────────────
+  empBox: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: GRAY_50, borderLeft: `3 solid ${EMERALD}`, borderRadius: 5, padding: '9 12', marginBottom: 14, gap: 12 },
+  empName: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: GRAY_900, marginBottom: 3 },
+  empMeta: { fontSize: 7.5, color: GRAY_500, marginTop: 1 },
+  empMetaValue: { fontFamily: 'Helvetica-Bold', color: GRAY_700 },
 
-  // Section
+  // ── Section ─────────────────────────────────────────────────────────────────
   section: { marginBottom: 12 },
 
-  // Earnings table
-  tableHeader: { flexDirection: 'row', backgroundColor: EMERALD, padding: '5 8', borderRadius: '4 4 0 0' },
-  tableHeaderText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', flex: 3 },
-  tableHeaderRight: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', flex: 1, textAlign: 'right' },
+  // ── Table shared ────────────────────────────────────────────────────────────
+  tHead: { flexDirection: 'row', padding: '5 8' },
+  tRow: { flexDirection: 'row', padding: '3.5 8', borderBottom: `0.5 solid ${GRAY_100}` },
+  tTotalRow: { flexDirection: 'row', padding: '5 8', borderTop: `1 solid ${GRAY_200}`, backgroundColor: GRAY_50 },
 
-  tableSubHeader: { flexDirection: 'row', backgroundColor: GRAY_100, padding: '4 8', borderBottom: `1 solid ${GRAY_200}` },
-  tableSubHeaderText: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: GRAY_500, textTransform: 'uppercase', flex: 3 },
-  tableSubHeaderRight: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: GRAY_500, textTransform: 'uppercase', flex: 1, textAlign: 'right' },
+  // ── Earnings table ──────────────────────────────────────────────────────────
+  earnHead: { backgroundColor: EMERALD, borderRadius: '4 4 0 0' },
+  earnHeadText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#FFFFFF' },
+  earnCell: { fontSize: 8, color: GRAY_700 },
+  earnCellBold: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_900 },
+  earnTotal: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: GRAY_900 },
+  earnTotalValue: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: EMERALD },
 
-  tableRow: { flexDirection: 'row', padding: '4 8', borderBottom: `1 solid ${GRAY_100}` },
-  tableCell: { fontSize: 8, color: GRAY_700, flex: 3 },
-  tableCellRight: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_900, flex: 1, textAlign: 'right' },
+  // ── Deductions table ────────────────────────────────────────────────────────
+  dedHead: { backgroundColor: GRAY_700, borderRadius: '4 4 0 0' },
+  dedHeadText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#FFFFFF' },
+  dedLabel: { fontSize: 8, color: GRAY_700 },
+  dedRate: { fontSize: 8, color: GRAY_500 },
+  dedArrow: { fontSize: 8, color: GRAY_500 },
+  dedAmount: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: RED },
+  dedAmountNeutral: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_700 },
+  dedTotalLabel: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: GRAY_900 },
+  dedTotalValue: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: RED },
 
-  grossRow: { flexDirection: 'row', padding: '6 8', backgroundColor: GRAY_50, borderTop: `1 solid ${GRAY_200}` },
-  grossLabel: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: GRAY_900, flex: 3 },
-  grossValue: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: EMERALD, flex: 1, textAlign: 'right' },
+  // ── Net income row ──────────────────────────────────────────────────────────
+  netRow: { flexDirection: 'row', padding: '7 8', backgroundColor: EMERALD_LIGHT, borderTop: `1 solid ${EMERALD}` },
+  netLabel: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: EMERALD_DARK },
+  netValue: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: EMERALD },
 
-  // Deductions table
-  dedHeader: { flexDirection: 'row', backgroundColor: GRAY_700, padding: '5 8', borderRadius: '4 4 0 0' },
-  dedHeaderText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', flex: 3 },
-  dedHeaderRight: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', flex: 1, textAlign: 'right' },
-
-  dedRow: { flexDirection: 'row', padding: '4 8', borderBottom: `1 solid ${GRAY_100}` },
-  dedLabel: { fontSize: 8, color: GRAY_700, flex: 3 },
-  dedRate: { fontSize: 8, color: GRAY_500, flex: 1, textAlign: 'center' },
-  dedAmount: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: RED, flex: 1, textAlign: 'right' },
-  dedAmountNeutral: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: GRAY_700, flex: 1, textAlign: 'right' },
-
-  totalDedRow: { flexDirection: 'row', padding: '6 8', backgroundColor: GRAY_50, borderTop: `1 solid ${GRAY_200}` },
-  totalDedLabel: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: GRAY_900, flex: 3 },
-  totalDedValue: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: RED, flex: 1, textAlign: 'right' },
-
-  // Net pay
-  netBox: { backgroundColor: EMERALD_LIGHT, borderRadius: 6, padding: '10 12', marginTop: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', border: `1 solid ${EMERALD}` },
-  netLabel: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: EMERALD_DARK },
-  netValue: { fontSize: 16, fontFamily: 'Helvetica-Bold', color: EMERALD },
-
-  // Footer
-  footer: { marginTop: 20, paddingTop: 8, borderTop: `1 solid ${GRAY_100}`, flexDirection: 'row', justifyContent: 'space-between' },
+  // ── Footer ──────────────────────────────────────────────────────────────────
+  footer: { marginTop: 16, paddingTop: 7, borderTop: `0.5 solid ${GRAY_200}`, flexDirection: 'row', justifyContent: 'space-between' },
   footerText: { fontSize: 7, color: GRAY_500 },
 })
 
 function fmt(n: number): string {
   return `RD$ ${roundHalfUp(n, 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+// Lookup a custom deduction by keyword match; returns 0 if not found.
+function lookupDed(
+  breakdown: Array<{ name: string; amount: number }>,
+  keywords: string[],
+): number {
+  const found = breakdown.find((d) =>
+    keywords.some((kw) => d.name.toLowerCase().includes(kw.toLowerCase())),
+  )
+  return found?.amount ?? 0
+}
+
+// Custom deductions that aren't one of the three named fixed rows.
+function otherDeds(
+  breakdown: Array<{ name: string; amount: number }>,
+): Array<{ name: string; amount: number }> {
+  const fixed = ['advance', 'adelanto', 'dependent tss', 'tss depend', 'complementary', 'complementario']
+  return breakdown.filter(
+    (d) => !fixed.some((kw) => d.name.toLowerCase().includes(kw)),
+  )
 }
 
 interface Props {
@@ -107,60 +113,66 @@ interface Props {
   holidayRatePercent?: number
 }
 
-const labels = {
+const L = {
   en: {
-    payStub: 'PAYSTUB',
+    stub: 'PAYSTUB',
     dateRange: 'Date Range',
     payDate: 'Pay Date',
     position: 'Position',
-    department: 'Department',
-    employeeId: 'ID',
-    earnings: 'EARNINGS',
-    concept: 'Concept',
-    hours: 'Hours',
-    rate: 'Rate',
-    amount: 'Amount',
-    regular: 'Regular Hours',
-    ot: 'Overtime Hours',
-    holiday: 'Double Holiday Hours',
+    dept: 'Department',
+    empId: 'ID',
+    payDesc: 'PAYMENT DESCRIPTION',
+    hours: 'HOURS',
+    rate: 'RATE',
+    total: 'TOTAL',
+    regular: 'Regular hours',
+    night: 'Night incentive',
+    holiday: 'Double Holiday hours',
+    ot: 'Overtime hours',
     grossTotal: 'GROSS TOTAL',
     deductions: 'DEDUCTIONS',
-    rateCol: 'Rate',
-    sfs: 'Family Health Insurance (SFS)',
-    afp: 'Pension Retention (AFP)',
+    rateCol: 'RATE',
+    sfs: 'Family health insurance (SFS)',
+    afp: 'Pension retention (AFP)',
+    payAdvance: 'Pay Advance Deduction',
+    dependentTSS: 'Dependent TSS retention',
     isr: 'Tax Retention ISR (DGII)',
     isrSalary: 'Salary for the month applicable to ISR',
+    complementaryIns: 'Complementary Insurance Dependent',
     totalDed: 'Total Deductions',
     netPay: 'NET INCOME',
-    generatedOn: 'Generated on',
     rnc: 'RNC',
+    generatedOn: 'Generated on',
   },
   es: {
-    payStub: 'COMPROBANTE DE PAGO',
+    stub: 'COMPROBANTE DE PAGO',
     dateRange: 'Período',
     payDate: 'Fecha de pago',
     position: 'Cargo',
-    department: 'Departamento',
-    employeeId: 'ID',
-    earnings: 'INGRESOS',
-    concept: 'Concepto',
-    hours: 'Horas',
-    rate: 'Tarifa',
-    amount: 'Monto',
-    regular: 'Horas Regulares',
-    ot: 'Horas Extra',
-    holiday: 'Horas Feriado Doble',
+    dept: 'Departamento',
+    empId: 'ID',
+    payDesc: 'DESCRIPCIÓN DE PAGO',
+    hours: 'HORAS',
+    rate: 'TARIFA',
+    total: 'TOTAL',
+    regular: 'Horas regulares',
+    night: 'Incentivo nocturno',
+    holiday: 'Horas feriado doble',
+    ot: 'Horas extra',
     grossTotal: 'TOTAL BRUTO',
     deductions: 'DEDUCCIONES',
-    rateCol: 'Tasa',
-    sfs: 'Seguro Familiar de Salud (SFS)',
-    afp: 'Retención Pensión (AFP)',
+    rateCol: 'TASA',
+    sfs: 'Seguro familiar de salud (SFS)',
+    afp: 'Retención pensión (AFP)',
+    payAdvance: 'Adelanto de sueldo',
+    dependentTSS: 'Retención TSS dependiente',
     isr: 'Retención ISR (DGII)',
     isrSalary: 'Salario del mes aplicable a ISR',
-    totalDed: 'Total Deducciones',
+    complementaryIns: 'Seguro complementario dependiente',
+    totalDed: 'Total deducciones',
     netPay: 'SALARIO NETO',
-    generatedOn: 'Generado el',
     rnc: 'RNC',
+    generatedOn: 'Generado el',
   },
 }
 
@@ -174,176 +186,217 @@ export function PayStubDocument({
   holidayRatePercent = 100,
 }: Props) {
   const { employee: emp, calculation: c, hours: h } = entry
-  const l = labels[lang]
+  const l = L[lang]
   const today = new Date().toLocaleDateString(lang === 'es' ? 'es-DO' : 'en-US')
 
-  const otMultiplier = 1 + otRatePercent / 100
-  const holidayMultiplier = 1 + holidayRatePercent / 100
-  const otMultiplierLabel = otMultiplier.toFixed(2)
-  const holidayMultiplierLabel = holidayMultiplier.toFixed(2)
+  const otMultiplier = (1 + otRatePercent / 100).toFixed(2)
+  void holidayRatePercent // holiday is always ×2 in DR; column shows base rate with "Double" in label
 
-  // Monthly salary basis for ISR (annualized / 12)
-  const isrMonthlySalary = roundHalfUp(c.taxableIncome / 12)
+  const payAdvanceAmt    = lookupDed(c.customDeductionsBreakdown, ['advance', 'adelanto'])
+  const dependentTSSAmt  = lookupDed(c.customDeductionsBreakdown, ['dependent tss', 'tss depend', 'depend'])
+  const complementaryAmt = lookupDed(c.customDeductionsBreakdown, ['complementary', 'complementario'])
+  const remainingDeds    = otherDeds(c.customDeductionsBreakdown)
+
+  // "Salary for the month applicable to ISR" = gross pay for the period
+  const isrSalaryDisplay = c.grossPay
+
+  // Column flex widths — earnings: [desc 5, hours 1.5, rate 2.5, amount 2]
+  const eD = 5, eH = 1.5, eR = 2.5, eA = 2
+  // deductions: [desc 5.5, rate 1.5, arrow 0.5, amount 2]
+  const dD = 5.5, dR = 1.5, dArr = 0.5, dA = 2
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={S.page}>
 
         {/* ── HEADER ── */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
+        <View style={S.header}>
+          <View style={S.logoWrap}>
             {company.logoBase64 && (
-              <Image style={styles.logo} src={`data:image/png;base64,${company.logoBase64}`} />
+              <Image style={S.logo} src={`data:image/png;base64,${company.logoBase64}`} />
             )}
             <View>
-              <Text style={styles.companyName}>{company.name}</Text>
-              {company.rnc && (
-                <Text style={styles.companyInfo}>{l.rnc}: {company.rnc}</Text>
-              )}
-              {company.address && (
-                <Text style={styles.companyInfo}>{company.address}</Text>
-              )}
-              {company.phone && (
-                <Text style={styles.companyInfo}>{company.phone}</Text>
-              )}
+              <Text style={S.companyName}>{company.name}</Text>
+              {company.rnc && <Text style={S.companyMeta}>{l.rnc}: {company.rnc}</Text>}
+              {company.address && <Text style={S.companyMeta}>{company.address}</Text>}
+              {company.phone && <Text style={S.companyMeta}>{company.phone}</Text>}
             </View>
           </View>
-          <View style={styles.headerRight}>
-            <Text style={styles.stubTitle}>{l.payStub}</Text>
-            <View style={styles.periodRow}>
-              <Text style={styles.periodLabel}>{l.dateRange}:</Text>
-              <Text style={styles.periodValue}>{startDate} – {endDate}</Text>
+          <View style={S.headerRight}>
+            <Text style={S.stubTitle}>{l.stub}</Text>
+            <View style={S.metaRow}>
+              <Text style={S.metaLabel}>{l.dateRange}:</Text>
+              <Text style={S.metaValue}>{startDate} – {endDate}</Text>
             </View>
-            <View style={styles.periodRow}>
-              <Text style={styles.periodLabel}>{l.payDate}:</Text>
-              <Text style={styles.periodValue}>{today}</Text>
+            <View style={S.metaRow}>
+              <Text style={S.metaLabel}>{l.payDate}:</Text>
+              <Text style={S.metaValue}>{today}</Text>
             </View>
           </View>
         </View>
 
-        {/* ── EMPLOYEE ── */}
-        <View style={styles.employeeBox}>
-          <Text style={styles.empName}>{emp.firstName} {emp.lastName}</Text>
-          <View style={styles.empMetaRow}>
-            {emp.jobTitle && (
-              <Text style={styles.empMeta}>
-                {l.position}: <Text style={styles.empMetaBold}>{emp.jobTitle}</Text>
-              </Text>
-            )}
-            {emp.department && (
-              <Text style={styles.empMeta}>
-                {l.department}: <Text style={styles.empMetaBold}>{emp.department}</Text>
-              </Text>
-            )}
-            <Text style={styles.empMeta}>
-              {l.employeeId}: <Text style={styles.empMetaBold}>{emp.id}</Text>
-            </Text>
+        {/* ── EMPLOYEE BOX ── */}
+        <View style={S.empBox}>
+          <View style={{ flex: 1 }}>
+            <Text style={S.empName}>{emp.firstName} {emp.lastName}</Text>
+            <View style={{ flexDirection: 'row', gap: 14, flexWrap: 'wrap' }}>
+              {emp.jobTitle && (
+                <Text style={S.empMeta}>{l.position}: <Text style={S.empMetaValue}>{emp.jobTitle}</Text></Text>
+              )}
+              {emp.department && (
+                <Text style={S.empMeta}>{l.dept}: <Text style={S.empMetaValue}>{emp.department}</Text></Text>
+              )}
+              <Text style={S.empMeta}>{l.empId}: <Text style={S.empMetaValue}>{emp.id}</Text></Text>
+            </View>
           </View>
         </View>
 
-        {/* ── EARNINGS ── */}
-        <View style={styles.section}>
-          <View style={styles.tableHeader}>
-            <Text style={{ ...styles.tableHeaderText, flex: 4 }}>{l.earnings}</Text>
-            <Text style={styles.tableHeaderRight}>{l.hours}</Text>
-            <Text style={{ ...styles.tableHeaderRight, flex: 2 }}>{l.rate}</Text>
-            <Text style={styles.tableHeaderRight}>{l.amount}</Text>
+        {/* ── EARNINGS TABLE ── */}
+        <View style={S.section}>
+          {/* Header */}
+          <View style={[S.tHead, S.earnHead]}>
+            <Text style={[S.earnHeadText, { flex: eD }]}>{l.payDesc}</Text>
+            <Text style={[S.earnHeadText, { flex: eH, textAlign: 'right' }]}>{l.hours}</Text>
+            <Text style={[S.earnHeadText, { flex: eR, textAlign: 'right' }]}>{l.rate}</Text>
+            <Text style={[S.earnHeadText, { flex: eA, textAlign: 'right' }]}>{l.total}</Text>
           </View>
 
-          {h.regularHours > 0 && (
-            <View style={styles.tableRow}>
-              <Text style={{ ...styles.tableCell, flex: 4 }}>{l.regular}</Text>
-              <Text style={{ ...styles.tableCellRight, fontFamily: 'Helvetica' }}>{h.regularHours}</Text>
-              <Text style={{ ...styles.tableCellRight, flex: 2, fontFamily: 'Helvetica' }}>{fmt(emp.payRate)}/hr</Text>
-              <Text style={styles.tableCellRight}>{fmt(c.regularPay)}</Text>
-            </View>
-          )}
+          {/* Regular hours */}
+          <View style={S.tRow}>
+            <Text style={[S.earnCell, { flex: eD }]}>{l.regular}</Text>
+            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{h.regularHours}</Text>
+            <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>{fmt(emp.payRate)}/hr</Text>
+            <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(c.regularPay)}</Text>
+          </View>
 
-          {h.otHours > 0 && (
-            <View style={styles.tableRow}>
-              <Text style={{ ...styles.tableCell, flex: 4 }}>{l.ot}</Text>
-              <Text style={{ ...styles.tableCellRight, fontFamily: 'Helvetica' }}>{h.otHours}</Text>
-              <Text style={{ ...styles.tableCellRight, flex: 2, fontFamily: 'Helvetica' }}>{fmt(emp.payRate)}/hr × {otMultiplierLabel}</Text>
-              <Text style={styles.tableCellRight}>{fmt(c.otPay)}</Text>
-            </View>
-          )}
+          {/* Night incentive (always shown, default 0) */}
+          <View style={S.tRow}>
+            <Text style={[S.earnCell, { flex: eD }]}>{l.night}</Text>
+            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>0</Text>
+            <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>15%</Text>
+            <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>RD$ 0.00</Text>
+          </View>
 
-          {h.holidayHours > 0 && (
-            <View style={styles.tableRow}>
-              <Text style={{ ...styles.tableCell, flex: 4 }}>{l.holiday}</Text>
-              <Text style={{ ...styles.tableCellRight, fontFamily: 'Helvetica' }}>{h.holidayHours}</Text>
-              <Text style={{ ...styles.tableCellRight, flex: 2, fontFamily: 'Helvetica' }}>{fmt(emp.payRate)}/hr × {holidayMultiplierLabel}</Text>
-              <Text style={styles.tableCellRight}>{fmt(c.holidayPay)}</Text>
-            </View>
-          )}
+          {/* Double Holiday hours (always shown) */}
+          <View style={S.tRow}>
+            <Text style={[S.earnCell, { flex: eD }]}>{l.holiday}</Text>
+            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{h.holidayHours}</Text>
+            <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>{fmt(emp.payRate)}/hr</Text>
+            <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(c.holidayPay)}</Text>
+          </View>
 
-          <View style={styles.grossRow}>
-            <Text style={{ ...styles.grossLabel, flex: 4 }}>{l.grossTotal}</Text>
-            <Text style={{ ...styles.grossLabel, flex: 1 }}> </Text>
-            <Text style={{ ...styles.grossLabel, flex: 2 }}> </Text>
-            <Text style={styles.grossValue}>{fmt(c.grossPay)}</Text>
+          {/* Overtime hours (always shown) */}
+          <View style={S.tRow}>
+            <Text style={[S.earnCell, { flex: eD }]}>{l.ot}</Text>
+            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{h.otHours}</Text>
+            <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>{fmt(emp.payRate)}/hr × {otMultiplier}</Text>
+            <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(c.otPay)}</Text>
+          </View>
+
+          {/* GROSS TOTAL */}
+          <View style={S.tTotalRow}>
+            <Text style={[S.earnTotal, { flex: eD }]}>{l.grossTotal}</Text>
+            <Text style={[S.earnTotal, { flex: eH }]}> </Text>
+            <Text style={[S.earnTotal, { flex: eR }]}> </Text>
+            <Text style={[S.earnTotalValue, { flex: eA, textAlign: 'right' }]}>{fmt(c.grossPay)}</Text>
           </View>
         </View>
 
-        {/* ── DEDUCTIONS ── */}
-        <View style={styles.section}>
-          <View style={styles.dedHeader}>
-            <Text style={{ ...styles.dedHeaderText, flex: 4 }}>{l.deductions}</Text>
-            <Text style={{ ...styles.dedHeaderRight, flex: 1 }}>{l.rateCol}</Text>
-            <Text style={{ ...styles.dedHeaderRight, flex: 2 }}>{l.amount}</Text>
+        {/* ── DEDUCTIONS TABLE ── */}
+        <View style={S.section}>
+          {/* Header */}
+          <View style={[S.tHead, S.dedHead]}>
+            <Text style={[S.dedHeadText, { flex: dD }]}>{l.deductions}</Text>
+            <Text style={[S.dedHeadText, { flex: dR, textAlign: 'center' }]}>{l.rateCol}</Text>
+            <Text style={[S.dedHeadText, { flex: dArr }]}> </Text>
+            <Text style={[S.dedHeadText, { flex: dA, textAlign: 'right' }]}>{l.total}</Text>
           </View>
 
-          <View style={styles.dedRow}>
-            <Text style={{ ...styles.dedLabel, flex: 4 }}>{l.sfs}</Text>
-            <Text style={{ ...styles.dedRate, flex: 1 }}>3.04%</Text>
-            <Text style={{ ...styles.dedAmount, flex: 2 }}>({fmt(c.sfsAmount)})</Text>
+          {/* SFS */}
+          <View style={S.tRow}>
+            <Text style={[S.dedLabel, { flex: dD }]}>{l.sfs}</Text>
+            <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>3.04%</Text>
+            <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
+            <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.sfsAmount)}</Text>
           </View>
 
-          <View style={styles.dedRow}>
-            <Text style={{ ...styles.dedLabel, flex: 4 }}>{l.afp}</Text>
-            <Text style={{ ...styles.dedRate, flex: 1 }}>2.87%</Text>
-            <Text style={{ ...styles.dedAmount, flex: 2 }}>({fmt(c.afpAmount)})</Text>
+          {/* AFP */}
+          <View style={S.tRow}>
+            <Text style={[S.dedLabel, { flex: dD }]}>{l.afp}</Text>
+            <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>2.87%</Text>
+            <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
+            <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.afpAmount)}</Text>
           </View>
 
-          {c.customDeductionsBreakdown.map((d) => (
-            <View key={d.name} style={styles.dedRow}>
-              <Text style={{ ...styles.dedLabel, flex: 4 }}>{d.name}</Text>
-              <Text style={{ ...styles.dedRate, flex: 1 }}> </Text>
-              <Text style={{ ...styles.dedAmount, flex: 2 }}>({fmt(d.amount)})</Text>
+          {/* Pay Advance Deduction */}
+          <View style={S.tRow}>
+            <Text style={[S.dedLabel, { flex: dD }]}>{l.payAdvance}</Text>
+            <Text style={[S.dedRate, { flex: dR }]}> </Text>
+            <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
+            <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(payAdvanceAmt)}</Text>
+          </View>
+
+          {/* Dependent TSS retention */}
+          <View style={S.tRow}>
+            <Text style={[S.dedLabel, { flex: dD }]}>{l.dependentTSS}</Text>
+            <Text style={[S.dedRate, { flex: dR }]}> </Text>
+            <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
+            <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(dependentTSSAmt)}</Text>
+          </View>
+
+          {/* ISR (always shown) */}
+          <View style={S.tRow}>
+            <Text style={[S.dedLabel, { flex: dD }]}>{l.isr}</Text>
+            <Text style={[S.dedRate, { flex: dR }]}> </Text>
+            <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
+            <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.isrPeriod)}</Text>
+          </View>
+
+          {/* Salary for the month applicable to ISR */}
+          <View style={[S.tRow, { backgroundColor: GRAY_50 }]}>
+            <Text style={[S.dedLabel, { flex: dD, color: GRAY_500 }]}>{l.isrSalary}</Text>
+            <Text style={[S.dedRate, { flex: dR }]}> </Text>
+            <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
+            <Text style={[S.dedAmountNeutral, { flex: dA, textAlign: 'right' }]}>{fmt(isrSalaryDisplay)}</Text>
+          </View>
+
+          {/* Complementary Insurance Dependent */}
+          <View style={S.tRow}>
+            <Text style={[S.dedLabel, { flex: dD }]}>{l.complementaryIns}</Text>
+            <Text style={[S.dedRate, { flex: dR }]}> </Text>
+            <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
+            <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(complementaryAmt)}</Text>
+          </View>
+
+          {/* Any other custom deductions not in the named list */}
+          {remainingDeds.map((d) => (
+            <View key={d.name} style={S.tRow}>
+              <Text style={[S.dedLabel, { flex: dD }]}>{d.name}</Text>
+              <Text style={[S.dedRate, { flex: dR }]}> </Text>
+              <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
+              <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(d.amount)}</Text>
             </View>
           ))}
 
-          <View style={styles.dedRow}>
-            <Text style={{ ...styles.dedLabel, flex: 4 }}>{l.isr}</Text>
-            <Text style={{ ...styles.dedRate, flex: 1 }}> </Text>
-            <Text style={{ ...styles.dedAmount, flex: 2 }}>({fmt(c.isrPeriod)})</Text>
+          {/* Total Deductions */}
+          <View style={S.tTotalRow}>
+            <Text style={[S.dedTotalLabel, { flex: dD }]}>{l.totalDed}</Text>
+            <Text style={[S.dedTotalLabel, { flex: dR }]}> </Text>
+            <Text style={[S.dedTotalLabel, { flex: dArr }]}> </Text>
+            <Text style={[S.dedTotalValue, { flex: dA, textAlign: 'right' }]}>{fmt(c.totalDeductions)}</Text>
           </View>
 
-          <View style={styles.dedRow}>
-            <Text style={{ ...styles.dedLabel, flex: 4 }}>{l.isrSalary}</Text>
-            <Text style={{ ...styles.dedRate, flex: 1 }}> </Text>
-            <Text style={{ ...styles.dedAmountNeutral, flex: 2 }}>{fmt(isrMonthlySalary)}</Text>
+          {/* NET INCOME */}
+          <View style={S.netRow}>
+            <Text style={[S.netLabel, { flex: dD + dR + dArr }]}>{l.netPay}</Text>
+            <Text style={[S.netValue, { flex: dA, textAlign: 'right' }]}>{fmt(c.netPay)}</Text>
           </View>
-
-          <View style={styles.totalDedRow}>
-            <Text style={{ ...styles.totalDedLabel, flex: 4 }}>{l.totalDed}</Text>
-            <Text style={{ ...styles.totalDedLabel, flex: 1 }}> </Text>
-            <Text style={{ ...styles.totalDedValue, flex: 2 }}>({fmt(c.totalDeductions)})</Text>
-          </View>
-        </View>
-
-        {/* ── NET INCOME ── */}
-        <View style={styles.netBox}>
-          <Text style={styles.netLabel}>{l.netPay}</Text>
-          <Text style={styles.netValue}>{fmt(c.netPay)}</Text>
         </View>
 
         {/* ── FOOTER ── */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            {company.name}{company.rnc ? ` — ${l.rnc} ${company.rnc}` : ''}
-          </Text>
-          <Text style={styles.footerText}>{l.generatedOn} {today}</Text>
+        <View style={S.footer}>
+          <Text style={S.footerText}>{company.name}{company.rnc ? ` — ${l.rnc} ${company.rnc}` : ''}</Text>
+          <Text style={S.footerText}>{l.generatedOn} {today}</Text>
         </View>
 
       </Page>
