@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from '@react-pdf/renderer'
 import type { PayrollEntry, CompanySettings } from '@/types'
-import { roundHalfUp } from '@/lib/payroll/calculations'
+import { roundHalfUp, safeNum } from '@/lib/payroll/calculations'
 import { getCurrencySymbol } from '@/lib/payroll/rules'
 import { logoSrc } from './logo'
 
@@ -82,7 +82,7 @@ const S = StyleSheet.create({
 
 function makeFmt(currencySymbol: string) {
   return (n: number): string =>
-    `${currencySymbol} ${roundHalfUp(n, 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    `${currencySymbol} ${roundHalfUp(safeNum(n), 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 // Lookup a custom deduction by keyword match; returns 0 if not found.
@@ -213,8 +213,11 @@ export function PayStubDocument({
   holidayRatePercent = 100,
 }: Props) {
   const { employee: emp, calculation: c, hours: h } = entry
-  // Admin-entered rate (for "Not set" employees) takes precedence over BambooHR rate
-  const effectiveRate = h.payRateOverride ?? emp.payRate
+  // Rate shown in the earnings table. Salary pay is fixed, so the per-hour figure is
+  // gross ÷ period hours (keeps hours × rate = gross). Hourly shows its stored/override rate.
+  const effectiveRate = emp.payType === 'Salary'
+    ? (safeNum(h.regularHours) > 0 ? safeNum(c.regularPay) / safeNum(h.regularHours) : 0)
+    : safeNum(h.payRateOverride ?? emp.payRate)
   const logo = logoSrc(company.logoBase64)
   const l = L[lang]
   const today = new Date().toLocaleDateString(lang === 'es' ? 'es-DO' : 'en-US')
@@ -299,7 +302,7 @@ export function PayStubDocument({
           {/* Regular hours */}
           <View style={S.tRow}>
             <Text style={[S.earnCell, { flex: eD }]}>{l.regular}</Text>
-            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{h.regularHours}</Text>
+            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{safeNum(h.regularHours)}</Text>
             <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>{fmt(effectiveRate)}/hr</Text>
             <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(c.regularPay)}</Text>
           </View>
@@ -315,7 +318,7 @@ export function PayStubDocument({
           {/* Double Holiday hours (always shown) */}
           <View style={S.tRow}>
             <Text style={[S.earnCell, { flex: eD }]}>{l.holiday}</Text>
-            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{h.holidayHours}</Text>
+            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{safeNum(h.holidayHours)}</Text>
             <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>{fmt(effectiveRate)}/hr</Text>
             <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(c.holidayPay)}</Text>
           </View>
@@ -323,7 +326,7 @@ export function PayStubDocument({
           {/* Overtime hours (always shown) */}
           <View style={S.tRow}>
             <Text style={[S.earnCell, { flex: eD }]}>{l.ot}</Text>
-            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{h.otHours}</Text>
+            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{safeNum(h.otHours)}</Text>
             <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>{fmt(effectiveRate)}/hr × {otMultiplier}</Text>
             <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(c.otPay)}</Text>
           </View>

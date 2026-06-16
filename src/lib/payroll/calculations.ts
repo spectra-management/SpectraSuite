@@ -11,10 +11,20 @@ export function roundHalfUp(value: number, decimals: number = 2): number {
 }
 
 /**
+ * Coerces any value to a finite number, returning 0 for null/undefined/NaN/Infinity.
+ * Used to guard every numeric that reaches the payroll engine or the PDF renderer
+ * (@react-pdf throws "unsupported number: NaN" on a NaN style/measurement).
+ */
+export function safeNum(val: unknown): number {
+  const n = typeof val === 'number' ? val : Number(val)
+  return Number.isFinite(n) ? n : 0
+}
+
+/**
  * Format a monetary value as RD$ 1,234.56
  */
 export function formatCurrency(value: number): string {
-  const rounded = roundHalfUp(value, 2)
+  const rounded = roundHalfUp(safeNum(value), 2)
   return `RD$ ${rounded.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
@@ -22,7 +32,7 @@ export function formatCurrency(value: number): string {
  * Format a monetary value with a given currency symbol, e.g. MX$ 1,234.56
  */
 export function formatCurrencyWithSymbol(value: number, symbol: string): string {
-  const rounded = roundHalfUp(value, 2)
+  const rounded = roundHalfUp(safeNum(value), 2)
   return `${symbol} ${rounded.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
@@ -129,8 +139,31 @@ export function findFirstFortnightGross(
 }
 
 /**
+ * Standard scheduled work hours in a pay period: workdays (Mon–Fri) in the
+ * inclusive [startDate, endDate] range × 8h. Used to auto-populate hours for
+ * Salary employees (who don't track hours in Hubstaff).
+ */
+export function standardPeriodHours(startDate: string, endDate: string): number {
+  if (!startDate || !endDate) return 0
+  const d = new Date(startDate + 'T00:00:00')
+  const end = new Date(endDate + 'T00:00:00')
+  if (isNaN(d.getTime()) || isNaN(end.getTime()) || d > end) return 0
+  let workdays = 0
+  while (d <= end) {
+    const dow = d.getDay()
+    if (dow !== 0 && dow !== 6) workdays++
+    d.setDate(d.getDate() + 1)
+  }
+  return workdays * 8
+}
+
+/**
  * Main payroll calculation function.
  * Pure function — no side effects, no UI dependencies.
+ *
+ * Salary employees (input.payType === 'Salary'): pay is fixed regardless of hours.
+ *   input.hourlyRate carries the MONTHLY salary; period gross = monthlySalary × 12 / payPeriodsPerYear
+ *   (e.g. monthly/2 biweekly). AFP/SFS/ISR are then computed on that gross like any other.
  *
  * DR biweekly ISR rule (only when rules.country includes 'dominican'):
  *   ISR is computed on income AFTER TSS (AFP + SFS), on a MONTHLY basis.
@@ -143,15 +176,19 @@ export function findFirstFortnightGross(
  */
 export function calculatePayroll(input: CalculationInput): CalculationResult {
   const {
-    hourlyRate,
-    regularHours,
-    otHours,
-    holidayHours,
     rules,
     frequency,
     otRatePercent = 35,
     holidayRatePercent = 100,
   } = input
+
+  // Coerce every numeric input — a NaN/undefined value (e.g. a Salary employee with no
+  // tracked hours, or an unset rate) must never propagate into the result or the PDF.
+  const isSalary = input.payType === 'Salary'
+  const baseRate = safeNum(input.hourlyRate)        // hourly rate, or MONTHLY salary when isSalary
+  const regularHours = safeNum(input.regularHours)
+  const otHours = safeNum(input.otHours)
+  const holidayHours = safeNum(input.holidayHours)
 
   // Detect quincena from period start date (DR biweekly rule only)
   const isDR = rules.country.toLowerCase().includes('dominican')
@@ -161,7 +198,8 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
     quincena = day <= 15 ? 1 : 2
   }
 
-  if (hourlyRate <= 0 || (regularHours + otHours + holidayHours) === 0) {
+  // Hourly needs hours to earn; Salary is paid regardless of hours.
+  if (baseRate <= 0 || (!isSalary && (regularHours + otHours + holidayHours) === 0)) {
     return {
       regularPay: 0,
       otPay: 0,
@@ -185,14 +223,20 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
     }
   }
 
-  const earnings = calculateHourlyEarnings(
-    hourlyRate,
-    regularHours,
-    otHours,
-    holidayHours,
-    otRatePercent,
-    holidayRatePercent,
-  )
+  const earnings = isSalary
+    // Salary: fixed pay per period = monthly salary × 12 / pay periods per year (e.g. monthly/2 biweekly).
+    ? (() => {
+        const periodGross = roundHalfUp((baseRate * 12) / rules.payPeriodsPerYear)
+        return { regularPay: periodGross, otPay: 0, holidayPay: 0, grossPay: periodGross }
+      })()
+    : calculateHourlyEarnings(
+        baseRate,
+        regularHours,
+        otHours,
+        holidayHours,
+        otRatePercent,
+        holidayRatePercent,
+      )
 
   // Pension (AFP / Social Security)
   const afpBase = roundHalfUp(Math.min(earnings.grossPay, rules.pensionCap ?? earnings.grossPay))

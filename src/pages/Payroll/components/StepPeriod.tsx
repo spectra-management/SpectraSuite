@@ -11,7 +11,7 @@ import { useEmployeesStore } from '@/store/employeesStore'
 import { toast } from '@/hooks/useToast'
 import { fetchHoursForPeriod, fetchUserProfiles } from '@/lib/connectors/hubstaff'
 import type { HubstaffActivityUser } from '@/lib/connectors/hubstaff'
-import { roundHalfUp } from '@/lib/payroll/calculations'
+import { roundHalfUp, standardPeriodHours } from '@/lib/payroll/calculations'
 import { cn } from '@/lib/utils'
 import type { Employee, EmployeeHoursEntry } from '@/types'
 
@@ -313,11 +313,16 @@ export function StepPeriod({ onNext }: Props) {
         console.log(`[StepPeriod] no match: ${emp.firstName} ${emp.lastName} (${emp.workEmail})`)
       }
 
+      // Salary employees don't track hours in Hubstaff — pay is fixed. Auto-fill the
+      // period's standard scheduled hours so they don't show as "Zero Hours".
+      const isSalary = emp.payType === 'Salary'
+      const salaryHours = isSalary ? standardPeriodHours(effectiveStart, effectiveEnd) : 0
+
       return {
         employeeId: emp.id,
         hubstaffUserId,
-        regularHours: roundHalfUp(hubstaffData?.regular ?? 0, 2),
-        otHours: roundHalfUp(hubstaffData?.ot ?? 0, 2),
+        regularHours: isSalary ? salaryHours : roundHalfUp(hubstaffData?.regular ?? 0, 2),
+        otHours: isSalary ? 0 : roundHalfUp(hubstaffData?.ot ?? 0, 2),
         holidayHours: 0,
         source: hubstaffData ? 'hubstaff' : 'manual',
         editedManually: false,

@@ -104,7 +104,8 @@ export function EmployeeReportDocument({ employees, columns, company, reportTitl
     )
   }
 
-  const totalFlexWidth = columns.reduce((s, c) => s + colWidth(c), 0)
+  // Guard against an empty column set → flex would be 0/0 = NaN, which @react-pdf rejects.
+  const totalFlexWidth = columns.reduce((s, c) => s + colWidth(c), 0) || 1
 
   return (
     <Document>

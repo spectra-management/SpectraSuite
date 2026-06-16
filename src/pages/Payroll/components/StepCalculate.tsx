@@ -55,6 +55,7 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
 
       const calculation = calculatePayroll({
         employeeId: emp.id,
+        payType: emp.payType,
         hourlyRate: h.payRateOverride ?? emp.payRate,
         regularHours: h.regularHours,
         otHours: h.otHours,

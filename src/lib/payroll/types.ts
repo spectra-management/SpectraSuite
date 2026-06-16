@@ -3,6 +3,8 @@ import type { CustomDeduction } from '@/types'
 
 export interface CalculationInput {
   employeeId: string
+  // 'Hourly' (default): hourlyRate × hours. 'Salary': fixed pay; hourlyRate carries the MONTHLY salary.
+  payType?: 'Hourly' | 'Salary'
   hourlyRate: number
   regularHours: number
   otHours: number

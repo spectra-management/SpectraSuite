@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from '@react-pdf/renderer'
 import type { PayrollEntry, PayrollTotals, CompanySettings } from '@/types'
-import { roundHalfUp } from '@/lib/payroll/calculations'
+import { roundHalfUp, safeNum } from '@/lib/payroll/calculations'
 import { logoSrc } from './logo'
 
 const EMERALD = '#059669'
@@ -79,10 +79,10 @@ const S = StyleSheet.create({
 })
 
 function fmt(n: number): string {
-  return `RD$ ${roundHalfUp(n, 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return `RD$ ${roundHalfUp(safeNum(n), 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 function num(n: number): string {
-  return roundHalfUp(n, 2).toFixed(2)
+  return roundHalfUp(safeNum(n), 2).toFixed(2)
 }
 
 interface DeptRow {

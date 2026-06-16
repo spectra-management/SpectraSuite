@@ -4,6 +4,10 @@ import {
   calculateAnnualISR,
   findFirstFortnightGross,
   roundHalfUp,
+  safeNum,
+  standardPeriodHours,
+  formatCurrency,
+  formatCurrencyWithSymbol,
   splitOTHours,
 } from '../calculations'
 import { DEFAULT_FISCAL_PARAMETERS, DEFAULT_PAYROLL_SETTINGS } from '../constants'
@@ -415,5 +419,69 @@ describe('findFirstFortnightGross', () => {
   it('ignores periods from a different month', () => {
     const history = [firstQuincena] as never
     expect(findFirstFortnightGross(history, 'Dominican Republic', '2026-04-16', 'emp-1')).toBeUndefined()
+  })
+})
+
+// ─── Test 12: Salary payType ──────────────────────────────────────────────────
+describe('Salary payType', () => {
+  it('salary gross = monthly × 12 / periods (biweekly → monthly/2), hours ignored', () => {
+    // monthly salary RD$50,000 → biweekly period gross = 25,000
+    const input = makeInput({ payType: 'Salary', hourlyRate: 50000, regularHours: 0, otHours: 0, holidayHours: 0 })
+    const result = calculatePayroll(input)
+    expect(result.grossPay).toBe(25000)
+    expect(result.afpAmount).toBe(roundHalfUp(25000 * 0.0287))   // 717.50
+    expect(result.sfsAmount).toBe(roundHalfUp(25000 * 0.0304))   // 760.00
+    expect(result.netPay).toBeGreaterThan(0)
+  })
+
+  it('salary pay is fixed regardless of hours entered', () => {
+    const a = calculatePayroll(makeInput({ payType: 'Salary', hourlyRate: 50000, regularHours: 96 }))
+    const b = calculatePayroll(makeInput({ payType: 'Salary', hourlyRate: 50000, regularHours: 40 }))
+    expect(a.grossPay).toBe(25000)
+    expect(b.grossPay).toBe(25000)
+  })
+
+  it('salary with 0 hours still flows through (not zeroed like hourly)', () => {
+    const salary = calculatePayroll(makeInput({ payType: 'Salary', hourlyRate: 50000, regularHours: 0 }))
+    const hourly = calculatePayroll(makeInput({ payType: 'Hourly', hourlyRate: 50000, regularHours: 0 }))
+    expect(salary.grossPay).toBe(25000)
+    expect(hourly.grossPay).toBe(0)  // hourly with no hours earns nothing
+  })
+})
+
+// ─── Test 13: NaN safety (no "unsupported number: NaN") ───────────────────────
+describe('NaN safety', () => {
+  it('safeNum coerces null/undefined/NaN/Infinity to 0', () => {
+    expect(safeNum(null)).toBe(0)
+    expect(safeNum(undefined)).toBe(0)
+    expect(safeNum(NaN)).toBe(0)
+    expect(safeNum(Infinity)).toBe(0)
+    expect(safeNum('abc')).toBe(0)
+    expect(safeNum(12.5)).toBe(12.5)
+  })
+
+  it('NaN/undefined numeric inputs never produce NaN in the result', () => {
+    const result = calculatePayroll(makeInput({
+      hourlyRate: NaN as unknown as number,
+      regularHours: undefined as unknown as number,
+      otHours: NaN as unknown as number,
+    }))
+    for (const v of Object.values(result)) {
+      if (typeof v === 'number') expect(Number.isFinite(v)).toBe(true)
+    }
+    expect(result.grossPay).toBe(0)
+  })
+
+  it('formatCurrency renders 0.00 for NaN/undefined instead of "NaN"', () => {
+    expect(formatCurrency(NaN)).toBe('RD$ 0.00')
+    expect(formatCurrency(undefined as unknown as number)).toBe('RD$ 0.00')
+    expect(formatCurrencyWithSymbol(NaN, 'MX$')).toBe('MX$ 0.00')
+  })
+
+  it('standardPeriodHours counts workdays × 8 (1st fortnight March 2026)', () => {
+    // 2026-03-01..15: workdays Mon-Fri. March 1 2026 is a Sunday.
+    const hrs = standardPeriodHours('2026-03-01', '2026-03-15')
+    expect(hrs).toBeGreaterThan(0)
+    expect(hrs % 8).toBe(0)
   })
 })

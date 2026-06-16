@@ -333,10 +333,20 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                         </td>
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-1.5">
-                            <MatchBadge entry={h} total={total} t={t} />
-                            <Badge variant={emp.payType === 'Hourly' ? 'info' : 'secondary'} className="text-[10px]">
-                              {emp.payType}
-                            </Badge>
+                            {emp.payType === 'Salary' ? (
+                              // Salary pay is fixed; hours aren't required → never "Zero Hours"/"Needs Mapping".
+                              <Badge variant="default">
+                                <CheckCircle2 className="mr-1 h-2.5 w-2.5" />
+                                {t('payroll.review.salary')}
+                              </Badge>
+                            ) : (
+                              <>
+                                <MatchBadge entry={h} total={total} t={t} />
+                                <Badge variant="info" className="text-[10px]">
+                                  {emp.payType}
+                                </Badge>
+                              </>
+                            )}
                           </div>
                         </td>
                         <td className="px-3 py-3 text-center">
