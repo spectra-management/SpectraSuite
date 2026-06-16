@@ -12,6 +12,7 @@ interface PeriodData {
   endDate: string
   frequency: 'biweekly' | 'weekly'
   employeeHours: EmployeeHoursEntry[]
+  country: string
 }
 
 interface CalculatedData {
@@ -25,6 +26,7 @@ export default function Payroll() {
   const [periodData, setPeriodData] = useState<PeriodData | null>(null)
   const [reviewedHours, setReviewedHours] = useState<EmployeeHoursEntry[]>([])
   const [calculatedData, setCalculatedData] = useState<CalculatedData | null>(null)
+  const [selectedCountry, setSelectedCountry] = useState('')
 
   const steps = [
     { key: 'period', label: t('payroll.steps.selectPeriod') },
@@ -46,6 +48,7 @@ export default function Payroll() {
         <StepPeriod
           onNext={(data) => {
             setPeriodData(data)
+            setSelectedCountry(data.country)
             setReviewedHours(data.employeeHours)
             setStep(1)
           }}
@@ -58,6 +61,7 @@ export default function Payroll() {
           startDate={periodData.startDate}
           endDate={periodData.endDate}
           frequency={periodData.frequency}
+          country={selectedCountry}
           onNext={(hours) => {
             setReviewedHours(hours)
             setStep(2)
@@ -72,6 +76,7 @@ export default function Payroll() {
           startDate={periodData.startDate}
           endDate={periodData.endDate}
           frequency={periodData.frequency}
+          country={selectedCountry}
           onNext={(entries, totals) => {
             setCalculatedData({ entries, totals })
             setStep(3)
@@ -85,6 +90,7 @@ export default function Payroll() {
           startDate={periodData.startDate}
           endDate={periodData.endDate}
           frequency={periodData.frequency}
+          country={selectedCountry}
           entries={calculatedData.entries}
           totals={calculatedData.totals}
           onBack={() => setStep(2)}

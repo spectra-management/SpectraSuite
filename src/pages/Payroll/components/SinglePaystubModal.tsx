@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { useSettingsStore } from '@/store/settingsStore'
 import { calculatePayroll, formatCurrency } from '@/lib/payroll/calculations'
+import { getPayrollRules } from '@/lib/payroll/rules'
 import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/lib/pdf/generatePdf'
 import { toast } from '@/hooks/useToast'
 import type { Employee, EmployeeHoursEntry } from '@/types'
@@ -16,6 +17,7 @@ interface Props {
   startDate: string
   endDate: string
   frequency: 'biweekly' | 'weekly'
+  country: string
   onClose: () => void
 }
 
@@ -39,7 +41,7 @@ function otherDeds(
   )
 }
 
-export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, frequency, onClose }: Props) {
+export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, frequency, country, onClose }: Props) {
   const { t, i18n } = useTranslation()
   const company = useSettingsStore((s) => s.company)
   const fiscal = useSettingsStore((s) => s.fiscal)
@@ -51,6 +53,11 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
   const [downloading, setDownloading] = useState(false)
   const [sending, setSending] = useState(false)
 
+  const rules = useMemo(
+    () => getPayrollRules(country, frequency, fiscal, payrollSettings),
+    [country, frequency, fiscal, payrollSettings],
+  )
+
   const calculation = useMemo(() => calculatePayroll({
     employeeId: employee.id,
     hourlyRate: employee.payRate,
@@ -58,11 +65,12 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
     otHours: hoursEntry.otHours,
     holidayHours: hoursEntry.holidayHours,
     customDeductions: employee.customDeductions?.filter((d) => d.active) ?? [],
-    fiscal,
-    payroll: payrollSettings,
+    rules,
     frequency,
+    otRatePercent: payrollSettings.otRatePercent,
+    holidayRatePercent: payrollSettings.holidayRatePercent,
     periodStart: startDate,
-  }), [employee, hoursEntry, fiscal, payrollSettings, frequency, startDate])
+  }), [employee, hoursEntry, rules, payrollSettings, frequency, startDate])
 
   const entry = useMemo(() => ({
     employee,
@@ -93,6 +101,7 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
       startDate,
       endDate,
       lang,
+      country,
       otRatePercent: payrollSettings.otRatePercent,
       holidayRatePercent: payrollSettings.holidayRatePercent,
     })

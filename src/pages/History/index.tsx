@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import React from 'react'
 import { History as HistoryIcon, Download, Mail, Send, Loader2, ChevronDown, ChevronRight, FileText, Table } from 'lucide-react'
@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { usePayrollStore } from '@/store/payrollStore'
 import { useSettingsStore } from '@/store/settingsStore'
 import { toast } from '@/hooks/useToast'
@@ -250,6 +251,14 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
             onClick={() => setExpanded((v) => !v)}
           >
             {expanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+            <span className="text-base leading-none" title={payroll.country || 'Unknown'}>
+              {(() => {
+                const c = (payroll.country ?? '').toLowerCase()
+                if (c.includes('dominican')) return '🇩🇴'
+                if (c.includes('united states') || c === 'us') return '🇺🇸'
+                return '🌐'
+              })()}
+            </span>
             {formatDate(payroll.startDate)} – {formatDate(payroll.endDate)}
           </button>
         </td>
@@ -353,10 +362,35 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
   )
 }
 
+function countryFlag(country: string | undefined): string {
+  const c = (country ?? '').toLowerCase()
+  if (c.includes('dominican')) return '🇩🇴'
+  if (c.includes('united states') || c === 'us') return '🇺🇸'
+  return '🌐'
+}
+
 export default function History() {
   const { t } = useTranslation()
   const history = usePayrollStore((s) => s.history)
   const sorted = [...history].reverse()
+  const [countryFilter, setCountryFilter] = useState('all')
+
+  const availableCountries = useMemo(() => {
+    const set = new Set<string>()
+    for (const p of history) {
+      const c = p.country && p.country.trim() ? p.country.trim() : 'Unknown'
+      set.add(c)
+    }
+    return [...set].sort()
+  }, [history])
+
+  const filtered = useMemo(() => {
+    if (countryFilter === 'all') return sorted
+    return sorted.filter((p) => {
+      const c = p.country && p.country.trim() ? p.country.trim() : 'Unknown'
+      return c === countryFilter
+    })
+  }, [sorted, countryFilter])
 
   return (
     <div className="space-y-6">
@@ -365,9 +399,27 @@ export default function History() {
         <p className="mt-1 text-sm text-gray-500">{t('history.subtitle')}</p>
       </div>
 
+      {availableCountries.length > 1 && (
+        <div className="flex items-center gap-3">
+          <Select value={countryFilter} onValueChange={setCountryFilter}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder={t('history.filterAllCountries')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('history.filterAllCountries')}</SelectItem>
+              {availableCountries.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {countryFlag(c)} {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
-          {sorted.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100">
                 <HistoryIcon className="h-7 w-7 text-gray-400" />
@@ -389,7 +441,7 @@ export default function History() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {sorted.map((p) => <PayrollRow key={p.id} payroll={p} />)}
+                  {filtered.map((p) => <PayrollRow key={p.id} payroll={p} />)}
                 </tbody>
               </table>
             </div>

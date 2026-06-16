@@ -12,6 +12,7 @@ export interface Employee {
   status: 'Active' | 'Inactive' | 'Terminated'
   hubstaffUserId?: string
   customDeductions?: CustomDeduction[]
+  country?: string
 }
 
 export interface CustomDeduction {
@@ -48,6 +49,7 @@ export interface PayrollPeriod {
   processedDate?: string
   entries: PayrollEntry[]
   totals: PayrollTotals
+  country?: string
 }
 
 export interface PayrollEntry {

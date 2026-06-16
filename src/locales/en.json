@@ -112,6 +112,7 @@
       "allTitles": "All Job Titles",
       "allStatuses": "All Statuses",
       "allPayTypes": "All Pay Types",
+      "allCountries": "All Countries",
       "hourly": "Hourly",
       "salary": "Salary",
       "clearFilters": "Clear Filters",
@@ -181,6 +182,9 @@
   "payroll": {
     "title": "Process Payroll",
     "subtitle": "Calculate and process payroll for your employees",
+    "selectCountry": "Select Country",
+    "countryFor": "{{country}} Payroll",
+    "unknownCountryWarning": "{{count}} employees have no country set in BambooHR — Dominican Republic rules will be used.",
     "steps": {
       "selectPeriod": "Select Period",
       "reviewHours": "Review Hours",
@@ -346,7 +350,8 @@
     "viewPayroll": "View Payroll",
     "resendPayStubs": "Resend Pay Stubs",
     "noHistory": "No payroll history yet",
-    "sendingProgress": "Sending pay stubs… {{done}}/{{total}}"
+    "sendingProgress": "Sending pay stubs… {{done}}/{{total}}",
+    "filterAllCountries": "All Countries"
   },
   "connectors": {
     "title": "Connectors",

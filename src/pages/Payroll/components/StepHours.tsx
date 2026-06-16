@@ -20,6 +20,7 @@ interface Props {
   startDate: string
   endDate: string
   frequency: 'biweekly' | 'weekly'
+  country: string
   onNext: (hours: EmployeeHoursEntry[]) => void
   onBack: () => void
 }
@@ -33,7 +34,14 @@ interface SoloTarget {
   hoursEntry: EmployeeHoursEntry
 }
 
-export function StepHours({ employeeHours, startDate, endDate, frequency, onNext, onBack }: Props) {
+function countryFlag(country: string): string {
+  const c = country.toLowerCase()
+  if (c.includes('dominican')) return '🇩🇴'
+  if (c.includes('united states') || c === 'us') return '🇺🇸'
+  return '🌐'
+}
+
+export function StepHours({ employeeHours, startDate, endDate, frequency, country, onNext, onBack }: Props) {
   const { t } = useTranslation()
   const employees = useEmployeesStore((s) => s.employees)
   const [hours, setHours] = useState<EmployeeHoursEntry[]>(employeeHours)
@@ -151,7 +159,14 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, onNext
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <CardTitle>{t('payroll.review.title')}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>{t('payroll.review.title')}</CardTitle>
+                  {country && (
+                    <span className="text-base leading-none" title={country}>
+                      {countryFlag(country)}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {startDate} – {endDate}
                 </p>
@@ -341,6 +356,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, onNext
           startDate={startDate}
           endDate={endDate}
           frequency={frequency}
+          country={country}
           onClose={() => setSoloTarget(null)}
         />
       )}

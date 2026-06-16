@@ -78,8 +78,9 @@ const S = StyleSheet.create({
   footerText: { fontSize: 7, color: GRAY_500 },
 })
 
-function fmt(n: number): string {
-  return `RD$ ${roundHalfUp(n, 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+function makeFmt(currencySymbol: string) {
+  return (n: number): string =>
+    `${currencySymbol} ${roundHalfUp(n, 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 // Lookup a custom deduction by keyword match; returns 0 if not found.
@@ -109,6 +110,7 @@ interface Props {
   startDate: string
   endDate: string
   lang: 'en' | 'es'
+  country?: string
   otRatePercent?: number
   holidayRatePercent?: number
 }
@@ -184,12 +186,29 @@ const L = {
   },
 }
 
+// Country-specific deduction labels
+const COUNTRY_LABELS = {
+  us: {
+    sfs: 'Medicare (1.45%)',
+    afp: 'Social Security (6.2%)',
+    isr: 'Federal Income Tax',
+    currencySymbol: '$',
+  },
+  dr: {
+    sfs: 'Family health insurance (SFS)',
+    afp: 'Pension retention (AFP)',
+    isr: 'Tax Retention ISR (DGII)',
+    currencySymbol: 'RD$',
+  },
+}
+
 export function PayStubDocument({
   entry,
   company,
   startDate,
   endDate,
   lang,
+  country = 'Dominican Republic',
   otRatePercent = 35,
   holidayRatePercent = 100,
 }: Props) {
@@ -199,6 +218,11 @@ export function PayStubDocument({
 
   const otMultiplier = (1 + otRatePercent / 100).toFixed(2)
   void holidayRatePercent // holiday is always ×2 in DR; column shows base rate with "Double" in label
+
+  // Country-specific labels and currency
+  const isUS = country.toLowerCase().includes('united states') || country.toLowerCase() === 'us'
+  const countryL = isUS ? COUNTRY_LABELS.us : COUNTRY_LABELS.dr
+  const fmt = makeFmt(countryL.currencySymbol)
 
   const payAdvanceAmt    = lookupDed(c.customDeductionsBreakdown, ['advance', 'adelanto'])
   const dependentTSSAmt  = lookupDed(c.customDeductionsBreakdown, ['dependent tss', 'tss depend', 'depend'])
@@ -324,18 +348,18 @@ export function PayStubDocument({
             <Text style={[S.dedHeadText, { flex: dA, textAlign: 'right' }]}>{l.total}</Text>
           </View>
 
-          {/* SFS */}
+          {/* SFS / Medicare */}
           <View style={S.tRow}>
-            <Text style={[S.dedLabel, { flex: dD }]}>{l.sfs}</Text>
-            <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>3.04%</Text>
+            <Text style={[S.dedLabel, { flex: dD }]}>{countryL.sfs}</Text>
+            <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>{isUS ? '1.45%' : '3.04%'}</Text>
             <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
             <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.sfsAmount)}</Text>
           </View>
 
-          {/* AFP */}
+          {/* AFP / Social Security */}
           <View style={S.tRow}>
-            <Text style={[S.dedLabel, { flex: dD }]}>{l.afp}</Text>
-            <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>2.87%</Text>
+            <Text style={[S.dedLabel, { flex: dD }]}>{countryL.afp}</Text>
+            <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>{isUS ? '6.2%' : '2.87%'}</Text>
             <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
             <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.afpAmount)}</Text>
           </View>
@@ -356,12 +380,12 @@ export function PayStubDocument({
             <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(dependentTSSAmt)}</Text>
           </View>
 
-          {/* ISR — quincena-aware display */}
+          {/* ISR / Federal Income Tax — quincena-aware display (DR only) */}
           {isrDeferred > 0 ? (
-            // 1st quincena: ISR calculated but not retained; show 0 + informational note
+            // 1st quincena (DR only): ISR calculated but not retained; show 0 + informational note
             <>
               <View style={S.tRow}>
-                <Text style={[S.dedLabel, { flex: dD }]}>{l.isr}</Text>
+                <Text style={[S.dedLabel, { flex: dD }]}>{countryL.isr}</Text>
                 <Text style={[S.dedRate, { flex: dR }]}> </Text>
                 <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
                 <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(0)}</Text>
@@ -374,7 +398,7 @@ export function PayStubDocument({
               </View>
             </>
           ) : isrFromPrev > 0 ? (
-            // 2nd quincena: show 1st + 2nd breakdown
+            // 2nd quincena (DR only): show 1st + 2nd breakdown
             <>
               <View style={S.tRow}>
                 <Text style={[S.dedLabel, { flex: dD }]}>{l.isr1st}</Text>
@@ -396,9 +420,9 @@ export function PayStubDocument({
               </View>
             </>
           ) : (
-            // Weekly or same-period: single ISR row
+            // US / weekly / no quincena: single row
             <View style={S.tRow}>
-              <Text style={[S.dedLabel, { flex: dD }]}>{l.isr}</Text>
+              <Text style={[S.dedLabel, { flex: dD }]}>{countryL.isr}</Text>
               <Text style={[S.dedRate, { flex: dR }]}> </Text>
               <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>►</Text>
               <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.isrPeriod)}</Text>

@@ -20,6 +20,13 @@ const PAGE_SIZE = 25
 type SortCol = 'name' | 'payRate' | 'hireDate'
 type SortDir = 'asc' | 'desc'
 
+function countryFlag(country: string | undefined): string {
+  const c = (country ?? '').toLowerCase()
+  if (c.includes('dominican')) return '🇩🇴'
+  if (c.includes('united states') || c === 'us') return '🇺🇸'
+  return '🌐'
+}
+
 function statusVariant(status: Employee['status']): 'default' | 'secondary' | 'destructive' {
   if (status === 'Active') return 'default'
   if (status === 'Inactive') return 'secondary'
@@ -44,6 +51,7 @@ export default function Employees() {
   const [deptFilter, setDeptFilter] = useState('all')
   const [titleFilter, setTitleFilter] = useState('all')
   const [payTypeFilter, setPayTypeFilter] = useState('all')
+  const [countryFilter, setCountryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState<string>(
     () => localStorage.getItem('spectra_employees_status_filter') ?? 'Active',
   )
@@ -62,11 +70,21 @@ export default function Employees() {
     () => [...new Set(employees.map((e) => e.jobTitle).filter(Boolean))].sort(),
     [employees],
   )
+  // Unique countries from employees
+  const availableCountries = useMemo(() => {
+    const set = new Set<string>()
+    for (const e of employees) {
+      const c = e.country && e.country.trim() ? e.country.trim() : 'Unknown'
+      set.add(c)
+    }
+    return [...set].sort()
+  }, [employees])
 
   const activeFilterCount = [
     deptFilter !== 'all',
     titleFilter !== 'all',
     payTypeFilter !== 'all',
+    countryFilter !== 'all',
     statusFilter !== 'Active',   // 'Active' is the default, not a filter override
     !!search,
   ].filter(Boolean).length
@@ -76,6 +94,7 @@ export default function Employees() {
     setDeptFilter('all')
     setTitleFilter('all')
     setPayTypeFilter('all')
+    setCountryFilter('all')
     const defaultStatus = 'Active'
     setStatusFilter(defaultStatus)
     localStorage.setItem('spectra_employees_status_filter', defaultStatus)
@@ -100,6 +119,10 @@ export default function Employees() {
         if (deptFilter !== 'all' && e.department !== deptFilter) return false
         if (titleFilter !== 'all' && e.jobTitle !== titleFilter) return false
         if (payTypeFilter !== 'all' && e.payType !== payTypeFilter) return false
+        if (countryFilter !== 'all') {
+          const empCountry = e.country && e.country.trim() ? e.country.trim() : 'Unknown'
+          if (empCountry !== countryFilter) return false
+        }
         if (statusFilter === 'Active' && e.status !== 'Active') return false
         if (statusFilter === 'not-active' && e.status === 'Active') return false
         return true
@@ -220,6 +243,23 @@ export default function Employees() {
               </SelectContent>
             </Select>
 
+            {/* Country filter */}
+            {availableCountries.length > 1 && (
+              <Select value={countryFilter} onValueChange={handleFilterChange(setCountryFilter)}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder={t('employees.filters.allCountries')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('employees.filters.allCountries')}</SelectItem>
+                  {availableCountries.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {countryFlag(c)} {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
             {/* Status filter */}
             <Select value={statusFilter} onValueChange={handleFilterChange(setStatusFilter, 'spectra_employees_status_filter')}>
               <SelectTrigger className="w-44">
@@ -302,6 +342,9 @@ export default function Employees() {
                       <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
+                            <span className="text-base leading-none shrink-0" title={emp.country || 'Unknown'}>
+                              {countryFlag(emp.country)}
+                            </span>
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
                               {getInitials(emp.firstName, emp.lastName)}
                             </div>

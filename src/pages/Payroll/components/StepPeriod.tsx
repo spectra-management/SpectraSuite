@@ -21,6 +21,7 @@ interface Props {
     endDate: string
     frequency: 'biweekly' | 'weekly'
     employeeHours: EmployeeHoursEntry[]
+    country: string
   }) => void
 }
 
@@ -70,6 +71,18 @@ function toISODate(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+function countryFlag(country: string): string {
+  const c = country.toLowerCase()
+  if (c.includes('dominican')) return '🇩🇴'
+  if (c.includes('united states') || c === 'us') return '🇺🇸'
+  return '🌐'
+}
+
+function countryLabel(country: string): string {
+  if (!country) return 'Unknown'
+  return country
+}
+
 export function StepPeriod({ onNext }: Props) {
   const { t, i18n } = useTranslation()
   const payrollSettings = useSettingsStore((s) => s.payroll)
@@ -79,6 +92,43 @@ export function StepPeriod({ onNext }: Props) {
 
   const today = new Date()
   const [frequency, setFrequency] = useState<'biweekly' | 'weekly'>(payrollSettings.frequency)
+
+  // ── Country selection ────────────────────────────────────────────────────────
+  // Compute available countries from active hourly employees
+  const availableCountries = useMemo(() => {
+    const activeHourly = employees.filter(
+      (e) => e.status === 'Active' && e.payType === 'Hourly',
+    )
+    const countryMap = new Map<string, number>()
+    for (const emp of activeHourly) {
+      const c = emp.country && emp.country.trim() ? emp.country.trim() : 'Unknown'
+      countryMap.set(c, (countryMap.get(c) ?? 0) + 1)
+    }
+    // Sort: Dominican Republic first, then US, then Unknown
+    const sorted = [...countryMap.entries()].sort(([a], [b]) => {
+      const priority = (s: string) => {
+        if (s.toLowerCase().includes('dominican')) return 0
+        if (s.toLowerCase().includes('united states') || s === 'us') return 1
+        if (s === 'Unknown') return 3
+        return 2
+      }
+      return priority(a) - priority(b)
+    })
+    return sorted
+  }, [employees])
+
+  const defaultCountry = useMemo(() => {
+    if (availableCountries.length === 0) return 'Dominican Republic'
+    return availableCountries[0][0]
+  }, [availableCountries])
+
+  const [selectedCountry, setSelectedCountry] = useState<string>(defaultCountry)
+
+  // Unknown count for warning message
+  const unknownCount = useMemo(() => {
+    const found = availableCountries.find(([c]) => c === 'Unknown')
+    return found ? found[1] : 0
+  }, [availableCountries])
 
   // ── Biweekly picker state ──────────────────────────────────────────────────
   const [bwYear, setBwYear] = useState(today.getFullYear())
@@ -100,15 +150,12 @@ export function StepPeriod({ onNext }: Props) {
   const [weeklyEnd, setWeeklyEnd] = useState(defaultWeeklyEnd)
 
   // ── Custom dates toggle (biweekly only) ───────────────────────────────────
-  // When true, shows free date pickers even in biweekly mode
   const [useCustomDates, setUseCustomDates] = useState(false)
-  // Custom date inputs mirror bwDates when first opened
   const [customStart, setCustomStart] = useState(bwDates.start)
   const [customEnd, setCustomEnd] = useState(bwDates.end)
 
   const handleToggleCustomDates = () => {
     if (!useCustomDates) {
-      // Pre-fill custom inputs with the current quincena dates
       setCustomStart(bwDates.start)
       setCustomEnd(bwDates.end)
     }
@@ -149,9 +196,16 @@ export function StepPeriod({ onNext }: Props) {
       return
     }
 
-    const activeEmployees = employees.filter(
+    // Filter employees to the selected country
+    const allActiveHourly = employees.filter(
       (e) => e.status === 'Active' && e.payType === 'Hourly',
     )
+
+    const activeEmployees = allActiveHourly.filter((e) => {
+      const empCountry = e.country && e.country.trim() ? e.country.trim() : 'Unknown'
+      return empCountry === selectedCountry
+    })
+
     if (activeEmployees.length === 0) {
       toast({ variant: 'destructive', title: t('payroll.noActiveEmployees') })
       return
@@ -264,7 +318,7 @@ export function StepPeriod({ onNext }: Props) {
     })
 
     setLoading(false)
-    onNext({ startDate: effectiveStart, endDate: effectiveEnd, frequency, employeeHours })
+    onNext({ startDate: effectiveStart, endDate: effectiveEnd, frequency, employeeHours, country: selectedCountry })
   }
 
   return (
@@ -278,6 +332,47 @@ export function StepPeriod({ onNext }: Props) {
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
+
+        {/* Country selector */}
+        {availableCountries.length > 0 && (
+          <div className="space-y-1.5">
+            <Label>{t('payroll.selectCountry')}</Label>
+            <div className="flex flex-col gap-2">
+              {availableCountries.map(([country, count]) => (
+                <button
+                  key={country}
+                  type="button"
+                  onClick={() => setSelectedCountry(country)}
+                  className={cn(
+                    'flex items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
+                    selectedCountry === country
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
+                      : country === 'Unknown'
+                        ? 'border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-300'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50',
+                  )}
+                >
+                  <div className={cn(
+                    'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
+                    selectedCountry === country ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300',
+                  )}>
+                    {selectedCountry === country && (
+                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <span className="text-base leading-none">{countryFlag(country)}</span>
+                  <span className="font-medium leading-tight flex-1">{countryLabel(country)}</span>
+                  <span className="text-xs text-gray-400">{count} {t('common.employees')}</span>
+                </button>
+              ))}
+            </div>
+            {unknownCount > 0 && selectedCountry === 'Unknown' && (
+              <p className="text-xs text-amber-600 mt-1">
+                {t('payroll.unknownCountryWarning', { count: unknownCount })}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Frequency selector */}
         <div className="space-y-1.5">

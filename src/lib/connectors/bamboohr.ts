@@ -12,6 +12,7 @@ interface BambooReportEmployee {
   employmentHistoryStatus?: string
   jobTitle?: string
   department?: string
+  country?: string
 }
 
 interface BambooReportResponse {
@@ -88,6 +89,7 @@ export async function fetchBambooDirectory(
         'employmentHistoryStatus',
         'jobTitle',
         'department',
+        'country',
       ],
     }),
   })
@@ -123,6 +125,7 @@ export async function fetchBambooDirectory(
       hireDate: e.hireDate ?? '',
       status: mapStatus(e.employmentHistoryStatus),
       customDeductions: [],
+      country: e.country ?? '',
     }
   })
 

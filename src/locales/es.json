@@ -112,6 +112,7 @@
       "allTitles": "Todos los Cargos",
       "allStatuses": "Todos los Estados",
       "allPayTypes": "Todos los Tipos",
+      "allCountries": "Todos los Países",
       "hourly": "Por Hora",
       "salary": "Salario",
       "clearFilters": "Limpiar Filtros",
@@ -181,6 +182,9 @@
   "payroll": {
     "title": "Procesar Nómina",
     "subtitle": "Calcular y procesar la nómina de tus empleados",
+    "selectCountry": "Seleccionar País",
+    "countryFor": "Nómina {{country}}",
+    "unknownCountryWarning": "{{count}} empleados no tienen país configurado en BambooHR — se usarán las reglas de República Dominicana.",
     "steps": {
       "selectPeriod": "Seleccionar Período",
       "reviewHours": "Revisar Horas",
@@ -346,7 +350,8 @@
     "viewPayroll": "Ver nómina",
     "resendPayStubs": "Reenviar comprobantes",
     "noHistory": "No hay historial de nómina aún",
-    "sendingProgress": "Enviando comprobantes… {{done}}/{{total}}"
+    "sendingProgress": "Enviando comprobantes… {{done}}/{{total}}",
+    "filterAllCountries": "Todos los Países"
   },
   "connectors": {
     "title": "Conectores",

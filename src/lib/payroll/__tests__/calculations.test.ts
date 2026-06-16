@@ -6,6 +6,8 @@ import {
   splitOTHours,
 } from '../calculations'
 import { DEFAULT_FISCAL_PARAMETERS, DEFAULT_PAYROLL_SETTINGS } from '../constants'
+import { getDOPayrollRules } from '../rules/do'
+import { getUSPayrollRules } from '../rules/us'
 import type { CalculationInput } from '../types'
 
 const baseFiscal = DEFAULT_FISCAL_PARAMETERS
@@ -19,9 +21,10 @@ function makeInput(overrides: Partial<CalculationInput> = {}): CalculationInput 
     otHours: 0,
     holidayHours: 0,
     customDeductions: [],
-    fiscal: baseFiscal,
-    payroll: basePayroll,
+    rules: getDOPayrollRules(baseFiscal, basePayroll, 'biweekly'),
     frequency: 'biweekly',
+    otRatePercent: basePayroll.otRatePercent,
+    holidayRatePercent: basePayroll.holidayRatePercent,
     ...overrides,
   }
 }
@@ -123,6 +126,7 @@ describe('Quincena ISR Rule (DR biweekly)', () => {
     const input = makeInput({
       hourlyRate: 350,
       regularHours: 80,
+      rules: getDOPayrollRules(baseFiscal, basePayroll, 'weekly'),
       frequency: 'weekly',
       periodStart: '2026-03-01',  // day=1 but weekly → no quincena rule
     })
@@ -176,7 +180,7 @@ describe('Overtime Calculation', () => {
       hourlyRate,
       regularHours: 44,
       otHours: 6,
-      payroll: { ...basePayroll, otRatePercent: 35 },
+      otRatePercent: 35,
     })
     const result = calculatePayroll(input)
     const expectedRegular = roundHalfUp(hourlyRate * 44)
@@ -197,7 +201,7 @@ describe('Holiday Calculation', () => {
       regularHours: 0,
       otHours: 0,
       holidayHours,
-      payroll: { ...basePayroll, holidayRatePercent: 100 },
+      holidayRatePercent: 100,
     })
     const result = calculatePayroll(input)
     const expectedHolidayPay = roundHalfUp(hourlyRate * holidayHours * 2.0)
@@ -329,5 +333,57 @@ describe('calculateAnnualISR', () => {
   it('amount = 900,000 → bracket 4: 79,776 + 25% of excess', () => {
     const expected = roundHalfUp(79776 + (900000 - 867123.01) * 0.25)
     expect(calculateAnnualISR(900000, baseFiscal.isrBrackets)).toBe(expected)
+  })
+})
+
+// ─── Test 10: US Payroll Rules ────────────────────────────────────────────────
+describe('US Payroll Rules', () => {
+  it('Medicare + Social Security computed correctly for a US employee', () => {
+    // US: hourlyRate=50, 80hrs → gross=4,000
+    // Medicare 1.45% (no cap): 4,000 × 0.0145 = 58.00
+    // Social Security 6.2%, cap = 168600/24 = 7025.00 per period; 4000 < 7025 so no cap
+    // SS: 4,000 × 0.062 = 248.00
+    const usRules = getUSPayrollRules('biweekly')
+    const input: CalculationInput = {
+      employeeId: 'us-emp-1',
+      hourlyRate: 50,
+      regularHours: 80,
+      otHours: 0,
+      holidayHours: 0,
+      customDeductions: [],
+      rules: usRules,
+      frequency: 'biweekly',
+      otRatePercent: 35,
+      holidayRatePercent: 100,
+    }
+    const result = calculatePayroll(input)
+    expect(result.grossPay).toBe(4000)
+    expect(result.sfsAmount).toBe(roundHalfUp(4000 * 0.0145))   // Medicare = 58.00
+    expect(result.afpAmount).toBe(roundHalfUp(4000 * 0.062))    // SS = 248.00
+  })
+
+  it('US payroll: income tax retained every period (no quincena rule)', () => {
+    // US: hourlyRate=100, 80hrs → gross=8,000 → annual=192,000
+    // Federal income tax: 1,160 + (192,000-11,600) × 12% = 1,160 + 21,648 = 22,808 annual → 22,808/24 ≈ 950.33/period
+    const usRules = getUSPayrollRules('biweekly')
+    const input: CalculationInput = {
+      employeeId: 'us-emp-2',
+      hourlyRate: 100,
+      regularHours: 80,
+      otHours: 0,
+      holidayHours: 0,
+      customDeductions: [],
+      rules: usRules,
+      frequency: 'biweekly',
+      periodStart: '2026-03-01',  // day=1 — would trigger 1st quincena for DR but NOT for US
+      otRatePercent: 35,
+      holidayRatePercent: 100,
+    }
+    const result = calculatePayroll(input)
+    // ISR should be retained normally (not 0 like DR 1st quincena)
+    expect(result.isrPeriod).toBe(result.isrCalculated)
+    expect(result.isrPeriod).toBeGreaterThan(0)
+    // US rules country is 'United States', so isDR=false, no quincena applied
+    expect(usRules.country).toBe('United States')
   })
 })

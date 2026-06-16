@@ -17,12 +17,13 @@ interface Props {
   startDate: string
   endDate: string
   frequency: 'biweekly' | 'weekly'
+  country: string
   entries: PayrollEntry[]
   totals: PayrollTotals
   onBack: () => void
 }
 
-export function StepApprove({ startDate, endDate, frequency, entries, totals, onBack }: Props) {
+export function StepApprove({ startDate, endDate, frequency, country, entries, totals, onBack }: Props) {
   const { t, i18n } = useTranslation()
   const addPayroll = usePayrollStore((s) => s.addPayroll)
   const company = useSettingsStore((s) => s.company)
@@ -40,6 +41,7 @@ export function StepApprove({ startDate, endDate, frequency, entries, totals, on
       startDate,
       endDate,
       frequency,
+      country,
       status: 'approved',
       processedDate: new Date().toISOString().split('T')[0],
       entries,

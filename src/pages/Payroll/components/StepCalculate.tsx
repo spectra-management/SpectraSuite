@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useEmployeesStore } from '@/store/employeesStore'
 import { useSettingsStore } from '@/store/settingsStore'
 import { calculatePayroll } from '@/lib/payroll/calculations'
+import { getPayrollRules } from '@/lib/payroll/rules'
 import { formatCurrency, getInitials } from '@/lib/utils'
 import { roundHalfUp } from '@/lib/payroll/calculations'
 import type { EmployeeHoursEntry, PayrollEntry, PayrollTotals } from '@/types'
@@ -15,6 +16,7 @@ interface Props {
   startDate: string
   endDate: string
   frequency: 'biweekly' | 'weekly'
+  country: string
   onNext: (entries: PayrollEntry[], totals: PayrollTotals) => void
   onBack: () => void
 }
@@ -24,14 +26,21 @@ function isFirstQuincena(startDate: string): boolean {
   return new Date(startDate + 'T00:00:00').getDate() <= 15
 }
 
-export function StepCalculate({ employeeHours, startDate, endDate: _endDate, frequency, onNext, onBack }: Props) {
+export function StepCalculate({ employeeHours, startDate, endDate: _endDate, frequency, country, onNext, onBack }: Props) {
   const { t } = useTranslation()
   const employees = useEmployeesStore((s) => s.employees)
   const fiscal = useSettingsStore((s) => s.fiscal)
   const payrollSettings = useSettingsStore((s) => s.payroll)
 
+  // Build country-specific payroll rules
+  const rules = useMemo(
+    () => getPayrollRules(country, frequency, fiscal, payrollSettings),
+    [country, frequency, fiscal, payrollSettings],
+  )
+
   // For UI banners only — actual quincena logic is inside calculatePayroll
-  const firstQuincena = frequency === 'biweekly' && isFirstQuincena(startDate)
+  const isDR = rules.country.toLowerCase().includes('dominican')
+  const firstQuincena = isDR && frequency === 'biweekly' && isFirstQuincena(startDate)
 
   const salariedSlipthrough = useMemo(() =>
     employeeHours
@@ -55,9 +64,10 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
         otHours: h.otHours,
         holidayHours: h.holidayHours,
         customDeductions: emp.customDeductions?.filter((d) => d.active) ?? [],
-        fiscal,
-        payroll: payrollSettings,
+        rules,
         frequency,
+        otRatePercent: payrollSettings.otRatePercent,
+        holidayRatePercent: payrollSettings.holidayRatePercent,
         periodStart: startDate,
       })
 
@@ -77,7 +87,7 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
     }
 
     return { entries: computedEntries, totals }
-  }, [employeeHours, employees, fiscal, payrollSettings, frequency, startDate])
+  }, [employeeHours, employees, rules, frequency, payrollSettings, startDate])
 
   if (salariedSlipthrough.length > 0) {
     return (
@@ -110,13 +120,13 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
       {/* Top action buttons */}
       <ActionButtons />
 
-      {/* Quincena ISR notice */}
-      {frequency === 'biweekly' && firstQuincena && (
+      {/* Quincena ISR notice — only for DR */}
+      {isDR && frequency === 'biweekly' && firstQuincena && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
           {t('payroll.calculate.quincena1Notice')}
         </div>
       )}
-      {frequency === 'biweekly' && !firstQuincena && (
+      {isDR && frequency === 'biweekly' && !firstQuincena && (
         <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-700">
           {t('payroll.calculate.quincena2Notice')}
         </div>
