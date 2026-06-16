@@ -3,7 +3,7 @@
 **Last updated:** 2026-06-15  
 **Current Phase:** SYSTEM COMPLETE — UX improvements  
 **Git branch:** main  
-**Last commit:** feat: biweekly quincena picker + ISO week OT calculation (30536fce)
+**Last commit:** feat: complete paystub format + manager report PDF/CSV (cc86a888)
 
 ---
 
@@ -29,6 +29,16 @@ All phases (1–9) implemented and verified.
 | 7 | Full settings (company/logo/payroll/fiscal params/email template) | ✅ |
 | 8 | Dashboard with AreaChart + history with expandable rows | ✅ |
 | 9 | QA pass: i18n completeness, bundle splitting, bug fixes | ✅ |
+
+---
+
+## Paystub + Manager Report (2026-06-15)
+
+| Improvement | Files |
+|-------------|-------|
+| MEJORA 1: Paystub exact format — all rows always visible, "PAYMENT DESCRIPTION/HOURS/RATE/TOTAL" header, Night Incentive row (0 default), all deduction rows with ► arrow, fixed named deductions (SFS, AFP, Pay Advance, Dependent TSS, ISR, ISR Salary=grossPay, Complementary Insurance), NET INCOME as last table row. File naming: Paystub_{Name}_{start}_{end}.pdf | `src/lib/pdf/payStubPdf.tsx`, `src/pages/Payroll/components/SinglePaystubModal.tsx` |
+| MEJORA 2: Manager Report — A4 Landscape PDF with Executive Summary, Employee Detail table, Dept Summary, Signature footer. CSV export with BOM. Buttons in Step 4 (pre+post approval) and History per payroll row | `src/lib/pdf/managerReportPdf.tsx`, `src/lib/pdf/generateCsv.ts`, `src/pages/Payroll/components/StepApprove.tsx`, `src/pages/History/index.tsx` |
+| New i18n keys: payAdvance, dependentTSS, complementaryIns, nightIncentive, managerReport.* | `src/locales/en.json`, `src/locales/es.json` |
 
 ---
 
