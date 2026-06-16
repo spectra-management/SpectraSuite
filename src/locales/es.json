@@ -225,6 +225,7 @@
       "filterWithHours": "Con horas",
       "filterZeroHours": "Sin horas",
       "filterNoMatch": "Sin match",
+      "filterOT": "OT",
       "holidaysBanner": "{{count}} feriado(s) en este período",
       "salariedSection": "Empleados asalariados (excluidos de nómina por hora)",
       "salariedNote": "Estos empleados tienen salario fijo y no se incluyen en los cálculos de nómina por hora.",

@@ -225,6 +225,7 @@
       "filterWithHours": "With Hours",
       "filterZeroHours": "Zero Hours",
       "filterNoMatch": "No Match",
+      "filterOT": "OT",
       "holidaysBanner": "{{count}} public holiday(s) in this period",
       "salariedSection": "Salaried Employees (excluded from hourly payroll)",
       "salariedNote": "These employees have a fixed salary and are not included in hourly payroll calculations.",

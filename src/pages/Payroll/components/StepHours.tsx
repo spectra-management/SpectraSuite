@@ -13,7 +13,7 @@ import { getDRHolidaysInRange } from '@/lib/drHolidays'
 import { SinglePaystubModal } from './SinglePaystubModal'
 import type { EmployeeHoursEntry, Employee } from '@/types'
 
-type Filter = 'all' | 'with-hours' | 'zero-hours' | 'no-match'
+type Filter = 'all' | 'with-hours' | 'zero-hours' | 'no-match' | 'ot'
 
 interface Props {
   employeeHours: EmployeeHoursEntry[]
@@ -68,6 +68,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, onNext
       if (filter === 'with-hours') return total > 0
       if (filter === 'zero-hours') return total === 0
       if (filter === 'no-match') return !h.hubstaffUserId
+      if (filter === 'ot') return h.otHours > 0
       return true
     })
   }, [hours, filter])
@@ -77,6 +78,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, onNext
     'with-hours': hours.filter((h) => totalHours(h) > 0).length,
     'zero-hours': hours.filter((h) => totalHours(h) === 0).length,
     'no-match': hours.filter((h) => !h.hubstaffUserId).length,
+    ot: hours.filter((h) => h.otHours > 0).length,
   }), [hours])
 
   const FILTERS: { key: Filter; label: string }[] = [
@@ -84,6 +86,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, onNext
     { key: 'with-hours', label: t('payroll.review.filterWithHours') },
     { key: 'zero-hours', label: t('payroll.review.filterZeroHours') },
     { key: 'no-match', label: t('payroll.review.filterNoMatch') },
+    { key: 'ot', label: t('payroll.review.filterOT') },
   ]
 
   return (
