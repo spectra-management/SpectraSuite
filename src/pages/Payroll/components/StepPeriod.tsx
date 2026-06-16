@@ -76,16 +76,18 @@ function countryFlag(country: string): string {
   if (c.includes('dominican')) return '🇩🇴'
   if (c.includes('united states') || c === 'us') return '🇺🇸'
   if (c.includes('jamaica')) return '🇯🇲'
+  if (c.includes('philippines') || c.includes('filipinas')) return '🇵🇭'
+  if (c.includes('kenya')) return '🇰🇪'
+  if (c.includes('mexico') || c.includes('méxico')) return '🇲🇽'
   if (c.includes('haiti')) return '🇭🇹'
   if (c.includes('puerto rico')) return '🇵🇷'
   if (c.includes('canada')) return '🇨🇦'
-  if (c.includes('mexico') || c.includes('méxico')) return '🇲🇽'
   if (c.includes('colombia')) return '🇨🇴'
   if (c.includes('venezuela')) return '🇻🇪'
   if (c.includes('panama') || c.includes('panamá')) return '🇵🇦'
   if (c.includes('costa rica')) return '🇨🇷'
   if (c.includes('cuba')) return '🇨🇺'
-  return '🌐'
+  return '🌍'
 }
 
 function countryLabel(country: string): string {
@@ -104,13 +106,11 @@ export function StepPeriod({ onNext }: Props) {
   const [frequency, setFrequency] = useState<'biweekly' | 'weekly'>(payrollSettings.frequency)
 
   // ── Country selection ────────────────────────────────────────────────────────
-  // Compute available countries from active hourly employees
+  // All active employees (Hourly + Salary) determine which countries appear
   const availableCountries = useMemo(() => {
-    const activeHourly = employees.filter(
-      (e) => e.status === 'Active' && e.payType === 'Hourly',
-    )
+    const active = employees.filter((e) => e.status === 'Active')
     const countryMap = new Map<string, number>()
-    for (const emp of activeHourly) {
+    for (const emp of active) {
       const c = emp.country && emp.country.trim() ? emp.country.trim() : 'Unknown'
       countryMap.set(c, (countryMap.get(c) ?? 0) + 1)
     }
