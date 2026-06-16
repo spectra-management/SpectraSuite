@@ -1,9 +1,9 @@
 # CHECKPOINT.md — Spectra Payroll System
 
-**Last updated:** 2026-06-16  
-**Current Phase:** SYSTEM COMPLETE — Post-launch bug fixes  
+**Last updated:** 2026-06-15  
+**Current Phase:** SYSTEM COMPLETE — UX improvements  
 **Git branch:** main  
-**Last commit:** fix: Hubstaff bracket params + payType Hourly filter
+**Last commit:** feat: three UX improvements to Process Payroll step 2 (98f2a8a1)
 
 ---
 
@@ -29,6 +29,18 @@ All phases (1–9) implemented and verified.
 | 7 | Full settings (company/logo/payroll/fiscal params/email template) | ✅ |
 | 8 | Dashboard with AreaChart + history with expandable rows | ✅ |
 | 9 | QA pass: i18n completeness, bundle splitting, bug fixes | ✅ |
+
+---
+
+## UX Improvements (2026-06-15)
+
+| Improvement | Files |
+|-------------|-------|
+| MEJORA 1: Back + Calculate Payroll buttons duplicated at top of Review Hours (Step 2) | `src/pages/Payroll/components/StepHours.tsx` |
+| MEJORA 2: Per-row Calculator icon button opens SinglePaystubModal for solo employee preview with Download PDF + Send Email | `src/pages/Payroll/components/SinglePaystubModal.tsx`, `StepHours.tsx` |
+| MEJORA 3: Paystub PDF redesigned — green EARNINGS table (Concept/Hours/Rate/Amount), dark DEDUCTIONS table with SFS, AFP, custom deductions, ISR DGII, "Salary for month applicable to ISR" (taxableIncome/12), company logo, Date Range + Pay Date header | `src/lib/pdf/payStubPdf.tsx` |
+| New i18n keys for soloPaystub modal in EN + ES | `src/locales/en.json`, `src/locales/es.json` |
+| StepHours `frequency` prop added to enable solo calculation with correct ISR annualization | `src/pages/Payroll/index.tsx` |
 
 ---
 
