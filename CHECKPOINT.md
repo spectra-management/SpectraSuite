@@ -3,7 +3,7 @@
 **Last updated:** 2026-06-15  
 **Current Phase:** SYSTEM COMPLETE — UX improvements  
 **Git branch:** main  
-**Last commit:** fix: DR quincena ISR rule + corrected ISR annualization formula (06d712ec)
+**Last commit:** feat: country-separated payroll (DR + US) — Opción A (5af8b5f2)
 
 ---
 
@@ -29,6 +29,27 @@ All phases (1–9) implemented and verified.
 | 7 | Full settings (company/logo/payroll/fiscal params/email template) | ✅ |
 | 8 | Dashboard with AreaChart + history with expandable rows | ✅ |
 | 9 | QA pass: i18n completeness, bundle splitting, bug fixes | ✅ |
+
+---
+
+## Country-Separated Payroll — Opción A (2026-06-16)
+
+| Area | Change | Files |
+|------|--------|-------|
+| **New: PayrollRules** | `types.ts` interface: country, currency, rates, caps, income-tax function, periods/year, OT threshold, holidays, daily divisor | `src/lib/payroll/rules/types.ts` |
+| **New: DR rules** | `getDOPayrollRules(fiscal, payroll, frequency)` — AFP 2.87%, SFS 3.04%, DGII ISR brackets, quincena rule, DR holidays 2025–2026 | `src/lib/payroll/rules/do.ts` |
+| **New: US rules** | `getUSPayrollRules(frequency)` — Social Security 6.2% (cap $168,600/yr), Medicare 1.45%, 2024 single-filer federal tax brackets, US federal holidays 2025–2026 | `src/lib/payroll/rules/us.ts` |
+| **New: rules factory** | `getPayrollRules(country, frequency, fiscal, payroll)` — dispatches to US or DR, Unknown → DR fallback | `src/lib/payroll/rules/index.ts` |
+| **Core calculation** | `CalculationInput` now uses `rules: PayrollRules` (replaces `fiscal` + `payroll`). Quincena rule gated to DR only. Inline pension/health cap logic. | `src/lib/payroll/calculations.ts`, `types.ts` |
+| **BambooHR sync** | `country` field added to custom report fields + Employee mapping | `src/lib/connectors/bamboohr.ts` |
+| **Types** | `country?: string` added to `Employee` and `PayrollPeriod` | `src/types/index.ts` |
+| **Process Payroll Step 1** | Country selector (🇩🇴/🇺🇸/🌐) with active employee counts; filters `activeEmployees` by selected country; Unknown shows amber warning | `StepPeriod.tsx` |
+| **Process Payroll Steps 2–4** | `country` threaded through all steps; StepCalculate calls `getPayrollRules`; StepApprove saves country to payroll record | `StepHours.tsx`, `StepCalculate.tsx`, `StepApprove.tsx`, `Payroll/index.tsx` |
+| **Solo paystub modal** | `country` prop added; builds rules from `getPayrollRules` | `SinglePaystubModal.tsx` |
+| **Employees page** | Country filter Select; flag emoji (🇩🇴/🇺🇸/🌐) next to each employee | `Employees/index.tsx` |
+| **History** | Country filter Select; flag badge next to each payroll period | `History/index.tsx` |
+| **Paystub PDF** | `makeFmt(currencySymbol)` for DR ($RD$) vs US ($); `COUNTRY_LABELS` selects AFP/SFS/ISR vs SS/Medicare/FIT labels dynamically | `payStubPdf.tsx` |
+| **Tests** | 29 tests (was 27); uses `getDOPayrollRules` in `makeInput`; 2 new US tests (SS+Medicare amounts, no quincena for US) | `calculations.test.ts` |
 
 ---
 
