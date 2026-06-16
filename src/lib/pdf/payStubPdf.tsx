@@ -8,6 +8,7 @@ import {
 } from '@react-pdf/renderer'
 import type { PayrollEntry, CompanySettings } from '@/types'
 import { roundHalfUp } from '@/lib/payroll/calculations'
+import { getCurrencySymbol } from '@/lib/payroll/rules'
 
 const EMERALD = '#059669'
 const EMERALD_DARK = '#065F46'
@@ -192,13 +193,11 @@ const COUNTRY_LABELS = {
     sfs: 'Medicare (1.45%)',
     afp: 'Social Security (6.2%)',
     isr: 'Federal Income Tax',
-    currencySymbol: '$',
   },
   dr: {
     sfs: 'Family health insurance (SFS)',
     afp: 'Pension retention (AFP)',
     isr: 'Tax Retention ISR (DGII)',
-    currencySymbol: 'RD$',
   },
 }
 
@@ -224,7 +223,7 @@ export function PayStubDocument({
   // Country-specific labels and currency
   const isUS = country.toLowerCase().includes('united states') || country.toLowerCase() === 'us'
   const countryL = isUS ? COUNTRY_LABELS.us : COUNTRY_LABELS.dr
-  const fmt = makeFmt(countryL.currencySymbol)
+  const fmt = makeFmt(getCurrencySymbol(country))
 
   const payAdvanceAmt    = lookupDed(c.customDeductionsBreakdown, ['advance', 'adelanto'])
   const dependentTSSAmt  = lookupDed(c.customDeductionsBreakdown, ['dependent tss', 'tss depend', 'depend'])
@@ -312,7 +311,7 @@ export function PayStubDocument({
             <Text style={[S.earnCell, { flex: eD }]}>{l.night}</Text>
             <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>0</Text>
             <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>15%</Text>
-            <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>RD$ 0.00</Text>
+            <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(0)}</Text>
           </View>
 
           {/* Double Holiday hours (always shown) */}

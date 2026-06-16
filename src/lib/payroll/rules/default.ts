@@ -1,4 +1,5 @@
 import type { PayrollRules } from './types'
+import { getCurrencySymbol } from './currency'
 
 export function getDefaultPayrollRules(
   country: string,
@@ -8,7 +9,7 @@ export function getDefaultPayrollRules(
   return {
     country,
     currency: 'USD',
-    currencySymbol: '$',
+    currencySymbol: getCurrencySymbol(country),
     healthInsuranceRate: 0,
     pensionRate: 0,
     healthInsuranceName: 'Health Insurance',

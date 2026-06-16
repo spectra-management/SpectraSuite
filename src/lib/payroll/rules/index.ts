@@ -5,6 +5,7 @@ import { getDefaultPayrollRules } from './default'
 import type { PayrollRules } from './types'
 
 export type { PayrollRules }
+export { getCurrencySymbol } from './currency'
 
 export function isKnownCountry(country: string): boolean {
   const c = country.toLowerCase().trim()

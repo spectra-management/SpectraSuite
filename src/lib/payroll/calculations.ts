@@ -19,6 +19,14 @@ export function formatCurrency(value: number): string {
 }
 
 /**
+ * Format a monetary value with a given currency symbol, e.g. MX$ 1,234.56
+ */
+export function formatCurrencyWithSymbol(value: number, symbol: string): string {
+  const rounded = roundHalfUp(value, 2)
+  return `${symbol} ${rounded.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+/**
  * Calculate hourly earnings (regular, OT, holiday).
  */
 function calculateHourlyEarnings(
