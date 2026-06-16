@@ -57,6 +57,7 @@ export default function Payroll() {
           employeeHours={reviewedHours}
           startDate={periodData.startDate}
           endDate={periodData.endDate}
+          frequency={periodData.frequency}
           onNext={(hours) => {
             setReviewedHours(hours)
             setStep(2)

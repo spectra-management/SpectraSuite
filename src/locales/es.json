@@ -226,7 +226,9 @@
       "salary": "Salario",
       "needsMapping": "Falta mapeo",
       "unmappedBanner": "{{count}} empleado(s) no tienen mapeo de Hubstaff — sus horas serán 0.",
-      "configureMapping": "Configurar mapeo →"
+      "configureMapping": "Configurar mapeo →",
+      "calculateSolo": "Calcular",
+      "soloPaystub": "Ver comprobante"
     },
     "calculate": {
       "title": "Cálculo de Nómina",
@@ -271,6 +273,32 @@
       "mercedes": "Día de las Mercedes",
       "constitution": "Día de la Constitución",
       "christmas": "Navidad"
+    },
+    "soloPaystub": {
+      "title": "Vista previa del comprobante",
+      "download": "Descargar PDF",
+      "sendEmail": "Enviar por Email",
+      "sending": "Enviando...",
+      "sent": "¡Enviado!",
+      "close": "Cerrar",
+      "dateRange": "Período",
+      "payDate": "Fecha de pago",
+      "hours": "Horas",
+      "rate": "Tarifa",
+      "amount": "Monto",
+      "earnings": "INGRESOS",
+      "deductions": "DEDUCCIONES",
+      "regularHours": "Horas Regulares",
+      "overtimeHours": "Horas Extra",
+      "holidayHours": "Horas Feriado Doble",
+      "grossTotal": "TOTAL BRUTO",
+      "sfs": "Seguro Familiar de Salud (SFS)",
+      "afp": "Retención Pensión (AFP)",
+      "isr": "Retención ISR (DGII)",
+      "isrSalary": "Salario del mes aplicable a ISR",
+      "totalDeductions": "Total Deducciones",
+      "netIncome": "SALARIO NETO",
+      "noEmail": "Este empleado no tiene dirección de email"
     }
   },
   "history": {

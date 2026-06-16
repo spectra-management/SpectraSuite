@@ -226,7 +226,9 @@
       "salary": "Salary",
       "needsMapping": "Needs Mapping",
       "unmappedBanner": "{{count}} employee(s) have no Hubstaff mapping — their hours will be 0.",
-      "configureMapping": "Configure Mapping →"
+      "configureMapping": "Configure Mapping →",
+      "calculateSolo": "Calculate",
+      "soloPaystub": "Preview Stub"
     },
     "calculate": {
       "title": "Payroll Calculation",
@@ -271,6 +273,32 @@
       "mercedes": "Our Lady of Mercedes Day",
       "constitution": "Constitution Day",
       "christmas": "Christmas Day"
+    },
+    "soloPaystub": {
+      "title": "Pay Stub Preview",
+      "download": "Download PDF",
+      "sendEmail": "Send by Email",
+      "sending": "Sending...",
+      "sent": "Sent!",
+      "close": "Close",
+      "dateRange": "Date Range",
+      "payDate": "Pay Date",
+      "hours": "Hours",
+      "rate": "Rate",
+      "amount": "Amount",
+      "earnings": "EARNINGS",
+      "deductions": "DEDUCTIONS",
+      "regularHours": "Regular Hours",
+      "overtimeHours": "Overtime Hours",
+      "holidayHours": "Double Holiday Hours",
+      "grossTotal": "GROSS TOTAL",
+      "sfs": "Family Health Insurance (SFS)",
+      "afp": "Pension Retention (AFP)",
+      "isr": "Tax Retention ISR (DGII)",
+      "isrSalary": "Salary for the month applicable to ISR",
+      "totalDeductions": "Total Deductions",
+      "netIncome": "NET INCOME",
+      "noEmail": "This employee has no email address"
     }
   },
   "history": {

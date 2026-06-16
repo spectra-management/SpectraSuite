@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Clock, Pencil, CheckCircle2, AlertTriangle, MapPin, CalendarDays, ChevronDown, ChevronRight } from 'lucide-react'
+import { Clock, Pencil, CheckCircle2, AlertTriangle, MapPin, CalendarDays, ChevronDown, ChevronRight, Calculator } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,8 @@ import { useEmployeesStore } from '@/store/employeesStore'
 import { formatCurrency, getInitials } from '@/lib/utils'
 import { roundHalfUp } from '@/lib/payroll/calculations'
 import { getDRHolidaysInRange } from '@/lib/drHolidays'
-import type { EmployeeHoursEntry } from '@/types'
+import { SinglePaystubModal } from './SinglePaystubModal'
+import type { EmployeeHoursEntry, Employee } from '@/types'
 
 type Filter = 'all' | 'with-hours' | 'zero-hours' | 'no-match'
 
@@ -18,6 +19,7 @@ interface Props {
   employeeHours: EmployeeHoursEntry[]
   startDate: string
   endDate: string
+  frequency: 'biweekly' | 'weekly'
   onNext: (hours: EmployeeHoursEntry[]) => void
   onBack: () => void
 }
@@ -26,12 +28,18 @@ function totalHours(h: EmployeeHoursEntry) {
   return roundHalfUp(h.regularHours + h.otHours + h.holidayHours, 2)
 }
 
-export function StepHours({ employeeHours, startDate, endDate, onNext, onBack }: Props) {
+interface SoloTarget {
+  employee: Employee
+  hoursEntry: EmployeeHoursEntry
+}
+
+export function StepHours({ employeeHours, startDate, endDate, frequency, onNext, onBack }: Props) {
   const { t } = useTranslation()
   const employees = useEmployeesStore((s) => s.employees)
   const [hours, setHours] = useState<EmployeeHoursEntry[]>(employeeHours)
   const [filter, setFilter] = useState<Filter>('all')
   const [showSalaried, setShowSalaried] = useState(false)
+  const [soloTarget, setSoloTarget] = useState<SoloTarget | null>(null)
 
   const salariedEmployees = useMemo(
     () => employees.filter((e) => e.status === 'Active' && e.payType !== 'Hourly'),
@@ -124,6 +132,14 @@ export function StepHours({ employeeHours, startDate, endDate, onNext, onBack }:
         </div>
       )}
 
+      {/* Top action buttons */}
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={onBack}>{t('common.back')}</Button>
+        <Button onClick={() => onNext(hours)}>
+          {t('payroll.calculate.calculate')}
+        </Button>
+      </div>
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -192,12 +208,15 @@ export function StepHours({ employeeHours, startDate, endDate, onNext, onBack }:
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     {t('payroll.review.status')}
                   </th>
+                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    {t('payroll.review.calculateSolo')}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-sm text-gray-400">
+                    <td colSpan={8} className="px-5 py-8 text-center text-sm text-gray-400">
                       {t('payroll.review.noHours')}
                     </td>
                   </tr>
@@ -248,6 +267,16 @@ export function StepHours({ employeeHours, startDate, endDate, onNext, onBack }:
                         <td className="px-3 py-3">
                           <MatchBadge entry={h} total={total} t={t} />
                         </td>
+                        <td className="px-3 py-3 text-center">
+                          <button
+                            type="button"
+                            title={t('payroll.review.soloPaystub')}
+                            onClick={() => setSoloTarget({ employee: emp, hoursEntry: h })}
+                            className="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
+                          >
+                            <Calculator className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
                       </tr>
                     )
                   })
@@ -293,12 +322,25 @@ export function StepHours({ employeeHours, startDate, endDate, onNext, onBack }:
         </div>
       )}
 
+      {/* Bottom action buttons */}
       <div className="flex gap-3">
         <Button variant="outline" onClick={onBack}>{t('common.back')}</Button>
         <Button onClick={() => onNext(hours)}>
           {t('payroll.calculate.calculate')}
         </Button>
       </div>
+
+      {/* Single employee paystub modal */}
+      {soloTarget && (
+        <SinglePaystubModal
+          employee={soloTarget.employee}
+          hoursEntry={soloTarget.hoursEntry}
+          startDate={startDate}
+          endDate={endDate}
+          frequency={frequency}
+          onClose={() => setSoloTarget(null)}
+        />
+      )}
     </div>
   )
 }
