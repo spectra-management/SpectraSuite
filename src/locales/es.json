@@ -13,7 +13,8 @@
       "nomina": "Nómina",
       "rrhh": "Recursos Humanos",
       "facturacion": "Facturación",
-      "gastos": "Gastos"
+      "gastos": "Gastos",
+      "it": "IT"
     },
     "nav": {
       "employees": "Empleados",
@@ -29,7 +30,14 @@
       "expenses": "Gastos",
       "categories": "Categorías",
       "suppliers": "Proveedores",
-      "approvals": "Aprobaciones"
+      "approvals": "Aprobaciones",
+      "assets": "Activos",
+      "computers": "Computadoras",
+      "peripherals": "Periféricos",
+      "mobileDevices": "Dispositivos Móviles",
+      "licenses": "Licencias",
+      "maintenance": "Mantenimiento",
+      "assignments": "Asignaciones"
     },
     "settings": {
       "title": "Ajustes de la Suite",

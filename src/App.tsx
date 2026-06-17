@@ -36,6 +36,7 @@ export default function App() {
         <Route path="/rrhh" element={<ModuleShell moduleId="rrhh" />} />
         <Route path="/facturacion" element={<ModuleShell moduleId="facturacion" />} />
         <Route path="/gastos" element={<ModuleShell moduleId="gastos" />} />
+        <Route path="/it" element={<ModuleShell moduleId="it" />} />
 
         {/* Unknown → Suite home */}
         <Route path="*" element={<Navigate to="/suite" replace />} />

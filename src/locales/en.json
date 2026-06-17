@@ -13,7 +13,8 @@
       "nomina": "Payroll",
       "rrhh": "Human Resources",
       "facturacion": "Billing",
-      "gastos": "Expenses"
+      "gastos": "Expenses",
+      "it": "IT"
     },
     "nav": {
       "employees": "Employees",
@@ -29,7 +30,14 @@
       "expenses": "Expenses",
       "categories": "Categories",
       "suppliers": "Suppliers",
-      "approvals": "Approvals"
+      "approvals": "Approvals",
+      "assets": "Assets",
+      "computers": "Computers",
+      "peripherals": "Peripherals",
+      "mobileDevices": "Mobile Devices",
+      "licenses": "Licenses",
+      "maintenance": "Maintenance",
+      "assignments": "Assignments"
     },
     "settings": {
       "title": "Suite Settings",
