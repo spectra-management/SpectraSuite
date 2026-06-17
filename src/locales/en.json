@@ -218,6 +218,7 @@
       "regularHours": "Regular Hours",
       "otHours": "OT Hours",
       "holidayHours": "Holiday Hours",
+      "nightHours": "Night Hours",
       "totalHours": "Total Hours",
       "payRate": "Pay Rate",
       "source": "Source",
@@ -460,7 +461,14 @@
       "otRate": "Overtime Rate (%)",
       "otRateHelp": "Additional percentage over base rate (e.g., 35 means 1.35× base rate)",
       "holidayRate": "Holiday Rate (%)",
-      "holidayRateHelp": "Additional percentage over base rate (e.g., 100 means 2.0× base rate)"
+      "holidayRateHelp": "Additional percentage over base rate (e.g., 100 means 2.0× base rate)",
+      "nightShiftSection": "Night Shift (15% Incentive)",
+      "nightStart": "Night shift start time",
+      "nightStartHelp": "Night shift runs from this time until 07:00. Default 9:00 PM.",
+      "mixedThreshold": "Mixed shift threshold",
+      "mixedThresholdHelp": "When met, the 15% incentive applies to ALL the day's hours; otherwise only to the night hours.",
+      "mixedPercent": "More than 50% of hours are nocturnal",
+      "mixedHours": "More than X hours are nocturnal"
     },
     "fiscal": {
       "title": "Fiscal Parameters",

@@ -66,7 +66,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
     [startDate, endDate],
   )
 
-  const updateHours = (employeeId: string, field: 'regularHours' | 'otHours' | 'holidayHours', raw: string) => {
+  const updateHours = (employeeId: string, field: 'regularHours' | 'otHours' | 'holidayHours' | 'nightHours', raw: string) => {
     const val = roundHalfUp(parseFloat(raw) || 0, 2)
     setHours((prev) =>
       prev.map((h) =>
@@ -255,6 +255,9 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                     {t('payroll.review.holidayHours')}
                   </th>
                   <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    {t('payroll.review.nightHours')}
+                  </th>
+                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                     {t('payroll.review.totalHours')}
                   </th>
                   <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -271,7 +274,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
               <tbody className="divide-y divide-gray-50">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-5 py-8 text-center text-sm text-gray-400">
+                    <td colSpan={9} className="px-5 py-8 text-center text-sm text-gray-400">
                       {t('payroll.review.noHours')}
                     </td>
                   </tr>
@@ -311,6 +314,12 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                           <HoursInput
                             value={h.holidayHours}
                             onChange={(v) => updateHours(h.employeeId, 'holidayHours', v)}
+                          />
+                        </td>
+                        <td className="px-3 py-3">
+                          <HoursInput
+                            value={h.nightHours ?? 0}
+                            onChange={(v) => updateHours(h.employeeId, 'nightHours', v)}
                           />
                         </td>
                         <td className="px-3 py-3 text-right font-semibold text-gray-900">

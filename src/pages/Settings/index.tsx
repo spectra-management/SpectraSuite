@@ -112,10 +112,14 @@ function PayrollTab() {
   const { t } = useTranslation()
   const payroll = useSettingsStore((s) => s.payroll)
   const updatePayrollSettings = useSettingsStore((s) => s.updatePayrollSettings)
+  const nightShift = useSettingsStore((s) => s.nightShift)
+  const updateNightShift = useSettingsStore((s) => s.updateNightShift)
   const [form, setForm] = useState(payroll)
+  const [nightForm, setNightForm] = useState(nightShift)
 
   const handleSave = () => {
     updatePayrollSettings(form)
+    updateNightShift(nightForm)
     toast({ variant: 'success', title: t('common.success') })
   }
 
@@ -171,6 +175,59 @@ function PayrollTab() {
             <p className="text-xs text-gray-400">{t('settings.payroll.holidayRateHelp')}</p>
           </div>
         </div>
+
+        {/* ── Night shift (15% incentive) ── */}
+        <div className="border-t border-gray-100 pt-4 space-y-4">
+          <p className="text-sm font-semibold text-gray-900">{t('settings.payroll.nightShiftSection')}</p>
+
+          <div className="space-y-1.5">
+            <Label>{t('settings.payroll.nightStart')}</Label>
+            <Input
+              type="time"
+              className="max-w-[160px]"
+              value={nightForm.nightStartTime}
+              onChange={(e) => setNightForm((f) => ({ ...f, nightStartTime: e.target.value }))}
+            />
+            <p className="text-xs text-gray-400">{t('settings.payroll.nightStartHelp')}</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t('settings.payroll.mixedThreshold')}</Label>
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                name="mixedThreshold"
+                className="h-4 w-4 accent-emerald-600"
+                checked={nightForm.mixedThresholdMode === 'percent'}
+                onChange={() => setNightForm((f) => ({ ...f, mixedThresholdMode: 'percent' }))}
+              />
+              {t('settings.payroll.mixedPercent')}
+            </label>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="radio"
+                  name="mixedThreshold"
+                  className="h-4 w-4 accent-emerald-600"
+                  checked={nightForm.mixedThresholdMode === 'hours'}
+                  onChange={() => setNightForm((f) => ({ ...f, mixedThresholdMode: 'hours' }))}
+                />
+                {t('settings.payroll.mixedHours')}
+              </label>
+              <Input
+                type="number"
+                min={0}
+                step={0.5}
+                className="h-8 w-20"
+                value={nightForm.mixedThresholdHours}
+                disabled={nightForm.mixedThresholdMode !== 'hours'}
+                onChange={(e) => setNightForm((f) => ({ ...f, mixedThresholdHours: Number(e.target.value) }))}
+              />
+            </div>
+            <p className="text-xs text-gray-400">{t('settings.payroll.mixedThresholdHelp')}</p>
+          </div>
+        </div>
+
         <Button onClick={handleSave}>{t('common.saveChanges')}</Button>
       </CardContent>
     </Card>

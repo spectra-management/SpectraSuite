@@ -310,9 +310,9 @@ export function PayStubDocument({
           {/* Night incentive (always shown, default 0) */}
           <View style={S.tRow}>
             <Text style={[S.earnCell, { flex: eD }]}>{l.night}</Text>
-            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>0</Text>
+            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{safeNum(c.nightIncentiveHours)}</Text>
             <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>15%</Text>
-            <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(0)}</Text>
+            <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(c.nightIncentiveAmount)}</Text>
           </View>
 
           {/* Double Holiday hours (always shown) */}

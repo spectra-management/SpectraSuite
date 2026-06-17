@@ -32,6 +32,7 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
   const employees = useEmployeesStore((s) => s.employees)
   const fiscal = useSettingsStore((s) => s.fiscal)
   const payrollSettings = useSettingsStore((s) => s.payroll)
+  const nightShift = useSettingsStore((s) => s.nightShift)
   const history = usePayrollStore((s) => s.history)
 
   // Build country-specific payroll rules
@@ -67,6 +68,8 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
         holidayRatePercent: payrollSettings.holidayRatePercent,
         periodStart: startDate,
         firstFortnightGross: findFirstFortnightGross(history, country, startDate, emp.id),
+        nightHours: h.nightHours,
+        nightShift,
       })
 
       computedEntries.push({ employee: emp, hours: h, calculation })
@@ -85,7 +88,7 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
     }
 
     return { entries: computedEntries, totals }
-  }, [employeeHours, employees, rules, frequency, payrollSettings, startDate, country, history])
+  }, [employeeHours, employees, rules, frequency, payrollSettings, startDate, country, history, nightShift])
 
   const ActionButtons = () => (
     <div className="flex gap-3">

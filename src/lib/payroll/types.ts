@@ -1,5 +1,5 @@
 import type { PayrollRules } from './rules/types'
-import type { CustomDeduction } from '@/types'
+import type { CustomDeduction, NightShiftSettings } from '@/types'
 
 export interface CalculationInput {
   employeeId: string
@@ -23,6 +23,10 @@ export interface CalculationInput {
   // DR 2nd-quincena ISR: monthly base = net(1st fortnight) + net(2nd fortnight). When absent
   // the engine falls back to assuming both fortnights are equal.
   firstFortnightGross?: number
+  // Manually-entered nocturnal hours for the period (Hourly employees only).
+  nightHours?: number
+  // Night-shift config (mixed-shift threshold). When absent, no night incentive is applied.
+  nightShift?: NightShiftSettings
 }
 
 export interface CalculationResult {
@@ -47,6 +51,9 @@ export interface CalculationResult {
   isrPeriod: number
   // True only on the DR 1st quincena, where ISR is deferred to the 2nd fortnight.
   isrDeferred: boolean
+  // Nocturnal 15% incentive (additive to gross). hours the incentive applies to + the amount.
+  nightIncentiveHours: number
+  nightIncentiveAmount: number
   customDeductionsBreakdown: Array<{ name: string; amount: number }>
   customDeductions: number
   totalDeductions: number

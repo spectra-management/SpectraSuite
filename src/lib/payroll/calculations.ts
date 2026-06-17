@@ -216,6 +216,8 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
       isrCalculated: 0,
       isrPeriod: 0,
       isrDeferred: false,
+      nightIncentiveHours: 0,
+      nightIncentiveAmount: 0,
       customDeductionsBreakdown: [],
       customDeductions: 0,
       totalDeductions: 0,
@@ -238,19 +240,39 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
         holidayRatePercent,
       )
 
+  // ── Night-shift 15% incentive (DR recargo nocturno) ────────────────────────
+  // Hourly only (rate is per-hour). The mixed-shift threshold from settings decides
+  // whether the 15% applies to ALL the period's worked hours or just the night portion.
+  // Additive to gross (and therefore subject to TSS + ISR).
+  const nightHoursInput = safeNum(input.nightHours)
+  let nightIncentiveHours = 0
+  let nightIncentiveAmount = 0
+  if (!isSalary && nightHoursInput > 0 && input.nightShift) {
+    const worked = regularHours + otHours + holidayHours
+    const night = worked > 0 ? Math.min(nightHoursInput, worked) : nightHoursInput
+    const fullyNocturnal = input.nightShift.mixedThresholdMode === 'hours'
+      ? night > safeNum(input.nightShift.mixedThresholdHours)
+      : (worked > 0 && night / worked > 0.5)
+    nightIncentiveHours = roundHalfUp(fullyNocturnal ? worked : night, 2)
+    nightIncentiveAmount = roundHalfUp(nightIncentiveHours * baseRate * 0.15, 2)
+  }
+
+  // Period gross including the nocturnal incentive.
+  const grossPay = roundHalfUp(earnings.grossPay + nightIncentiveAmount)
+
   // Pension (AFP / Social Security)
-  const afpBase = roundHalfUp(Math.min(earnings.grossPay, rules.pensionCap ?? earnings.grossPay))
+  const afpBase = roundHalfUp(Math.min(grossPay, rules.pensionCap ?? grossPay))
   const afpAmount = roundHalfUp(afpBase * (rules.pensionRate / 100))
 
   // Health insurance (SFS / Medicare)
-  const sfsBase = roundHalfUp(Math.min(earnings.grossPay, rules.healthInsuranceCap ?? earnings.grossPay))
+  const sfsBase = roundHalfUp(Math.min(grossPay, rules.healthInsuranceCap ?? grossPay))
   const sfsAmount = roundHalfUp(sfsBase * (rules.healthInsuranceRate / 100))
 
   const tssTotal = roundHalfUp(afpAmount + sfsAmount)
 
   // ── Income tax (ISR) ───────────────────────────────────────────────────────
   // This fortnight's income net of TSS (ISR is applied AFTER AFP + SFS).
-  const netThisPeriod = roundHalfUp(earnings.grossPay - tssTotal)
+  const netThisPeriod = roundHalfUp(grossPay - tssTotal)
 
   // TSS for an arbitrary gross (applies the same caps as this period) — used to
   // derive the 1st fortnight's net from its gross.
@@ -273,7 +295,7 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
     isrRetained = 0
   } else if (quincena === 2) {
     // DR 2nd quincena: monthly base = net(1st fortnight) + net(2nd fortnight)
-    const firstGross = input.firstFortnightGross ?? earnings.grossPay
+    const firstGross = input.firstFortnightGross ?? grossPay
     const firstNet = roundHalfUp(firstGross - tssForGross(firstGross))
     isrMonthlyBase = roundHalfUp(firstNet + netThisPeriod)
     annualTaxable = roundHalfUp(isrMonthlyBase * 12)
@@ -282,27 +304,27 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
     isrRetained = isrMonthly
   } else {
     // US / other countries / weekly / no periodStart: per-period ISR, gross-annualized
-    annualTaxable = roundHalfUp(earnings.grossPay * rules.payPeriodsPerYear)
+    annualTaxable = roundHalfUp(grossPay * rules.payPeriodsPerYear)
     const annualTax = rules.calculateIncomeTax(annualTaxable)
     isrRetained = roundHalfUp(annualTax / rules.payPeriodsPerYear)
     isrMonthly = roundHalfUp(annualTax / 12)
-    isrMonthlyBase = earnings.grossPay
+    isrMonthlyBase = grossPay
   }
 
   // isrCalculated kept for compatibility: monthly ISR on DR quincena runs, per-period ISR otherwise
   const isrCalculated = quincena !== null ? isrMonthly : isrRetained
   const isrDeferred = quincena === 1
 
-  const customDeds = calculateCustomDeductions(earnings.grossPay, input.customDeductions)
+  const customDeds = calculateCustomDeductions(grossPay, input.customDeductions)
 
   const totalDeductions = roundHalfUp(tssTotal + isrRetained + customDeds.total)
-  const netPay = roundHalfUp(earnings.grossPay - totalDeductions)
+  const netPay = roundHalfUp(grossPay - totalDeductions)
 
   return {
     regularPay: earnings.regularPay,
     otPay: earnings.otPay,
     holidayPay: earnings.holidayPay,
-    grossPay: earnings.grossPay,
+    grossPay: grossPay,
     afpBase,
     afpAmount,
     sfsBase,
@@ -314,6 +336,8 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
     isrCalculated,
     isrPeriod: isrRetained,
     isrDeferred,
+    nightIncentiveHours,
+    nightIncentiveAmount,
     customDeductionsBreakdown: customDeds.breakdown,
     customDeductions: customDeds.total,
     totalDeductions,

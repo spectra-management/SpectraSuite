@@ -50,6 +50,7 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
   const payrollSettings = useSettingsStore((s) => s.payroll)
   const emailConfig = useSettingsStore((s) => s.email)
   const emailTemplate = useSettingsStore((s) => s.emailTemplate)
+  const nightShift = useSettingsStore((s) => s.nightShift)
   const history = usePayrollStore((s) => s.history)
   const lang = (i18n.language?.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
@@ -81,7 +82,9 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
     holidayRatePercent: payrollSettings.holidayRatePercent,
     periodStart: startDate,
     firstFortnightGross: findFirstFortnightGross(history, country, startDate, employee.id),
-  }), [employee, effectiveRate, hoursEntry, rules, payrollSettings, frequency, startDate, country, history])
+    nightHours: hoursEntry.nightHours,
+    nightShift,
+  }), [employee, effectiveRate, hoursEntry, rules, payrollSettings, frequency, startDate, country, history, nightShift])
 
   const entry = useMemo(() => ({
     employee,
@@ -266,9 +269,9 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
               {/* Night incentive - always shown (default 0) */}
               <tr>
                 <td className="px-4 py-2 text-gray-700">{t('payroll.soloPaystub.nightIncentive')}</td>
-                <td className="px-3 py-2 text-right text-gray-700">0</td>
+                <td className="px-3 py-2 text-right text-gray-700">{calculation.nightIncentiveHours}</td>
                 <td className="px-3 py-2 text-right text-gray-500 text-xs">15%</td>
-                <td className="px-4 py-2 text-right font-semibold">{fmt(0)}</td>
+                <td className="px-4 py-2 text-right font-semibold">{fmt(calculation.nightIncentiveAmount)}</td>
               </tr>
               {/* Double Holiday hours - always shown */}
               <tr>

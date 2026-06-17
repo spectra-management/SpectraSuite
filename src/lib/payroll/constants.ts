@@ -1,4 +1,4 @@
-import type { FiscalParameters, PayrollSettings } from '@/types'
+import type { FiscalParameters, PayrollSettings, NightShiftSettings } from '@/types'
 
 export const DEFAULT_FISCAL_PARAMETERS: FiscalParameters = {
   minCotizableSalary: 16341.60,
@@ -20,4 +20,10 @@ export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
   otThresholdHours: 40,
   otRatePercent: 35,
   holidayRatePercent: 100,
+}
+
+export const DEFAULT_NIGHT_SHIFT_SETTINGS: NightShiftSettings = {
+  nightStartTime: '21:00',          // night shift begins 9pm; morning end fixed at 07:00
+  mixedThresholdMode: 'percent',    // mixed shift → fully nocturnal when >50% of hours are night
+  mixedThresholdHours: 3.5,         // X for 'hours' mode
 }

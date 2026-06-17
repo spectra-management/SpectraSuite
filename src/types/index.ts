@@ -40,6 +40,8 @@ export interface EmployeeHoursEntry {
   editedManually?: boolean
   /** Admin-entered hourly rate, used when the employee's BambooHR pay rate is "Not set". */
   payRateOverride?: number
+  /** Manually-entered nocturnal hours for the period (Hubstaff daily totals lack time-of-day). */
+  nightHours?: number
 }
 
 export interface PayrollPeriod {
@@ -78,6 +80,8 @@ export interface PayrollCalculation {
   isrDeferred: boolean   // true only on DR 1st quincena (ISR deferred to 2nd fortnight)
   customDeductions: number
   customDeductionsBreakdown: Array<{ name: string; amount: number }>
+  nightIncentiveHours: number  // hours the 15% nocturnal incentive applies to
+  nightIncentiveAmount: number // nightIncentiveHours × rate × 0.15 (additive to gross)
   totalDeductions: number
   netPay: number
 }
@@ -109,6 +113,15 @@ export interface PayrollSettings {
   otThresholdHours: number
   otRatePercent: number
   holidayRatePercent: number
+}
+
+export interface NightShiftSettings {
+  /** When night shift begins, "HH:MM" (default "21:00"). Morning end is fixed at 07:00. */
+  nightStartTime: string
+  /** How a mixed shift becomes treated as fully nocturnal. */
+  mixedThresholdMode: 'percent' | 'hours'
+  /** Hours threshold X for 'hours' mode (default 3.5). Ignored in 'percent' mode (>50%). */
+  mixedThresholdHours: number
 }
 
 export interface FiscalParameters {
@@ -172,6 +185,7 @@ export interface EmailTemplate {
 export interface AppSettings {
   company: CompanySettings
   payroll: PayrollSettings
+  nightShift: NightShiftSettings
   fiscal: FiscalParameters
   bamboohr: BambooHRConfig
   hubstaff: HubstaffConfig

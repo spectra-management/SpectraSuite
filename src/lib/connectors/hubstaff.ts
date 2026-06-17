@@ -273,7 +273,19 @@ export interface EmployeeHoursMap {
   [userId: string]: { regular: number; ot: number; total: number }
 }
 
-// Loose type for the raw /activities/daily response
+// Loose type for the raw /activities/daily response.
+//
+// NIGHT-SHIFT GRANULARITY NOTE (investigated for the night-incentive feature):
+// The /v2/organizations/{id}/activities/daily endpoint we use returns ONLY a
+// per-user, per-DAY total in `tracked` (seconds). Each daily_activities record is
+// { user_id, date, tracked } — there are NO start_time / stop_time timestamps and
+// NO intra-day time blocks. So time-of-day cannot be derived here and night hours
+// CANNOT be computed automatically from this endpoint.
+//   → Night hours are entered MANUALLY by the manager in the Review Hours table
+//     (see EmployeeHoursEntry.nightHours + StepHours), and the mixed-shift threshold
+//     is applied on the night/total ratio in calculatePayroll.
+// (Hubstaff's non-daily /activities or /timesheets endpoints DO expose start/stop
+//  times; switching to those in the future would enable automatic night detection.)
 interface ActivitiesRaw {
   daily_activities?: Array<{ user_id: number; date: string; tracked: number }>
   users?: Array<{ id: number; name: string; email?: string }>

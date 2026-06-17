@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
-import { DEFAULT_FISCAL_PARAMETERS, DEFAULT_PAYROLL_SETTINGS } from '@/lib/payroll/constants'
+import { DEFAULT_FISCAL_PARAMETERS, DEFAULT_PAYROLL_SETTINGS, DEFAULT_NIGHT_SHIFT_SETTINGS } from '@/lib/payroll/constants'
 import type {
   AppSettings,
   BambooHRConfig,
@@ -10,6 +10,7 @@ import type {
   FiscalParameters,
   HubstaffConfig,
   PayrollSettings,
+  NightShiftSettings,
 } from '@/types'
 
 const defaultCompany: CompanySettings = {
@@ -50,6 +51,7 @@ const defaultEmailTemplate: EmailTemplate = {
 interface SettingsState extends AppSettings {
   updateCompany: (data: Partial<CompanySettings>) => void
   updatePayrollSettings: (data: Partial<PayrollSettings>) => void
+  updateNightShift: (data: Partial<NightShiftSettings>) => void
   updateFiscalParameters: (data: Partial<FiscalParameters>) => void
   resetFiscalParameters: () => void
   updateBambooHR: (data: Partial<BambooHRConfig>) => void
@@ -61,6 +63,7 @@ interface SettingsState extends AppSettings {
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   company: storage.get<CompanySettings>(STORAGE_KEYS.COMPANY) ?? defaultCompany,
   payroll: storage.get<PayrollSettings>(STORAGE_KEYS.PAYROLL_SETTINGS) ?? DEFAULT_PAYROLL_SETTINGS,
+  nightShift: { ...DEFAULT_NIGHT_SHIFT_SETTINGS, ...(storage.get<NightShiftSettings>(STORAGE_KEYS.NIGHT_SETTINGS) ?? {}) },
   fiscal: storage.get<FiscalParameters>(STORAGE_KEYS.FISCAL_PARAMETERS) ?? DEFAULT_FISCAL_PARAMETERS,
   bamboohr: storage.get<BambooHRConfig>(STORAGE_KEYS.BAMBOOHR_CONFIG) ?? defaultBambooHR,
   hubstaff: (() => {
@@ -90,6 +93,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const updated = { ...get().payroll, ...data }
     storage.set(STORAGE_KEYS.PAYROLL_SETTINGS, updated)
     set({ payroll: updated })
+  },
+
+  updateNightShift: (data) => {
+    const updated = { ...get().nightShift, ...data }
+    storage.set(STORAGE_KEYS.NIGHT_SETTINGS, updated)
+    set({ nightShift: updated })
   },
 
   updateFiscalParameters: (data) => {

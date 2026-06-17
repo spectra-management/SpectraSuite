@@ -324,6 +324,7 @@ export function StepPeriod({ onNext }: Props) {
         regularHours: isSalary ? salaryHours : roundHalfUp(hubstaffData?.regular ?? 0, 2),
         otHours: isSalary ? 0 : roundHalfUp(hubstaffData?.ot ?? 0, 2),
         holidayHours: 0,
+        nightHours: 0,
         source: hubstaffData ? 'hubstaff' : 'manual',
         editedManually: false,
       }

@@ -218,6 +218,7 @@
       "regularHours": "Horas regulares",
       "otHours": "Horas extra (OT)",
       "holidayHours": "Horas feriados",
+      "nightHours": "Horas nocturnas",
       "totalHours": "Total horas",
       "payRate": "Tarifa",
       "source": "Fuente",
@@ -460,7 +461,14 @@
       "otRate": "Tasa de horas extra (%)",
       "otRateHelp": "Porcentaje adicional sobre la tarifa base (ej. 35 significa 1.35× la tarifa base)",
       "holidayRate": "Tasa de días feriados (%)",
-      "holidayRateHelp": "Porcentaje adicional sobre la tarifa base (ej. 100 significa 2.0× la tarifa base)"
+      "holidayRateHelp": "Porcentaje adicional sobre la tarifa base (ej. 100 significa 2.0× la tarifa base)",
+      "nightShiftSection": "Turno Nocturno (Incentivo 15%)",
+      "nightStart": "Hora de inicio del turno nocturno",
+      "nightStartHelp": "El turno nocturno va desde esta hora hasta las 07:00. Predeterminado 9:00 PM.",
+      "mixedThreshold": "Umbral de turno mixto",
+      "mixedThresholdHelp": "Cuando se cumple, el incentivo del 15% aplica a TODAS las horas del día; de lo contrario solo a las horas nocturnas.",
+      "mixedPercent": "Más del 50% de las horas son nocturnas",
+      "mixedHours": "Más de X horas son nocturnas"
     },
     "fiscal": {
       "title": "Parámetros Fiscales",

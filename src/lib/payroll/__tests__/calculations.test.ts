@@ -485,3 +485,50 @@ describe('NaN safety', () => {
     expect(hrs % 8).toBe(0)
   })
 })
+
+// ─── Test 14: Night shift 15% incentive ───────────────────────────────────────
+describe('Night Shift Incentive', () => {
+  const percent = { nightStartTime: '21:00', mixedThresholdMode: 'percent' as const, mixedThresholdHours: 3.5 }
+  const byHours = { nightStartTime: '21:00', mixedThresholdMode: 'hours' as const, mixedThresholdHours: 3.5 }
+
+  it('partial (≤50%): 15% applies only to night hours, additive to gross', () => {
+    const r = calculatePayroll(makeInput({ hourlyRate: 200, regularHours: 80, nightHours: 20, nightShift: percent }))
+    expect(r.nightIncentiveHours).toBe(20)
+    expect(r.nightIncentiveAmount).toBe(roundHalfUp(20 * 200 * 0.15)) // 600
+    expect(r.grossPay).toBe(roundHalfUp(80 * 200 + 600))               // 16,600
+  })
+
+  it('mixed >50% (percent mode): 15% applies to ALL worked hours', () => {
+    const r = calculatePayroll(makeInput({ hourlyRate: 200, regularHours: 80, nightHours: 50, nightShift: percent }))
+    expect(r.nightIncentiveHours).toBe(80)
+    expect(r.nightIncentiveAmount).toBe(roundHalfUp(80 * 200 * 0.15)) // 2,400
+  })
+
+  it('hours mode: night > X → treated as fully nocturnal (all hours)', () => {
+    const r = calculatePayroll(makeInput({ hourlyRate: 200, regularHours: 80, nightHours: 5, nightShift: byHours }))
+    expect(r.nightIncentiveHours).toBe(80)
+  })
+
+  it('hours mode: night ≤ X → only night hours', () => {
+    const r = calculatePayroll(makeInput({ hourlyRate: 200, regularHours: 80, nightHours: 3, nightShift: byHours }))
+    expect(r.nightIncentiveHours).toBe(3)
+  })
+
+  it('no nightShift config → no incentive', () => {
+    const r = calculatePayroll(makeInput({ hourlyRate: 200, regularHours: 80, nightHours: 40 }))
+    expect(r.nightIncentiveAmount).toBe(0)
+    expect(r.grossPay).toBe(roundHalfUp(80 * 200))
+  })
+
+  it('salary employees get no night incentive', () => {
+    const r = calculatePayroll(makeInput({ payType: 'Salary', hourlyRate: 50000, regularHours: 0, nightHours: 20, nightShift: percent }))
+    expect(r.nightIncentiveAmount).toBe(0)
+    expect(r.grossPay).toBe(25000)
+  })
+
+  it('night incentive is subject to TSS (included in gross before AFP/SFS)', () => {
+    const r = calculatePayroll(makeInput({ hourlyRate: 200, regularHours: 80, nightHours: 20, nightShift: percent }))
+    expect(r.afpAmount).toBe(roundHalfUp(r.grossPay * 0.0287))
+    expect(r.sfsAmount).toBe(roundHalfUp(r.grossPay * 0.0304))
+  })
+})

@@ -39,6 +39,7 @@ export const storage = {
 export const STORAGE_KEYS = {
   COMPANY: 'company_settings',
   PAYROLL_SETTINGS: 'payroll_settings',
+  NIGHT_SETTINGS: 'payroll_night_settings',
   FISCAL_PARAMETERS: 'fiscal_parameters',
   BAMBOOHR_CONFIG: 'bamboohr_config',
   HUBSTAFF_CONFIG: 'hubstaff_config',
