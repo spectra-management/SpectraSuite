@@ -20,6 +20,7 @@ const defaultCompany: CompanySettings = {
   phone: '',
   email: '',
   accentColor: '#059669',
+  secondaryColor: '#065F46',
 }
 
 const defaultBambooHR: BambooHRConfig = {
@@ -61,7 +62,7 @@ interface SettingsState extends AppSettings {
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
-  company: storage.get<CompanySettings>(STORAGE_KEYS.COMPANY) ?? defaultCompany,
+  company: { ...defaultCompany, ...(storage.get<CompanySettings>(STORAGE_KEYS.COMPANY) ?? {}) },
   payroll: storage.get<PayrollSettings>(STORAGE_KEYS.PAYROLL_SETTINGS) ?? DEFAULT_PAYROLL_SETTINGS,
   nightShift: { ...DEFAULT_NIGHT_SHIFT_SETTINGS, ...(storage.get<NightShiftSettings>(STORAGE_KEYS.NIGHT_SETTINGS) ?? {}) },
   fiscal: storage.get<FiscalParameters>(STORAGE_KEYS.FISCAL_PARAMETERS) ?? DEFAULT_FISCAL_PARAMETERS,

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
+import { ArrowRight, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useSettingsStore } from '@/store/settingsStore'
@@ -34,15 +34,22 @@ export default function SuiteHome() {
               <p className="text-xs text-gray-500">{company.name}</p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => i18n.changeLanguage(currentLang === 'en' ? 'es' : 'en')}
-            className="font-semibold tracking-wide"
-            aria-label="Toggle language"
-          >
-            {currentLang === 'en' ? 'ES' : 'EN'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => i18n.changeLanguage(currentLang === 'en' ? 'es' : 'en')}
+              className="font-semibold tracking-wide"
+              aria-label="Toggle language"
+            >
+              {currentLang === 'en' ? 'ES' : 'EN'}
+            </Button>
+            <Button variant="outline" size="icon" aria-label={t('suite.settings.title')} asChild>
+              <Link to="/suite/settings">
+                <Settings className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </header>
 

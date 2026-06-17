@@ -30,6 +30,15 @@
       "categories": "Categorías",
       "suppliers": "Proveedores",
       "approvals": "Aprobaciones"
+    },
+    "settings": {
+      "title": "Ajustes de la Suite",
+      "companySection": "Ajustes de la Empresa",
+      "brandColors": "Colores de Marca",
+      "primaryColor": "Color primario",
+      "secondaryColor": "Color secundario",
+      "managedNotice": "Los ajustes de la empresa se gestionan a nivel de la Suite.",
+      "goToSuiteSettings": "Ir a Ajustes de la Suite"
     }
   },
   "nav": {

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from './components/layout/Layout'
 import { ModuleShell } from './components/layout/ModuleShell'
 import SuiteHome from './pages/Suite/SuiteHome'
+import SuiteSettings from './pages/Suite/SuiteSettings'
 import Dashboard from './pages/Dashboard'
 import Employees from './pages/Employees'
 import EmployeeProfile from './pages/Employees/EmployeeProfile'
@@ -17,6 +18,7 @@ export default function App() {
         {/* Default → Spectra Suite home */}
         <Route path="/" element={<Navigate to="/suite" replace />} />
         <Route path="/suite" element={<SuiteHome />} />
+        <Route path="/suite/settings" element={<SuiteSettings />} />
 
         {/* Nómina module (the existing payroll app) */}
         <Route path="/nomina" element={<Layout />}>

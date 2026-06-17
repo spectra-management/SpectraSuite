@@ -112,7 +112,8 @@ export interface CompanySettings {
   phone: string
   email: string
   logoBase64?: string
-  accentColor: string
+  accentColor: string       // brand primary color
+  secondaryColor?: string   // brand secondary color
 }
 
 export interface PayrollSettings {

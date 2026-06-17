@@ -30,6 +30,15 @@
       "categories": "Categories",
       "suppliers": "Suppliers",
       "approvals": "Approvals"
+    },
+    "settings": {
+      "title": "Suite Settings",
+      "companySection": "Company Settings",
+      "brandColors": "Brand Colors",
+      "primaryColor": "Primary color",
+      "secondaryColor": "Secondary color",
+      "managedNotice": "Company settings are managed at the Suite level.",
+      "goToSuiteSettings": "Go to Suite Settings"
     }
   },
   "nav": {
