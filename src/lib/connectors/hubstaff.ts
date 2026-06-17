@@ -270,7 +270,7 @@ export async function fetchUserProfiles(
 }
 
 export interface EmployeeHoursMap {
-  [userId: string]: { regular: number; ot: number; total: number }
+  [userId: string]: { regular: number; ot: number; holiday: number; total: number }
 }
 
 // Loose type for the raw /activities/daily response.
@@ -302,6 +302,10 @@ export async function fetchHoursForPeriod(
   endDate: string,
   otThreshold: number,
   frequency: 'biweekly' | 'weekly',
+  // YYYY-MM-DD dates that are public holidays for the period's country. Hours tracked on
+  // these days are split out as holiday hours (paid at the holiday rate) and excluded from
+  // the weekly OT calculation. Matched by EXACT string equality — no Date/timezone parsing.
+  holidayDates: string[] = [],
 ): Promise<{ hoursMap: EmployeeHoursMap; users: HubstaffActivityUser[]; tokenUpdate: HubstaffTokenUpdate }> {
   if (!startDate || !endDate) {
     throw new Error('Period dates are required to fetch Hubstaff hours')
@@ -369,20 +373,32 @@ export async function fetchHoursForPeriod(
     userDailyHours[uid][activity.date] = (userDailyHours[uid][activity.date] ?? 0) + hours
   }
 
+  const holidaySet = new Set(holidayDates)
   const hoursMap: EmployeeHoursMap = {}
   for (const [uid, dailyMap] of Object.entries(userDailyHours)) {
-    const weeks = groupDailyIntoWeeks(dailyMap, startDate, endDate, frequency, otThreshold)
+    // Split each day: holiday-date hours → holiday bucket; the rest feed the weekly OT split.
+    let holidayHrs = 0
+    const workDaily: Record<string, number> = {}
+    for (const [date, hrs] of Object.entries(dailyMap)) {
+      if (holidaySet.has(date)) holidayHrs += hrs
+      else workDaily[date] = hrs
+    }
+
+    const weeks = groupDailyIntoWeeks(workDaily, startDate, endDate, frequency, otThreshold)
     let totalRegular = 0
     let totalOT = 0
     for (const week of weeks) {
       totalRegular += week.regular
       totalOT += week.ot
     }
-    const total = roundHalfUp(totalRegular + totalOT, 2)
+    const regular = roundHalfUp(totalRegular, 2)
+    const ot = roundHalfUp(totalOT, 2)
+    const holiday = roundHalfUp(holidayHrs, 2)
     hoursMap[uid] = {
-      regular: roundHalfUp(totalRegular, 2),
-      ot: roundHalfUp(totalOT, 2),
-      total,
+      regular,
+      ot,
+      holiday,
+      total: roundHalfUp(regular + ot + holiday, 2),
     }
   }
 

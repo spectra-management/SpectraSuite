@@ -12,6 +12,7 @@ import { toast } from '@/hooks/useToast'
 import { fetchHoursForPeriod, fetchUserProfiles } from '@/lib/connectors/hubstaff'
 import type { HubstaffActivityUser } from '@/lib/connectors/hubstaff'
 import { roundHalfUp, standardPeriodHours } from '@/lib/payroll/calculations'
+import { getHolidaysInRange } from '@/lib/holidays'
 import { cn } from '@/lib/utils'
 import type { Employee, EmployeeHoursEntry } from '@/types'
 
@@ -219,8 +220,12 @@ export function StepPeriod({ onNext }: Props) {
     }
 
     setLoading(true)
-    let hoursMap: Record<string, { regular: number; ot: number; total: number }> = {}
+    let hoursMap: Record<string, { regular: number; ot: number; holiday: number; total: number }> = {}
     let hubUsers: HubstaffActivityUser[] = []
+
+    // Public holidays within the period for the selected country (YYYY-MM-DD strings).
+    // Hours tracked on these dates are auto-flagged as holiday hours.
+    const holidayDates = getHolidaysInRange(selectedCountry, effectiveStart, effectiveEnd).map((h) => h.date)
 
     const missingToken = !hubstaff.refreshToken
     const missingOrg = !hubstaff.organizationId
@@ -259,6 +264,7 @@ export function StepPeriod({ onNext }: Props) {
           effectiveEnd,
           payrollSettings.otThresholdHours,
           frequency,
+          holidayDates,
         )
         hoursMap = result.hoursMap
         hubUsers = result.users
@@ -323,7 +329,7 @@ export function StepPeriod({ onNext }: Props) {
         hubstaffUserId,
         regularHours: isSalary ? salaryHours : roundHalfUp(hubstaffData?.regular ?? 0, 2),
         otHours: isSalary ? 0 : roundHalfUp(hubstaffData?.ot ?? 0, 2),
-        holidayHours: 0,
+        holidayHours: isSalary ? 0 : roundHalfUp(hubstaffData?.holiday ?? 0, 2),
         nightHours: 0,
         source: hubstaffData ? 'hubstaff' : 'manual',
         editedManually: false,

@@ -34,6 +34,16 @@ describe('holidays library', () => {
     expect(list[0]).toMatchObject({ date: '2026-05-05', name: 'Cinco de Mayo', source: 'manual', note: 'Decreto' })
   })
 
+  it('finds a registered holiday within a pay period (Corpus Christi Jun 4 in Jun 1-15)', () => {
+    addManualHoliday('Dominican Republic', 2026, '2026-06-04', 'Corpus Christi')
+    const inRange = getHolidaysInRange('Dominican Republic', '2026-06-01', '2026-06-15')
+    const corpus = inRange.find((h) => h.date === '2026-06-04')
+    expect(corpus?.name).toBe('Corpus Christi')
+    // Exact-string range bounds: a holiday outside the period is excluded.
+    expect(getHolidaysInRange('Dominican Republic', '2026-06-05', '2026-06-15')
+      .some((h) => h.date === '2026-06-04')).toBe(false)
+  })
+
   it('deletes a holiday by id', () => {
     addManualHoliday('Mexico', 2026, '2026-05-05', 'Cinco de Mayo')
     const id = getHolidays('Mexico', 2026)[0].id
