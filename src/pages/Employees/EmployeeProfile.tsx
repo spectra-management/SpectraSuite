@@ -23,14 +23,14 @@ import { usePaymentMethodsStore } from '@/store/paymentMethodsStore'
 import { useBankAccountsStore, RD_BANKS } from '@/store/bankAccountsStore'
 import { toast } from '@/hooks/useToast'
 import { formatCurrency, formatDate, getInitials } from '@/lib/utils'
-import { PAYMENT_METHOD_LABELS, getPaystubLang } from '@/lib/pdf/paystubLabels'
+import { PAYMENT_METHOD_LABELS } from '@/lib/pdf/paystubLabels'
 import type { CustomDeduction, PaymentMethod } from '@/types'
 
 const BANK_FIELD_LABELS = {
   en: {
     bank: 'Bank',
     accountNumber: 'Account Number',
-    note: 'This field is currently entered manually. It will be auto-synced from BambooHR when the integration becomes available.',
+    note: 'This field is entered manually for now. It will be auto-synced from BambooHR when the integration becomes available.',
   },
   es: {
     bank: 'Banco',
@@ -90,8 +90,9 @@ export default function EmployeeProfile() {
   const mapping = hubstaff.employeeMapping.find((m) => m.bambooEmployeeId === employee.id)
   const paymentMethod: PaymentMethod = paymentMethods[employee.id] ?? 'transfer'
   const bankAccount = bankAccounts[employee.id] ?? { bank: '', accountNumber: '' }
-  const bankLang = getPaystubLang(employee.country)
-  const bankLabels = BANK_FIELD_LABELS[bankLang]
+  // Bank field labels follow the APP interface language (not the employee's country).
+  // The Spanish labels appear only on the paystub PDF for DR/Mexico employees.
+  const bankLabels = BANK_FIELD_LABELS[uiLang]
 
   const openAdd = () => {
     setEditingId(null)
