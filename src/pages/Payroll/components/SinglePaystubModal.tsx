@@ -331,6 +331,17 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
               {!calculation.isrDeferred && (
                 <>
                   <DedRow fmt={fmt} label={L.isr} amount={calculation.isrPeriod} />
+                  {calculation.vacationIsr > 0 && (
+                    <>
+                      <DedRow fmt={fmt} label={L.vacationIsr} amount={calculation.vacationIsr} />
+                      <tr className="bg-red-50">
+                        <td className="px-4 py-2 font-bold text-red-700 text-xs">{L.isrTotalRetained}</td>
+                        <td className="px-3 py-2" />
+                        <td className="w-6 py-2 text-center text-red-400 text-xs">►</td>
+                        <td className="px-4 py-2 text-right font-bold text-red-700">{fmt(calculation.isrPeriod + calculation.vacationIsr)}</td>
+                      </tr>
+                    </>
+                  )}
                   {/* Salary for the month applicable to ISR — neutral reference row */}
                   <tr className="bg-gray-50">
                     <td className="px-4 py-2 text-gray-500 text-xs">{L.isrSalary}</td>

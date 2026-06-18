@@ -38,6 +38,8 @@ export interface PaystubLabels {
   payAdvance: string
   dependentTSS: string
   isr: string
+  vacationIsr: string
+  isrTotalRetained: string
   isrSalary: string
   complementaryIns: string
   totalDed: string
@@ -73,6 +75,8 @@ export const PAYSTUB_LABELS: Record<PaystubLang, PaystubLabels> = {
     payAdvance: 'Pay Advance Deduction',
     dependentTSS: 'Dependent TSS Retention',
     isr: 'Tax Retention ISR (DGII)',
+    vacationIsr: 'Vacation ISR',
+    isrTotalRetained: 'Total ISR Retained',
     isrSalary: 'Salary for the month applicable to ISR',
     complementaryIns: 'Complementary Insurance Dependent',
     totalDed: 'Total Deductions',
@@ -106,6 +110,8 @@ export const PAYSTUB_LABELS: Record<PaystubLang, PaystubLabels> = {
     payAdvance: 'Deducción Adelanto de Salario',
     dependentTSS: 'Retención TSS Dependientes',
     isr: 'Retención ISR (DGII)',
+    vacationIsr: 'ISR Vacaciones',
+    isrTotalRetained: 'Total ISR Retenido',
     isrSalary: 'Salario del mes aplicable al ISR',
     complementaryIns: 'Seguro Complementario Dependiente',
     totalDed: 'Total Deducciones',

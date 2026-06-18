@@ -232,7 +232,9 @@
       "generateReceipt": "Generar Recibo de Vacaciones",
       "receipt": "Recibo",
       "paid": "Vacaciones pagadas",
-      "paidDetail": "Pago generado el {{date}} por {{days}} días · {{amount}}"
+      "paidDetail": "Pago generado el {{date}} por {{days}} días · {{amount}}",
+      "isrPending": "ISR de vacaciones pendiente: {{amount}}",
+      "isrApplied": "ISR de vacaciones cobrado en {{period}}"
     },
     "deductions": {
       "addDeduction": "Agregar deducción",
@@ -302,6 +304,7 @@
       "filter": "Mostrar",
       "searchPlaceholder": "Buscar empleado...",
       "vacationTooltip": "En vacaciones {{period}} · El pago de vacaciones de {{amount}} se genera por separado",
+      "pendingVacationIsr": "ISR de vacaciones pendiente: {{amount}} (se cobrará en este período)",
       "filterAll": "Todos",
       "filterWithHours": "Con horas",
       "filterZeroHours": "Sin horas",

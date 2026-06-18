@@ -232,7 +232,9 @@
       "generateReceipt": "Generate Vacation Receipt",
       "receipt": "Receipt",
       "paid": "Vacation paid",
-      "paidDetail": "Payment generated on {{date}} for {{days}} days · {{amount}}"
+      "paidDetail": "Payment generated on {{date}} for {{days}} days · {{amount}}",
+      "isrPending": "Pending vacation ISR: {{amount}}",
+      "isrApplied": "Vacation ISR collected in {{period}}"
     },
     "deductions": {
       "addDeduction": "Add Deduction",
@@ -302,6 +304,7 @@
       "filter": "Show",
       "searchPlaceholder": "Search employee...",
       "vacationTooltip": "On vacation {{period}} · Vacation pay of {{amount}} is generated separately",
+      "pendingVacationIsr": "Pending vacation ISR: {{amount}} (will be collected this period)",
       "filterAll": "All",
       "filterWithHours": "With Hours",
       "filterZeroHours": "Zero Hours",

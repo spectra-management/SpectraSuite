@@ -218,6 +218,7 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
       isrDeferred: false,
       nightIncentiveHours: 0,
       nightIncentiveAmount: 0,
+      vacationIsr: 0,
       customDeductionsBreakdown: [],
       customDeductions: 0,
       totalDeductions: 0,
@@ -317,7 +318,10 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
 
   const customDeds = calculateCustomDeductions(grossPay, input.customDeductions)
 
-  const totalDeductions = roundHalfUp(tssTotal + isrRetained + customDeds.total)
+  // Pending vacation ISR is collected on the DR 2nd fortnight only (where ISR is retained).
+  const vacationIsr = quincena === 2 ? roundHalfUp(safeNum(input.pendingVacationIsr)) : 0
+
+  const totalDeductions = roundHalfUp(tssTotal + isrRetained + vacationIsr + customDeds.total)
   const netPay = roundHalfUp(grossPay - totalDeductions)
 
   return {
@@ -338,6 +342,7 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
     isrDeferred,
     nightIncentiveHours,
     nightIncentiveAmount,
+    vacationIsr,
     customDeductionsBreakdown: customDeds.breakdown,
     customDeductions: customDeds.total,
     totalDeductions,

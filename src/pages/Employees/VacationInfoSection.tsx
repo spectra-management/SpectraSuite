@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Palmtree, Loader2, FileText, CheckCircle2 } from 'lucide-react'
+import { Palmtree, Loader2, FileText, CheckCircle2, Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useVacationPaymentsStore } from '@/store/vacationPaymentsStore'
+import { usePendingVacationIsrStore } from '@/store/pendingVacationIsrStore'
 import { formatCurrencyWithSymbol } from '@/lib/payroll/calculations'
 import { getCurrencySymbol } from '@/lib/payroll/rules'
 import { formatDate } from '@/lib/utils'
@@ -23,6 +24,8 @@ export function VacationInfoSection({ employee }: { employee: Employee }) {
   const getPayment = useVacationPaymentsStore((s) => s.getPayment)
   const markPaid = useVacationPaymentsStore((s) => s.markPaid)
   const paymentsMap = useVacationPaymentsStore((s) => s.payments) // subscribe for re-render
+  const setPendingIsr = usePendingVacationIsrStore((s) => s.setPending)
+  const pendingIsrMap = usePendingVacationIsrStore((s) => s.pending) // subscribe for re-render
 
   const year = new Date().getFullYear()
   const country = employee.country || ''
@@ -41,6 +44,7 @@ export function VacationInfoSection({ employee }: { employee: Employee }) {
   const connected = bamboo.connected && !!bamboo.subdomain && !!bamboo.apiKey
   void paymentsMap
   const payment = getPayment(employee.id, year)
+  const isr = pendingIsrMap[employee.id] ?? null
 
   // Earliest vacation request of the year triggers the (single) payment.
   const sorted = [...vacations].sort((a, b) => a.start.localeCompare(b.start))
@@ -149,6 +153,25 @@ export function VacationInfoSection({ employee }: { employee: Employee }) {
             <FileText className="h-4 w-4" /> {t('employees.vacation.generateReceipt')}
           </Button>
         )}
+
+        {/* Vacation ISR status */}
+        {isr && isr.amount > 0 && (
+          isr.appliedInPeriod === null ? (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+              <Clock className="h-4 w-4 shrink-0 text-amber-600" />
+              <span className="text-xs font-medium text-amber-700">
+                {t('employees.vacation.isrPending', { amount: fmt(isr.amount) })}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              <span className="text-xs font-medium text-emerald-700">
+                {t('employees.vacation.isrApplied', { period: isr.appliedInPeriod })} ✓
+              </span>
+            </div>
+          )
+        )}
       </CardContent>
 
       {showReceipt && (
@@ -161,6 +184,15 @@ export function VacationInfoSection({ employee }: { employee: Employee }) {
           periodLabel={firstReqLabel}
           onConfirm={(p) => {
             markPaid(employee.id, year, p)
+            if (p.isrAmount > 0) {
+              setPendingIsr(employee.id, {
+                amount: p.isrAmount,
+                vacationReceiptId: `vac-${employee.id}-${year}`,
+                approvedDate: p.date.slice(0, 10),
+                vacationPeriod: p.periodLabel ?? firstReqLabel ?? '',
+                appliedInPeriod: null,
+              })
+            }
             setShowReceipt(false)
           }}
           onClose={() => setShowReceipt(false)}

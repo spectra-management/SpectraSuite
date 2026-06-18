@@ -27,6 +27,8 @@ export interface CalculationInput {
   nightHours?: number
   // Night-shift config (mixed-shift threshold). When absent, no night incentive is applied.
   nightShift?: NightShiftSettings
+  // Pending vacation ISR to collect this period. Only applied on the DR 2nd fortnight.
+  pendingVacationIsr?: number
 }
 
 export interface CalculationResult {
@@ -54,6 +56,8 @@ export interface CalculationResult {
   // Nocturnal 15% incentive (additive to gross). hours the incentive applies to + the amount.
   nightIncentiveHours: number
   nightIncentiveAmount: number
+  // Pending vacation ISR collected this period (DR 2nd fortnight only). Included in totalDeductions.
+  vacationIsr: number
   customDeductionsBreakdown: Array<{ name: string; amount: number }>
   customDeductions: number
   totalDeductions: number

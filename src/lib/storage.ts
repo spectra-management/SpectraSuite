@@ -52,6 +52,7 @@ export const STORAGE_KEYS = {
   HOLIDAYS_LAST_SYNC: 'holidays_last_sync',
   VACATION_RULES: 'vacation_rules',
   VACATION_PAYMENTS: 'vacation_payments_made',
+  PENDING_VACATION_ISR: 'pending_vacation_isr',
   PAYROLL_HISTORY: 'payroll_history',
   LANGUAGE: 'language',
 } as const

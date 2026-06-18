@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Clock, Pencil, CheckCircle2, AlertTriangle, MapPin, CalendarDays, Calculator, Search, Banknote, Landmark, ScrollText, Palmtree } from 'lucide-react'
+import { Clock, Pencil, CheckCircle2, AlertTriangle, MapPin, CalendarDays, Calculator, Search, Banknote, Landmark, ScrollText, Palmtree, Coins } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { useEmployeesStore } from '@/store/employeesStore'
 import { usePaymentMethodsStore } from '@/store/paymentMethodsStore'
 import { useBankAccountsStore } from '@/store/bankAccountsStore'
 import { useSettingsStore } from '@/store/settingsStore'
+import { usePendingVacationIsrStore } from '@/store/pendingVacationIsrStore'
 import { formatCurrency, formatDate, getInitials, maskAccount } from '@/lib/utils'
 import { roundHalfUp, formatCurrencyWithSymbol } from '@/lib/payroll/calculations'
 import { getCurrencySymbol } from '@/lib/payroll/rules'
@@ -72,7 +73,18 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
   const paymentMethods = usePaymentMethodsStore((s) => s.methods)
   const bankAccounts = useBankAccountsStore((s) => s.accounts)
   const bamboo = useSettingsStore((s) => s.bamboohr)
+  const pendingVacationIsr = usePendingVacationIsrStore((s) => s.pending)
   const uiLang = i18n.language?.startsWith('es') ? 'es' : 'en'
+  // Pending vacation ISR is collected on the 2nd fortnight (period start day ≥ 16).
+  const isSecondFortnight = frequency === 'biweekly' && new Date(startDate + 'T00:00:00').getDate() > 15
+
+  // Pending vacation ISR tooltip for an employee (2nd fortnight only).
+  const pendingIsrInfo = (emp: Employee): string | null => {
+    if (!isSecondFortnight) return null
+    const rec = pendingVacationIsr[emp.id]
+    if (!rec || rec.appliedInPeriod !== null || rec.amount <= 0) return null
+    return t('payroll.review.pendingVacationIsr', { amount: formatCurrencyWithSymbol(rec.amount, getCurrencySymbol(country)) })
+  }
 
   // Approved vacations for the pay-period year (for the 🌴 overlap badge).
   const [vacations, setVacations] = useState<VacationRequest[]>([])
@@ -356,6 +368,18 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                                       className="inline-flex shrink-0 items-center text-emerald-600"
                                     >
                                       <Palmtree className="h-3 w-3" />
+                                    </span>
+                                  )
+                                })()}
+                                {(() => {
+                                  const info = pendingIsrInfo(emp)
+                                  if (!info) return null
+                                  return (
+                                    <span
+                                      title={info}
+                                      className="inline-flex shrink-0 items-center text-amber-600"
+                                    >
+                                      <Coins className="h-3 w-3" />
                                     </span>
                                   )
                                 })()}

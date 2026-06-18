@@ -1,5 +1,7 @@
+import { Clock } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { useSettingsStore } from '@/store/settingsStore'
 import { formatCurrencyWithSymbol } from '@/lib/payroll/calculations'
 import { getCurrencySymbol } from '@/lib/payroll/rules'
 import { getPaystubLang } from '@/lib/pdf/paystubLabels'
@@ -11,15 +13,17 @@ const RECEIPT_LABELS = {
     title: 'Vacation Receipt', period: 'Vacation Period', entitledDays: 'Entitled days',
     daysTaken: 'Days taken this period', avgMonthly: 'Average monthly salary', monthlySalary: 'Monthly salary',
     dailySalary: 'Daily salary',
-    gross: 'Gross vacation pay', sfs: 'SFS (3.04%)', afp: 'AFP (2.87%)', isr: 'ISR (applies)',
+    gross: 'Gross vacation pay', sfs: 'SFS (3.04%)', afp: 'AFP (2.87%)', isr: 'ISR (DGII)',
     net: 'Net to pay', close: 'Close', approve: 'Approve payment',
+    isrNote: 'ISR of {amount} will be collected in the next payroll period (2nd fortnight)',
   },
   es: {
     title: 'Recibo de Vacaciones', period: 'Período de vacaciones', entitledDays: 'Días con derecho',
     daysTaken: 'Días tomados este período', avgMonthly: 'Salario mensual promedio', monthlySalary: 'Salario mensual',
     dailySalary: 'Salario diario',
-    gross: 'Pago de vacaciones (bruto)', sfs: 'SFS (3.04%)', afp: 'AFP (2.87%)', isr: 'ISR (aplica)',
+    gross: 'Pago de vacaciones (bruto)', sfs: 'SFS (3.04%)', afp: 'AFP (2.87%)', isr: 'ISR (DGII)',
     net: 'Neto a pagar', close: 'Cerrar', approve: 'Aprobar pago',
+    isrNote: 'El ISR de {amount} será cobrado en el próximo período de nómina (2da quincena)',
   },
 }
 
@@ -28,6 +32,7 @@ export interface VacationPaymentResult {
   amount: number
   gross: number
   days: number
+  isrAmount: number
   periodLabel?: string
 }
 
@@ -46,6 +51,7 @@ interface Props {
 }
 
 export function VacationReceiptModal({ employee, country, payRate, entitledDays, daysTaken, periodLabel, onConfirm, onClose }: Props) {
+  const fiscal = useSettingsStore((s) => s.fiscal)
   const lang = getPaystubLang(country)
   const L = RECEIPT_LABELS[lang]
   const sym = getCurrencySymbol(country)
@@ -53,8 +59,9 @@ export function VacationReceiptModal({ employee, country, payRate, entitledDays,
 
   // Pay is computed on the ENTITLED days, never the BambooHR request days.
   // Salary employees: payRate IS the monthly salary; Hourly: annualized via the formula.
-  const result = calculateVacationPayForDays(country, payRate, entitledDays, employee.payType)
+  const result = calculateVacationPayForDays(country, payRate, entitledDays, employee.payType, { isrBrackets: fiscal.isrBrackets })
   const monthlyLabel = employee.payType === 'Salary' ? L.monthlySalary : L.avgMonthly
+  const showIsr = !!result && result.isrApplies && result.isrAmount > 0
 
   const confirm = () => {
     if (!result || !onConfirm) return
@@ -63,6 +70,7 @@ export function VacationReceiptModal({ employee, country, payRate, entitledDays,
       amount: result.net,
       gross: result.gross,
       days: entitledDays,
+      isrAmount: result.isrAmount,
       periodLabel,
     })
   }
@@ -81,24 +89,39 @@ export function VacationReceiptModal({ employee, country, payRate, entitledDays,
             {periodLabel && <p className="text-xs text-gray-500 mt-0.5">{L.period}: {periodLabel}</p>}
           </div>
           {result ? (
-            <table className="w-full">
-              <tbody className="divide-y divide-gray-50">
-                <Row label={L.entitledDays} value={String(entitledDays)} bold />
-                {daysTaken != null && <Row label={L.daysTaken} value={String(daysTaken)} muted />}
-                <Row label={monthlyLabel} value={fmt(result.averageMonthlySalary)} />
-                <Row label={L.dailySalary} value={fmt(result.dailySalary)} />
-                <Row label={L.gross} value={fmt(result.gross)} bold />
-                {result.sfsAmount > 0 && <Row label={L.sfs} value={`(${fmt(result.sfsAmount)})`} red />}
-                {result.afpAmount > 0 && <Row label={L.afp} value={`(${fmt(result.afpAmount)})`} red />}
-                {result.isrApplies && <Row label={L.isr} value="✓" muted />}
-              </tbody>
-              <tfoot>
-                <tr className="bg-emerald-50 border-t border-emerald-200">
-                  <td className="px-4 py-3 font-extrabold text-emerald-800">{L.net}</td>
-                  <td className="px-4 py-3 text-right font-extrabold text-emerald-600 text-base">{fmt(result.net)}</td>
-                </tr>
-              </tfoot>
-            </table>
+            <>
+              <table className="w-full">
+                <tbody className="divide-y divide-gray-50">
+                  <Row label={L.entitledDays} value={String(entitledDays)} bold />
+                  {daysTaken != null && <Row label={L.daysTaken} value={String(daysTaken)} muted />}
+                  <Row label={monthlyLabel} value={fmt(result.averageMonthlySalary)} />
+                  <Row label={L.dailySalary} value={fmt(result.dailySalary)} />
+                  <Row label={L.gross} value={fmt(result.gross)} bold />
+                  {result.sfsAmount > 0 && <Row label={L.sfs} value={`(${fmt(result.sfsAmount)})`} red />}
+                  {result.afpAmount > 0 && <Row label={L.afp} value={`(${fmt(result.afpAmount)})`} red />}
+                  {/* ISR informational only — NOT deducted from vacation net */}
+                  {showIsr && (
+                    <tr>
+                      <td className="px-4 py-2 text-gray-400">
+                        <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {L.isr}</span>
+                      </td>
+                      <td className="px-4 py-2 text-right text-gray-400">{fmt(result.isrAmount)}</td>
+                    </tr>
+                  )}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-emerald-50 border-t border-emerald-200">
+                    <td className="px-4 py-3 font-extrabold text-emerald-800">{L.net}</td>
+                    <td className="px-4 py-3 text-right font-extrabold text-emerald-600 text-base">{fmt(result.net)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+              {showIsr && (
+                <p className="border-t border-gray-100 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+                  🕐 {L.isrNote.replace('{amount}', fmt(result.isrAmount))}
+                </p>
+              )}
+            </>
           ) : (
             <p className="px-4 py-6 text-center text-sm text-gray-400">—</p>
           )}

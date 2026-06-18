@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { usePayrollStore } from '@/store/payrollStore'
 import { useSettingsStore } from '@/store/settingsStore'
+import { usePendingVacationIsrStore } from '@/store/pendingVacationIsrStore'
 import { toast } from '@/hooks/useToast'
 import { formatCurrency } from '@/lib/utils'
 import { generatePdfBlob, downloadBlob } from '@/lib/pdf/generatePdf'
@@ -27,6 +28,7 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
   const { t, i18n } = useTranslation()
   const addPayroll = usePayrollStore((s) => s.addPayroll)
   const company = useSettingsStore((s) => s.company)
+  const markVacationIsrApplied = usePendingVacationIsrStore((s) => s.markApplied)
   const navigate = useNavigate()
   const [approving, setApproving] = useState(false)
   const [approved, setApproved] = useState(false)
@@ -47,6 +49,12 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
       entries,
       totals,
     })
+    // Mark any collected vacation ISR as applied to this period.
+    for (const e of entries) {
+      if (e.calculation.vacationIsr > 0) {
+        markVacationIsrApplied(e.employee.id, `${startDate}/${endDate}`)
+      }
+    }
     setApproved(true)
     setApproving(false)
     toast({ variant: 'success', title: t('payroll.approve.approved') })

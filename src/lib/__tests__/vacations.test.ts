@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
   defaultVacationRules, getVacationRules, isVacationConfigured, saveVacationRules,
-  getVacationDays, calculateVacationPay,
+  getVacationDays, calculateVacationPay, calculateVacationPayForDays,
 } from '../vacations'
+import { calculateAnnualISR, roundHalfUp } from '../payroll/calculations'
+import { DEFAULT_FISCAL_PARAMETERS } from '../payroll/constants'
 
 beforeEach(() => localStorage.clear())
 
@@ -48,6 +50,21 @@ describe('vacation rules', () => {
 
   it('returns null for an unconfigured country', () => {
     expect(calculateVacationPay('Kenya', 200, 3)).toBeNull()
+  })
+
+  it('vacation ISR = annualized (×12) DGII ÷ 12, and is NOT deducted from net', () => {
+    const brackets = DEFAULT_FISCAL_PARAMETERS.isrBrackets
+    const r = calculateVacationPayForDays('Dominican Republic', 69440, 14, 'Salary', { isrBrackets: brackets })!
+    const expectedIsr = roundHalfUp(calculateAnnualISR(roundHalfUp(r.gross * 12), brackets) / 12)
+    expect(r.isrAmount).toBe(expectedIsr)
+    expect(r.isrAmount).toBeGreaterThan(0)
+    // net excludes ISR (only SFS + AFP deducted)
+    expect(r.net).toBeCloseTo(r.gross - r.sfsAmount - r.afpAmount, 2)
+  })
+
+  it('vacation ISR is 0 when no brackets are provided', () => {
+    const r = calculateVacationPayForDays('Dominican Republic', 69440, 14, 'Salary')!
+    expect(r.isrAmount).toBe(0)
   })
 
   it('Salary: payRate IS the monthly salary (no hourly annualization)', () => {

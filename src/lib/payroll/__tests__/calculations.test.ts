@@ -145,6 +145,15 @@ describe('Quincena Monthly ISR Rule (DR biweekly)', () => {
     expect(result.isrPeriod).toBe(result.isrCalculated)
     expect(result.isrDeferred).toBe(false)
   })
+
+  it('pending vacation ISR is collected on the 2nd fortnight only, added to deductions', () => {
+    const second = calculatePayroll(makeInput({ hourlyRate: 350, regularHours: 80, periodStart: '2026-03-16', pendingVacationIsr: 1000 }))
+    expect(second.vacationIsr).toBe(1000)
+    expect(second.totalDeductions).toBe(roundHalfUp(second.tssTotal + second.isrPeriod + second.vacationIsr + second.customDeductions))
+
+    const first = calculatePayroll(makeInput({ hourlyRate: 350, regularHours: 80, periodStart: '2026-03-01', pendingVacationIsr: 1000 }))
+    expect(first.vacationIsr).toBe(0) // 1st quincena does not collect ISR
+  })
 })
 
 // ─── Test 3: TSS caps ─────────────────────────────────────────────────────────

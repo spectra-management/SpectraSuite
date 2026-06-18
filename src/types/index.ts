@@ -89,6 +89,7 @@ export interface PayrollCalculation {
   customDeductionsBreakdown: Array<{ name: string; amount: number }>
   nightIncentiveHours: number  // hours the 15% nocturnal incentive applies to
   nightIncentiveAmount: number // nightIncentiveHours × rate × 0.15 (additive to gross)
+  vacationIsr: number          // pending vacation ISR collected this period (2nd fortnight)
   totalDeductions: number
   netPay: number
 }

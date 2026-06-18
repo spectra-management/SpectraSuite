@@ -1,7 +1,8 @@
 import { storage, STORAGE_KEYS } from './storage'
 import { generateId } from './utils'
-import { roundHalfUp } from './payroll/calculations'
+import { roundHalfUp, calculateAnnualISR } from './payroll/calculations'
 import { getPaystubLang } from './pdf/paystubLabels'
+import type { ISRBracket } from '@/types'
 
 export interface SeniorityTier {
   id: string
@@ -108,6 +109,9 @@ export interface VacationPayResult {
   sfsAmount: number
   afpAmount: number
   isrApplies: boolean
+  // ISR on the vacation pay (annualized ÷ 12). Informational on the receipt — it is NOT
+  // deducted from `net`; it is collected on the next 2nd-fortnight payroll instead.
+  isrAmount: number
   net: number
 }
 
@@ -132,7 +136,7 @@ export function calculateVacationPayForDays(
   payRate: number,
   days: number,
   payType: 'Hourly' | 'Salary' = 'Hourly',
-  rates: { sfsRate?: number; afpRate?: number } = {},
+  rates: { sfsRate?: number; afpRate?: number; isrBrackets?: ISRBracket[] } = {},
 ): VacationPayResult | null {
   const rules = getVacationRules(country)
   if (!rules) return null
@@ -149,9 +153,17 @@ export function calculateVacationPayForDays(
   const afpRate = rates.afpRate ?? 2.87
   const sfsAmount = rules.deductions.sfs ? roundHalfUp(gross * (sfsRate / 100)) : 0
   const afpAmount = rules.deductions.afp ? roundHalfUp(gross * (afpRate / 100)) : 0
+
+  // ISR on vacation pay: annualize ×12, apply DGII brackets, ÷12. Informational only —
+  // not deducted from `net` (collected on the next 2nd-fortnight payroll).
+  const isrAmount = rules.deductions.isr && rates.isrBrackets
+    ? roundHalfUp(calculateAnnualISR(roundHalfUp(gross * 12), rates.isrBrackets) / 12)
+    : 0
+
+  // ISR is intentionally excluded from the vacation receipt's net pay.
   const net = roundHalfUp(gross - sfsAmount - afpAmount)
 
-  return { days, averageMonthlySalary, dailySalary, gross, sfsAmount, afpAmount, isrApplies: rules.deductions.isr, net }
+  return { days, averageMonthlySalary, dailySalary, gross, sfsAmount, afpAmount, isrApplies: rules.deductions.isr, isrAmount, net }
 }
 
 /**

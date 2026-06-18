@@ -323,6 +323,24 @@ export function PayStubDocument({
                 <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.isrPeriod)}</Text>
               </View>
 
+              {/* Pending vacation ISR collected this period + total */}
+              {safeNum(c.vacationIsr) > 0 && (
+                <>
+                  <View style={S.tRow}>
+                    <Text style={[S.dedLabel, { flex: dD }]}>{l.vacationIsr}</Text>
+                    <Text style={[S.dedRate, { flex: dR }]}> </Text>
+                    <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>{'>'}</Text>
+                    <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.vacationIsr)}</Text>
+                  </View>
+                  <View style={S.tRow}>
+                    <Text style={[S.dedLabel, { flex: dD, fontFamily: 'Roboto', fontWeight: 700 }]}>{l.isrTotalRetained}</Text>
+                    <Text style={[S.dedRate, { flex: dR }]}> </Text>
+                    <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>{'>'}</Text>
+                    <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(safeNum(c.isrPeriod) + safeNum(c.vacationIsr))}</Text>
+                  </View>
+                </>
+              )}
+
               {/* Salary for the month applicable to ISR */}
               <View style={[S.tRow, { backgroundColor: GRAY_50 }]}>
                 <Text style={[S.dedLabel, { flex: dD, color: GRAY_500 }]}>{l.isrSalary}</Text>

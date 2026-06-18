@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useEmployeesStore } from '@/store/employeesStore'
 import { useSettingsStore } from '@/store/settingsStore'
 import { usePayrollStore } from '@/store/payrollStore'
+import { usePendingVacationIsrStore } from '@/store/pendingVacationIsrStore'
 import { calculatePayroll, findFirstFortnightGross } from '@/lib/payroll/calculations'
 import { getPayrollRules } from '@/lib/payroll/rules'
 import { formatCurrency, getInitials } from '@/lib/utils'
@@ -34,6 +35,7 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
   const payrollSettings = useSettingsStore((s) => s.payroll)
   const nightShift = useSettingsStore((s) => s.nightShift)
   const history = usePayrollStore((s) => s.history)
+  const pendingVacationIsr = usePendingVacationIsrStore((s) => s.pending)
 
   // Build country-specific payroll rules
   const rules = useMemo(
@@ -70,6 +72,10 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
         firstFortnightGross: findFirstFortnightGross(history, country, startDate, emp.id),
         nightHours: h.nightHours,
         nightShift,
+        pendingVacationIsr: (() => {
+          const p = pendingVacationIsr[emp.id]
+          return p && p.appliedInPeriod === null ? p.amount : 0
+        })(),
       })
 
       computedEntries.push({ employee: emp, hours: h, calculation })
@@ -88,7 +94,7 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
     }
 
     return { entries: computedEntries, totals }
-  }, [employeeHours, employees, rules, frequency, payrollSettings, startDate, country, history, nightShift])
+  }, [employeeHours, employees, rules, frequency, payrollSettings, startDate, country, history, nightShift, pendingVacationIsr])
 
   const ActionButtons = () => (
     <div className="flex gap-3">
