@@ -41,10 +41,22 @@ export default function Login() {
   const handleSignIn = async () => {
     setError(null)
     setSigningIn(true)
+    // IMPORTANT: redirectTo must be derived from the CURRENT window origin, never a
+    // hardcoded host — otherwise production sign-ins bounce back to localhost.
+    // Using `${window.location.origin}/suite` means:
+    //   - In production it resolves to https://spectra-suite.vercel.app/suite
+    //   - When running locally it resolves to http://localhost:3000/suite (or whatever
+    //     port the dev server uses), which requires a local server to be running to
+    //     receive the redirect.
+    // Supabase also enforces an allowlist: Dashboard → Authentication → URL Configuration
+    //   - Site URL:       https://spectra-suite.vercel.app
+    //   - Redirect URLs:  https://spectra-suite.vercel.app/suite  (add localhost too for dev)
+    // A redirectTo that isn't in that allowlist is ignored and Supabase falls back to the
+    // Site URL — which is the usual cause of the "redirected to localhost" symptom.
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/suite',
+        redirectTo: `${window.location.origin}/suite`,
         scopes: GOOGLE_SCOPES,
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
