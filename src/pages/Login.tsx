@@ -5,7 +5,7 @@ import { Loader2, Banknote, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettingsStore } from '@/store/settingsStore'
-import { isSupabaseConfigured, signInWithGoogle } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/lib/supabase'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -24,9 +24,32 @@ export default function Login() {
   const company = useSettingsStore((s) => s.company)
   const [signingIn, setSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Branding fetched publicly (company_settings has an anon SELECT policy) since
+  // the login page renders before auth. Falls back to the localStorage cache.
+  const [cloudLogo, setCloudLogo] = useState<string | null>(null)
+  const [cloudName, setCloudName] = useState<string | null>(null)
   const currentLang = i18n.language.startsWith('es') ? 'es' : 'en'
 
+  const logo = cloudLogo ?? company.logoBase64 ?? null
+  const brandName = cloudName ?? company.name
+
   useEffect(() => { document.title = `${t('auth.login.title')} | Spectra Suite` }, [t])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    let active = true
+    void supabase
+      .from('company_settings')
+      .select('logo_url, company_name')
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active || !data) return
+        if (data.logo_url) setCloudLogo(data.logo_url as string)
+        if (data.company_name) setCloudName(data.company_name as string)
+      })
+    return () => { active = false }
+  }, [])
 
   // Already authenticated → straight to the suite.
   if (!loading && user) return <Navigate to="/suite" replace />
@@ -52,15 +75,15 @@ export default function Login() {
         <div className="absolute inset-0 bg-guilloche opacity-90" aria-hidden="true" />
         {/* Company logo on a light tile so it reads on the dark panel */}
         <div className="relative">
-          {company.logoBase64 ? (
+          {logo ? (
             <img
-              src={company.logoBase64}
-              alt={company.name}
-              className="h-11 rounded-xl bg-white object-contain p-1.5 shadow-soft"
+              src={logo}
+              alt={brandName}
+              className="h-12 rounded-xl bg-white object-contain p-1.5 shadow-soft"
             />
           ) : (
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-lg font-bold text-emerald-700 shadow-soft">
-              {(company.name || 'S').charAt(0).toUpperCase()}
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-lg font-bold text-emerald-700 shadow-soft">
+              {(brandName || 'S').charAt(0).toUpperCase()}
             </span>
           )}
         </div>
@@ -94,8 +117,8 @@ export default function Login() {
 
         <div className="w-full max-w-sm animate-rise">
           <div className="flex flex-col items-center text-center">
-            {company.logoBase64 ? (
-              <img src={company.logoBase64} alt={company.name} className="h-20 w-auto object-contain" />
+            {logo ? (
+              <img src={logo} alt={brandName} className="h-20 w-auto object-contain" />
             ) : (
               <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-ink-grad text-emerald-50 shadow-soft">
                 <Banknote className="h-8 w-8" strokeWidth={1.75} />
