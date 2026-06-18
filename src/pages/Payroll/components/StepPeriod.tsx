@@ -367,20 +367,20 @@ export function StepPeriod({ onNext }: Props) {
                       ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
                       : country === 'Unknown'
                         ? 'border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-300'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50',
+                        : 'border-input bg-card text-muted-foreground hover:border-input hover:bg-secondary',
                   )}
                 >
                   <div className={cn(
                     'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
-                    selectedCountry === country ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300',
+                    selectedCountry === country ? 'border-emerald-500 bg-emerald-500' : 'border-input',
                   )}>
                     {selectedCountry === country && (
-                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <div className="h-1.5 w-1.5 rounded-full bg-card" />
                     )}
                   </div>
                   <span className="text-base leading-none">{countryFlag(country)}</span>
                   <span className="font-medium leading-tight flex-1">{countryLabel(country)}</span>
-                  <span className="text-xs text-gray-400">{count} {t('common.employees')}</span>
+                  <span className="text-xs text-muted-foreground">{count} {t('common.employees')}</span>
                 </button>
               ))}
             </div>
@@ -461,15 +461,15 @@ export function StepPeriod({ onNext }: Props) {
                       'flex items-center gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
                       bwQuincena === q
                         ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50',
+                        : 'border-input bg-card text-muted-foreground hover:border-input hover:bg-secondary',
                     )}
                   >
                     <div className={cn(
                       'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
-                      bwQuincena === q ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300',
+                      bwQuincena === q ? 'border-emerald-500 bg-emerald-500' : 'border-input',
                     )}>
                       {bwQuincena === q && (
-                        <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-card" />
                       )}
                     </div>
                     <span className="font-medium leading-tight">
@@ -523,7 +523,7 @@ export function StepPeriod({ onNext }: Props) {
             <button
               type="button"
               onClick={handleToggleCustomDates}
-              className="text-xs text-gray-400 hover:text-emerald-600 underline underline-offset-2 transition-colors self-start"
+              className="text-xs text-muted-foreground hover:text-emerald-600 underline underline-offset-2 transition-colors self-start"
             >
               {useCustomDates ? t('payroll.period.useQuincenaPicker') : t('payroll.period.useCustomDates')}
             </button>

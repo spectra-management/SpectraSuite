@@ -108,11 +108,11 @@ export function EmployeeReports({ open, onClose, employees }: Props) {
           <DialogDescription className="sr-only">{t('employees.reports.subtitle')}</DialogDescription>
         </DialogHeader>
 
-        <p className="text-sm text-gray-500">{t('employees.reports.subtitle')}</p>
+        <p className="text-sm text-muted-foreground">{t('employees.reports.subtitle')}</p>
 
         {/* Predefined templates */}
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t('employees.reports.predefinedReports')}
           </p>
           <div className="grid grid-cols-1 gap-2">
@@ -124,10 +124,10 @@ export function EmployeeReports({ open, onClose, employees }: Props) {
                 key={tpl.key}
                 type="button"
                 onClick={() => applyTemplate(tpl.key as keyof typeof TEMPLATES)}
-                className="flex flex-col items-start rounded-lg border border-gray-200 p-3 text-left hover:border-emerald-300 hover:bg-emerald-50 transition-colors"
+                className="flex flex-col items-start rounded-lg border border-input p-3 text-left hover:border-emerald-300 hover:bg-emerald-50 transition-colors"
               >
-                <span className="text-sm font-medium text-gray-900">{t(tpl.titleKey)}</span>
-                <span className="text-xs text-gray-400">{t(tpl.descKey)}</span>
+                <span className="text-sm font-medium text-foreground">{t(tpl.titleKey)}</span>
+                <span className="text-xs text-muted-foreground">{t(tpl.descKey)}</span>
               </button>
             ))}
             <button
@@ -136,11 +136,11 @@ export function EmployeeReports({ open, onClose, employees }: Props) {
               className={`flex flex-col items-start rounded-lg border p-3 text-left transition-colors ${
                 reportMode === 'headcount'
                   ? 'border-emerald-400 bg-emerald-50'
-                  : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50'
+                  : 'border-input hover:border-emerald-300 hover:bg-emerald-50'
               }`}
             >
-              <span className="text-sm font-medium text-gray-900">{t('employees.reports.headcount')}</span>
-              <span className="text-xs text-gray-400">{t('employees.reports.headcountDesc')}</span>
+              <span className="text-sm font-medium text-foreground">{t('employees.reports.headcount')}</span>
+              <span className="text-xs text-muted-foreground">{t('employees.reports.headcountDesc')}</span>
             </button>
           </div>
         </div>
@@ -150,7 +150,7 @@ export function EmployeeReports({ open, onClose, employees }: Props) {
             <Separator />
             {/* Column selector */}
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t('employees.reports.selectColumns')}
               </p>
               <div className="grid grid-cols-2 gap-2">
@@ -174,7 +174,7 @@ export function EmployeeReports({ open, onClose, employees }: Props) {
         <Separator />
 
         {/* Summary */}
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           {employees.length} {t('common.employees')} · {reportMode === 'headcount' ? t('employees.reports.headcount') : `${columns.length} columns`}
         </p>
 

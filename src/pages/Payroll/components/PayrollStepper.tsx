@@ -26,7 +26,7 @@ export function PayrollStepper({ steps, currentStep }: Props) {
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all',
                     done && 'bg-emerald-600 text-white',
                     active && 'bg-emerald-600 text-white ring-4 ring-emerald-100',
-                    !done && !active && 'bg-gray-100 text-gray-400',
+                    !done && !active && 'bg-secondary text-muted-foreground',
                   )}
                 >
                   {done ? <Check className="h-4 w-4" /> : idx + 1}
@@ -34,14 +34,14 @@ export function PayrollStepper({ steps, currentStep }: Props) {
                 <span
                   className={cn(
                     'text-sm font-medium',
-                    active ? 'text-gray-900' : done ? 'text-emerald-600' : 'text-gray-400',
+                    active ? 'text-foreground' : done ? 'text-emerald-600' : 'text-muted-foreground',
                   )}
                 >
                   {step.label}
                 </span>
               </div>
               {idx < steps.length - 1 && (
-                <div className={cn('mx-4 h-px flex-1 transition-all', done ? 'bg-emerald-200' : 'bg-gray-100')} />
+                <div className={cn('mx-4 h-px flex-1 transition-all', done ? 'bg-emerald-200' : 'bg-secondary')} />
               )}
             </li>
           )

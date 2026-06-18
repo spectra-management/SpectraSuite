@@ -131,7 +131,7 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <SummaryCard label={t('payroll.calculate.grossPay')} value={formatCurrency(totals.totalGross)} color="text-gray-900" />
+        <SummaryCard label={t('payroll.calculate.grossPay')} value={formatCurrency(totals.totalGross)} color="text-foreground" />
         <SummaryCard label={t('payroll.calculate.tss')} value={formatCurrency(totals.totalTss)} color="text-orange-600" />
         <SummaryCard label={t('payroll.calculate.isr')} value={formatCurrency(totals.totalIsr)} color="text-red-600" />
         <SummaryCard label={t('payroll.calculate.netPay')} value={formatCurrency(totals.totalNet)} color="text-emerald-700" highlight />
@@ -150,53 +150,53 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <tr className="border-b border-border bg-secondary">
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.calculate.employee')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.calculate.grossPay')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.calculate.afp')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.calculate.sfs')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.calculate.isr')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.calculate.otherDeductions')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 bg-emerald-50">
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-emerald-50">
                     {t('payroll.calculate.netPay')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border">
                 {entries.map(({ employee: emp, calculation: c }) => (
-                  <tr key={emp.id} className="hover:bg-gray-50">
+                  <tr key={emp.id} className="hover:bg-secondary">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
                           {getInitials(emp.firstName, emp.lastName)}
                         </div>
-                        <span className="font-medium text-gray-900 text-xs">
+                        <span className="font-medium text-foreground text-xs">
                           {emp.firstName} {emp.lastName}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-900">{formatCurrency(c.grossPay)}</td>
+                    <td className="px-4 py-3 text-right text-foreground">{formatCurrency(c.grossPay)}</td>
                     <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(c.afpAmount)}</td>
                     <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(c.sfsAmount)}</td>
                     <td className="px-4 py-3 text-right text-red-600">
                       {firstQuincena
-                        ? <span className="text-gray-400 italic">{formatCurrency(0)}</span>
+                        ? <span className="text-muted-foreground italic">{formatCurrency(0)}</span>
                         : formatCurrency(c.isrPeriod)
                       }
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(c.customDeductions)}</td>
+                    <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(c.customDeductions)}</td>
                     <td className="px-4 py-3 text-right font-bold text-emerald-700 bg-emerald-50">
                       {formatCurrency(c.netPay)}
                     </td>
@@ -204,13 +204,13 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-gray-200 bg-gray-50 font-semibold">
-                  <td className="px-5 py-3 text-xs uppercase text-gray-500">{t('payroll.calculate.totals')}</td>
+                <tr className="border-t-2 border-input bg-secondary font-semibold">
+                  <td className="px-5 py-3 text-xs uppercase text-muted-foreground">{t('payroll.calculate.totals')}</td>
                   <td className="px-4 py-3 text-right">{formatCurrency(totals.totalGross)}</td>
                   <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(totals.totalAfp)}</td>
                   <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(totals.totalSfs)}</td>
                   <td className="px-4 py-3 text-right text-red-600">{formatCurrency(totals.totalIsr)}</td>
-                  <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(totals.totalCustomDeductions)}</td>
+                  <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(totals.totalCustomDeductions)}</td>
                   <td className="px-4 py-3 text-right font-bold text-emerald-700 bg-emerald-50">
                     {formatCurrency(totals.totalNet)}
                   </td>
@@ -229,8 +229,8 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
 
 function SummaryCard({ label, value, color, highlight }: { label: string; value: string; color: string; highlight?: boolean }) {
   return (
-    <div className={`rounded-xl border p-4 ${highlight ? 'border-emerald-200 bg-emerald-50' : 'border-gray-100 bg-white'}`}>
-      <p className="text-xs text-gray-500">{label}</p>
+    <div className={`rounded-xl border p-4 ${highlight ? 'border-emerald-200 bg-emerald-50' : 'border-border bg-card'}`}>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className={`mt-1 text-lg font-bold ${color}`}>{value}</p>
     </div>
   )

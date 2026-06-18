@@ -36,7 +36,7 @@ export function ModuleSummaryCards() {
         <Card className="overflow-hidden border-t-2 border-t-emerald-600">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                 <NominaIcon className="h-4 w-4" strokeWidth={1.75} />
               </span>
               {t('suite.modules.nomina')}
@@ -91,8 +91,8 @@ export function ModuleSummaryCards() {
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-lg bg-secondary p-3">
-      <div className="flex items-center gap-1.5 text-gray-400">{icon}<span className="text-xs">{label}</span></div>
-      <p className="text-figure mt-1 truncate text-lg font-bold text-gray-900">{value}</p>
+      <div className="flex items-center gap-1.5 text-muted-foreground">{icon}<span className="text-xs">{label}</span></div>
+      <p className="text-figure mt-1 truncate text-lg font-bold text-foreground">{value}</p>
     </div>
   )
 }
@@ -110,7 +110,7 @@ function ComingSoonCard({
     <Card className="relative overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-gray-500">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
             <Icon className="h-4 w-4" strokeWidth={1.75} />
           </span>
           {title}
@@ -124,8 +124,8 @@ function ComingSoonCard({
         ) : (
           <div className="py-4" />
         )}
-        <div className="absolute inset-0 flex items-center justify-center bg-white/55 backdrop-blur-[1px]">
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+        <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-[1px]">
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
             {t('suite.comingSoon')}
           </span>
         </div>

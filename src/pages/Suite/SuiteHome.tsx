@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { SUITE_MODULES } from '@/lib/suiteModules'
 import { MODULE_ICONS } from '@/components/moduleIcons'
 import { UserMenu } from '@/components/layout/UserMenu'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { Toaster } from '@/components/ui/toaster'
 import { ModuleSummaryCards } from './components/ModuleSummaryCards'
 import { TasksWidget } from './components/TasksWidget'
@@ -38,7 +39,7 @@ export default function SuiteHome() {
   return (
     <div className="min-h-screen bg-canvas">
       {/* Top bar */}
-      <header className="border-b border-border bg-white">
+      <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-6 py-4">
           <div className="flex items-center gap-2.5">
             {company.logoBase64 ? (
@@ -49,10 +50,10 @@ export default function SuiteHome() {
               </div>
             )}
             <div className="leading-tight">
-              <span className="block text-base font-bold tracking-tight text-gray-900">
-                Spectra <span className="text-emerald-600">Suite</span>
+              <span className="block text-base font-bold tracking-tight text-foreground">
+                Spectra <span className="text-emerald-600 dark:text-emerald-400">Suite</span>
               </span>
-              <span className="block text-xs text-gray-400">{company.name}</span>
+              <span className="block text-xs text-muted-foreground">{company.name}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -65,6 +66,7 @@ export default function SuiteHome() {
             >
               {currentLang === 'en' ? 'ES' : 'EN'}
             </Button>
+            <ThemeToggle />
             <UserMenu />
           </div>
         </div>
@@ -108,7 +110,7 @@ export default function SuiteHome() {
         {/* 3-column dashboard grid */}
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="animate-rise">
-            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t('suiteHome.overview')}
             </h2>
             <ModuleSummaryCards />

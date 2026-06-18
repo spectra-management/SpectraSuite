@@ -92,7 +92,7 @@ function PayrollTab() {
               value={form.otRatePercent}
               onChange={(e) => setForm((f) => ({ ...f, otRatePercent: Number(e.target.value) }))}
             />
-            <p className="text-xs text-gray-400">{t('settings.payroll.otRateHelp')}</p>
+            <p className="text-xs text-muted-foreground">{t('settings.payroll.otRateHelp')}</p>
           </div>
           <div className="space-y-1.5">
             <Label>{t('settings.payroll.holidayRate')}</Label>
@@ -102,13 +102,13 @@ function PayrollTab() {
               value={form.holidayRatePercent}
               onChange={(e) => setForm((f) => ({ ...f, holidayRatePercent: Number(e.target.value) }))}
             />
-            <p className="text-xs text-gray-400">{t('settings.payroll.holidayRateHelp')}</p>
+            <p className="text-xs text-muted-foreground">{t('settings.payroll.holidayRateHelp')}</p>
           </div>
         </div>
 
         {/* ── Night shift (15% incentive) ── */}
-        <div className="border-t border-gray-100 pt-4 space-y-4">
-          <p className="text-sm font-semibold text-gray-900">{t('settings.payroll.nightShiftSection')}</p>
+        <div className="border-t border-border pt-4 space-y-4">
+          <p className="text-sm font-semibold text-foreground">{t('settings.payroll.nightShiftSection')}</p>
 
           <div className="space-y-1.5">
             <Label>{t('settings.payroll.nightStart')}</Label>
@@ -118,12 +118,12 @@ function PayrollTab() {
               value={nightForm.nightStartTime}
               onChange={(e) => setNightForm((f) => ({ ...f, nightStartTime: e.target.value }))}
             />
-            <p className="text-xs text-gray-400">{t('settings.payroll.nightStartHelp')}</p>
+            <p className="text-xs text-muted-foreground">{t('settings.payroll.nightStartHelp')}</p>
           </div>
 
           <div className="space-y-2">
             <Label>{t('settings.payroll.mixedThreshold')}</Label>
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
               <input
                 type="radio"
                 name="mixedThreshold"
@@ -134,7 +134,7 @@ function PayrollTab() {
               {t('settings.payroll.mixedPercent')}
             </label>
             <div className="flex items-center gap-2">
-              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                 <input
                   type="radio"
                   name="mixedThreshold"
@@ -154,7 +154,7 @@ function PayrollTab() {
                 onChange={(e) => setNightForm((f) => ({ ...f, mixedThresholdHours: Number(e.target.value) }))}
               />
             </div>
-            <p className="text-xs text-gray-400">{t('settings.payroll.mixedThresholdHelp')}</p>
+            <p className="text-xs text-muted-foreground">{t('settings.payroll.mixedThresholdHelp')}</p>
           </div>
         </div>
 
@@ -190,7 +190,7 @@ function FiscalTab() {
       </CardHeader>
       <CardContent className="space-y-6 max-w-lg">
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-3">TSS</p>
+          <p className="text-sm font-medium text-muted-foreground mb-3">TSS</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>{t('settings.fiscal.afpRate')}</Label>
@@ -214,32 +214,32 @@ function FiscalTab() {
         <div className="space-y-1.5">
           <Label>{t('settings.fiscal.minCotizableSalary')}</Label>
           <Input type="number" step="0.01" value={form.minCotizableSalary} onChange={(e) => setForm((f) => ({ ...f, minCotizableSalary: Number(e.target.value) }))} />
-          <p className="text-xs text-gray-400">{t('settings.fiscal.minCotizableSalaryHelp')}</p>
+          <p className="text-xs text-muted-foreground">{t('settings.fiscal.minCotizableSalaryHelp')}</p>
         </div>
 
         <div className="space-y-1.5">
           <Label>{t('settings.fiscal.dailyDivisor')}</Label>
           <Input type="number" step="0.01" value={form.dailyDivisor} onChange={(e) => setForm((f) => ({ ...f, dailyDivisor: Number(e.target.value) }))} />
-          <p className="text-xs text-gray-400">{t('settings.fiscal.dailyDivisorHelp')}</p>
+          <p className="text-xs text-muted-foreground">{t('settings.fiscal.dailyDivisorHelp')}</p>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-3">{t('settings.fiscal.isrBrackets')}</p>
-          <div className="rounded-xl border border-gray-100 overflow-hidden">
+          <p className="text-sm font-medium text-muted-foreground mb-3">{t('settings.fiscal.isrBrackets')}</p>
+          <div className="rounded-xl border border-border overflow-hidden">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-4 py-2 text-left text-gray-500">From (RD$)</th>
-                  <th className="px-4 py-2 text-left text-gray-500">To (RD$)</th>
-                  <th className="px-4 py-2 text-right text-gray-500">Rate (%)</th>
-                  <th className="px-4 py-2 text-right text-gray-500">Fixed (RD$)</th>
+                <tr className="bg-secondary border-b border-border">
+                  <th className="px-4 py-2 text-left text-muted-foreground">From (RD$)</th>
+                  <th className="px-4 py-2 text-left text-muted-foreground">To (RD$)</th>
+                  <th className="px-4 py-2 text-right text-muted-foreground">Rate (%)</th>
+                  <th className="px-4 py-2 text-right text-muted-foreground">Fixed (RD$)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border">
                 {form.isrBrackets.map((bracket, i) => (
                   <tr key={i}>
-                    <td className="px-4 py-2 font-mono text-gray-600">{bracket.minAmount.toLocaleString()}</td>
-                    <td className="px-4 py-2 font-mono text-gray-600">
+                    <td className="px-4 py-2 font-mono text-muted-foreground">{bracket.minAmount.toLocaleString()}</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground">
                       {bracket.maxAmount !== null ? bracket.maxAmount.toLocaleString() : '∞'}
                     </td>
                     <td className="px-4 py-2">
@@ -321,7 +321,7 @@ function EmailTab() {
               <SelectItem value="en">{t('settings.emailTemplate.english')}</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-gray-400">{t('settings.emailTemplate.payStubLanguageHelp')}</p>
+          <p className="text-xs text-muted-foreground">{t('settings.emailTemplate.payStubLanguageHelp')}</p>
         </div>
         <div className="space-y-1.5">
           <Label>{t('settings.emailTemplate.subject')}</Label>
@@ -338,9 +338,9 @@ function EmailTab() {
             onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
           />
         </div>
-        <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-          <p className="text-xs font-medium text-gray-600">{t('settings.emailTemplate.variables')}</p>
-          <p className="mt-1 text-xs text-gray-400">{t('settings.emailTemplate.variablesList')}</p>
+        <div className="rounded-lg border border-border bg-secondary p-3">
+          <p className="text-xs font-medium text-muted-foreground">{t('settings.emailTemplate.variables')}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('settings.emailTemplate.variablesList')}</p>
         </div>
         <Button onClick={handleSave}>{t('common.saveChanges')}</Button>
       </CardContent>
@@ -364,17 +364,17 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('settings.title')}</h1>
       </div>
-      <div className="flex gap-1 rounded-xl bg-gray-100 p-1 w-fit">
+      <div className="flex gap-1 rounded-xl bg-secondary p-1 w-fit">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
               activeTab === tab.key
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-muted-foreground'
             }`}
           >
             {tab.label}

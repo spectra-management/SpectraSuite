@@ -208,10 +208,10 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
         </DialogHeader>
 
         {/* Paystub preview */}
-        <div className="rounded-xl border border-gray-100 overflow-hidden text-sm">
+        <div className="rounded-xl border border-border overflow-hidden text-sm">
 
           {/* Header */}
-          <div className="flex items-start justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-start justify-between px-5 py-4 border-b border-border">
             <div className="flex items-start gap-3">
               {logoSrc(company.logoBase64) && (
                 <img
@@ -222,43 +222,43 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
               )}
               <div>
                 <p className="font-bold text-emerald-600 text-base">{company.name}</p>
-                {company.rnc && <p className="text-xs text-gray-500">RNC: {company.rnc}</p>}
-                {company.address && <p className="text-xs text-gray-500">{company.address}</p>}
-                {company.phone && <p className="text-xs text-gray-500">{company.phone}</p>}
+                {company.rnc && <p className="text-xs text-muted-foreground">RNC: {company.rnc}</p>}
+                {company.address && <p className="text-xs text-muted-foreground">{company.address}</p>}
+                {company.phone && <p className="text-xs text-muted-foreground">{company.phone}</p>}
               </div>
             </div>
             <div className="text-right">
-              <p className="font-extrabold text-lg tracking-widest text-gray-900">{L.stub}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                <span className="font-medium text-gray-700">{L.dateRange}:</span>{' '}
+              <p className="font-extrabold text-lg tracking-widest text-foreground">{L.stub}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                <span className="font-medium text-muted-foreground">{L.dateRange}:</span>{' '}
                 {startDate} – {endDate}
               </p>
-              <p className="text-xs text-gray-500">
-                <span className="font-medium text-gray-700">{L.payDate}:</span>{' '}
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-muted-foreground">{L.payDate}:</span>{' '}
                 {new Date().toLocaleDateString()}
               </p>
             </div>
           </div>
 
           {/* Employee info */}
-          <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 border-l-4 border-l-emerald-500">
-            <p className="font-bold text-gray-900">{employee.firstName} {employee.lastName}</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {L.paymentMethod}: <span className="font-medium text-gray-700">{methodLabel}</span>
+          <div className="px-5 py-3 bg-secondary border-b border-border border-l-4 border-l-emerald-500">
+            <p className="font-bold text-foreground">{employee.firstName} {employee.lastName}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {L.paymentMethod}: <span className="font-medium text-muted-foreground">{methodLabel}</span>
             </p>
             <div className="flex flex-wrap gap-4 mt-1">
               {employee.jobTitle && (
-                <p className="text-xs text-gray-500">
-                  {L.position}: <span className="font-medium text-gray-700">{employee.jobTitle}</span>
+                <p className="text-xs text-muted-foreground">
+                  {L.position}: <span className="font-medium text-muted-foreground">{employee.jobTitle}</span>
                 </p>
               )}
               {employee.department && (
-                <p className="text-xs text-gray-500">
-                  {L.dept}: <span className="font-medium text-gray-700">{employee.department}</span>
+                <p className="text-xs text-muted-foreground">
+                  {L.dept}: <span className="font-medium text-muted-foreground">{employee.department}</span>
                 </p>
               )}
-              <p className="text-xs text-gray-500">
-                {L.empId}: <span className="font-medium text-gray-700">{employee.id}</span>
+              <p className="text-xs text-muted-foreground">
+                {L.empId}: <span className="font-medium text-muted-foreground">{employee.id}</span>
               </p>
             </div>
           </div>
@@ -273,39 +273,39 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
                 <th className="px-4 py-2 text-right text-xs font-bold text-white">{L.total}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border">
               {/* Regular hours - always shown */}
               <tr>
-                <td className="px-4 py-2 text-gray-700">{L.regular}</td>
-                <td className="px-3 py-2 text-right text-gray-700">{hoursEntry.regularHours}</td>
-                <td className="px-3 py-2 text-right text-gray-500 text-xs">{fmt(displayRate)}/hr</td>
+                <td className="px-4 py-2 text-muted-foreground">{L.regular}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground">{hoursEntry.regularHours}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground text-xs">{fmt(displayRate)}/hr</td>
                 <td className="px-4 py-2 text-right font-semibold">{fmt(calculation.regularPay)}</td>
               </tr>
               {/* Night incentive - always shown (default 0) */}
               <tr>
-                <td className="px-4 py-2 text-gray-700">{L.night}</td>
-                <td className="px-3 py-2 text-right text-gray-700">{calculation.nightIncentiveHours}</td>
-                <td className="px-3 py-2 text-right text-gray-500 text-xs">15%</td>
+                <td className="px-4 py-2 text-muted-foreground">{L.night}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground">{calculation.nightIncentiveHours}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground text-xs">15%</td>
                 <td className="px-4 py-2 text-right font-semibold">{fmt(calculation.nightIncentiveAmount)}</td>
               </tr>
               {/* Double Holiday hours - always shown */}
               <tr>
-                <td className="px-4 py-2 text-gray-700">{L.holiday}</td>
-                <td className="px-3 py-2 text-right text-gray-700">{hoursEntry.holidayHours}</td>
-                <td className="px-3 py-2 text-right text-gray-500 text-xs">{fmt(displayRate)}/hr</td>
+                <td className="px-4 py-2 text-muted-foreground">{L.holiday}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground">{hoursEntry.holidayHours}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground text-xs">{fmt(displayRate)}/hr</td>
                 <td className="px-4 py-2 text-right font-semibold">{fmt(calculation.holidayPay)}</td>
               </tr>
               {/* Overtime - always shown */}
               <tr>
-                <td className="px-4 py-2 text-gray-700">{L.ot}</td>
-                <td className="px-3 py-2 text-right text-gray-700">{hoursEntry.otHours}</td>
-                <td className="px-3 py-2 text-right text-gray-500 text-xs">{fmt(displayRate)}/hr × {otMultiplier.toFixed(2)}</td>
+                <td className="px-4 py-2 text-muted-foreground">{L.ot}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground">{hoursEntry.otHours}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground text-xs">{fmt(displayRate)}/hr × {otMultiplier.toFixed(2)}</td>
                 <td className="px-4 py-2 text-right font-semibold">{fmt(calculation.otPay)}</td>
               </tr>
             </tbody>
             <tfoot>
-              <tr className="bg-gray-50 border-t border-gray-200">
-                <td colSpan={3} className="px-4 py-2.5 font-bold text-gray-900">{L.grossTotal}</td>
+              <tr className="bg-secondary border-t border-input">
+                <td colSpan={3} className="px-4 py-2.5 font-bold text-foreground">{L.grossTotal}</td>
                 <td className="px-4 py-2.5 text-right font-bold text-emerald-700 text-base">{fmt(calculation.grossPay)}</td>
               </tr>
             </tfoot>
@@ -321,7 +321,7 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
                 <th className="px-4 py-2 text-right text-xs font-bold text-white">{L.total}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border">
               <DedRow fmt={fmt} label={L.sfs} rate="3.04%" amount={calculation.sfsAmount} />
               <DedRow fmt={fmt} label={L.afp} rate="2.87%" amount={calculation.afpAmount} />
               <DedRow fmt={fmt} label={L.payAdvance} amount={payAdvanceAmt} />
@@ -343,11 +343,11 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
                     </>
                   )}
                   {/* Salary for the month applicable to ISR — neutral reference row */}
-                  <tr className="bg-gray-50">
-                    <td className="px-4 py-2 text-gray-500 text-xs">{L.isrSalary}</td>
+                  <tr className="bg-secondary">
+                    <td className="px-4 py-2 text-muted-foreground text-xs">{L.isrSalary}</td>
                     <td className="px-3 py-2" />
-                    <td className="w-6 py-2 text-center text-gray-400 text-xs">►</td>
-                    <td className="px-4 py-2 text-right text-gray-700 text-xs font-semibold">{fmt(isrSalaryDisplay)}</td>
+                    <td className="w-6 py-2 text-center text-muted-foreground text-xs">►</td>
+                    <td className="px-4 py-2 text-right text-muted-foreground text-xs font-semibold">{fmt(isrSalaryDisplay)}</td>
                   </tr>
                 </>
               )}
@@ -357,8 +357,8 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
               ))}
             </tbody>
             <tfoot>
-              <tr className="bg-gray-50 border-t border-gray-200">
-                <td colSpan={3} className="px-4 py-2.5 font-bold text-gray-900">{L.totalDed}</td>
+              <tr className="bg-secondary border-t border-input">
+                <td colSpan={3} className="px-4 py-2.5 font-bold text-foreground">{L.totalDed}</td>
                 <td className="px-4 py-2.5 text-right font-bold text-red-600">({fmt(calculation.totalDeductions)})</td>
               </tr>
             </tfoot>
@@ -403,9 +403,9 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
 function DedRow({ label, rate, amount, fmt }: { label: string; rate?: string; amount: number; fmt: (n: number) => string }) {
   return (
     <tr>
-      <td className="px-4 py-2 text-gray-700">{label}</td>
-      <td className="px-3 py-2 text-center text-gray-500 text-xs">{rate ?? ''}</td>
-      <td className="w-6 py-2 text-center text-gray-400 text-xs">►</td>
+      <td className="px-4 py-2 text-muted-foreground">{label}</td>
+      <td className="px-3 py-2 text-center text-muted-foreground text-xs">{rate ?? ''}</td>
+      <td className="w-6 py-2 text-center text-muted-foreground text-xs">►</td>
       <td className="px-4 py-2 text-right text-red-600 font-semibold">{fmt(amount)}</td>
     </tr>
   )

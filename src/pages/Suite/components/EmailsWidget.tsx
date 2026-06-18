@@ -60,17 +60,17 @@ export function EmailsWidget() {
       <CardContent className="flex flex-1 flex-col">
         {loading ? (
           <div className="flex flex-1 items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : !available ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-            <p className="text-sm text-gray-400">{t('suiteHome.emails.unavailable')}</p>
+            <p className="text-sm text-muted-foreground">{t('suiteHome.emails.unavailable')}</p>
             <Button variant="outline" size="sm" onClick={() => void reconnectGoogle()}>
               {t('suiteHome.google.reconnect')}
             </Button>
           </div>
         ) : emails.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-400">{t('suiteHome.emails.empty')}</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t('suiteHome.emails.empty')}</p>
         ) : (
           <ul className="flex-1 space-y-1 overflow-auto">
             {emails.map((m) => (
@@ -79,7 +79,7 @@ export function EmailsWidget() {
                   href={m.link}
                   target="_blank"
                   rel="noreferrer"
-                  className="group flex items-start gap-2.5 rounded-lg px-2 py-2 hover:bg-gray-50"
+                  className="group flex items-start gap-2.5 rounded-lg px-2 py-2 hover:bg-secondary"
                 >
                   <span
                     className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${m.unread ? 'bg-emerald-500' : 'bg-transparent'}`}
@@ -87,16 +87,16 @@ export function EmailsWidget() {
                   />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className={`truncate text-sm ${m.unread ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
+                      <span className={`truncate text-sm ${m.unread ? 'font-semibold text-foreground' : 'font-medium text-muted-foreground'}`}>
                         {m.fromName}
                       </span>
-                      <span className="shrink-0 text-[11px] text-gray-400">{relativeTime(m.date)}</span>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">{relativeTime(m.date)}</span>
                     </span>
-                    <span className={`block truncate text-xs ${m.unread ? 'text-gray-600' : 'text-gray-400'}`}>
+                    <span className={`block truncate text-xs ${m.unread ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                       {m.subject}
                     </span>
                   </span>
-                  <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-300 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100" />
                 </a>
               </li>
             ))}

@@ -21,10 +21,10 @@ const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'gastos', 'it']
 const ROLES: UserRole[] = ['super_admin', 'module_admin', 'viewer', 'custom']
 
 const ROLE_BADGE: Record<UserRole, string> = {
-  super_admin: 'bg-emerald-100 text-emerald-700',
-  module_admin: 'bg-blue-100 text-blue-700',
-  viewer: 'bg-gray-100 text-gray-600',
-  custom: 'bg-purple-100 text-purple-700',
+  super_admin: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+  module_admin: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
+  viewer: 'bg-secondary text-muted-foreground',
+  custom: 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
 }
 
 interface PermDraft { can_view: boolean; can_edit: boolean; can_approve: boolean; can_admin: boolean }
@@ -115,11 +115,11 @@ export function UsersPanel() {
 
         {/* List */}
         {loading ? (
-          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-gray-400" /></div>
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
         ) : users.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-400">{t('users.empty')}</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t('users.empty')}</p>
         ) : (
-          <div className="divide-y divide-gray-100 rounded-xl border border-gray-100">
+          <div className="divide-y divide-border rounded-xl border border-border">
             {users.map((u) => (
               <div key={u.id} className="flex items-center gap-3 p-3">
                 {u.avatar_url ? (
@@ -130,13 +130,13 @@ export function UsersPanel() {
                   </span>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-900">{u.full_name || u.email}</p>
-                  <p className="truncate text-xs text-gray-500">{u.email}</p>
+                  <p className="truncate text-sm font-medium text-foreground">{u.full_name || u.email}</p>
+                  <p className="truncate text-xs text-muted-foreground">{u.email}</p>
                 </div>
                 <Badge className={ROLE_BADGE[u.role]}>{t(`users.roles.${u.role}`)}</Badge>
                 <div className="flex items-center gap-1.5">
                   <Switch checked={u.is_active} onCheckedChange={() => void toggleActive(u)} aria-label="active" />
-                  <span className="hidden text-xs text-gray-400 sm:inline">
+                  <span className="hidden text-xs text-muted-foreground sm:inline">
                     {u.is_active ? t('users.active') : t('users.inactive')}
                   </span>
                 </div>
@@ -240,9 +240,9 @@ function EditUserDialog({
           {role === 'custom' && (
             <div className="space-y-2">
               <Label>{t('users.modulePermissions')}</Label>
-              <div className="overflow-hidden rounded-xl border border-gray-100">
+              <div className="overflow-hidden rounded-xl border border-border">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 text-xs text-gray-500">
+                  <thead className="bg-secondary text-xs text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 text-left">{t('users.module')}</th>
                       <th className="px-2 py-2">{t('users.canView')}</th>
@@ -251,10 +251,10 @@ function EditUserDialog({
                       <th className="px-2 py-2">{t('users.canAdmin')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-border">
                     {MODULES.map((m) => (
                       <tr key={m}>
-                        <td className="px-3 py-2 font-medium text-gray-700">{t(`suite.modules.${m}`)}</td>
+                        <td className="px-3 py-2 font-medium text-muted-foreground">{t(`suite.modules.${m}`)}</td>
                         {(['can_view', 'can_edit', 'can_approve', 'can_admin'] as (keyof PermDraft)[]).map((k) => (
                           <td key={k} className="px-2 py-2 text-center">
                             <Switch

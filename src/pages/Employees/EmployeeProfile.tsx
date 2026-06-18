@@ -79,7 +79,7 @@ export default function EmployeeProfile() {
   if (!employee) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-gray-500">Employee not found.</p>
+        <p className="text-muted-foreground">Employee not found.</p>
         <Button variant="outline" className="mt-4" asChild>
           <Link to="/nomina/employees">{t('common.back')}</Link>
         </Button>
@@ -166,15 +166,15 @@ export default function EmployeeProfile() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold text-gray-900">
+                <h1 className="text-xl font-bold text-foreground">
                   {employee.firstName} {employee.lastName}
                 </h1>
                 <Badge variant={statusVariant}>
                   {t(`employees.status.${employee.status.toLowerCase()}`)}
                 </Badge>
               </div>
-              <p className="text-sm text-gray-500">{employee.jobTitle} {employee.department ? `· ${employee.department}` : ''}</p>
-              <p className="text-sm text-gray-400">{employee.workEmail}</p>
+              <p className="text-sm text-muted-foreground">{employee.jobTitle} {employee.department ? `· ${employee.department}` : ''}</p>
+              <p className="text-sm text-muted-foreground">{employee.workEmail}</p>
             </div>
           </div>
         </CardContent>
@@ -188,29 +188,29 @@ export default function EmployeeProfile() {
         <CardContent>
           <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
-              <dt className="text-xs text-gray-500">{t('employees.profile.payRate')}</dt>
-              <dd className="mt-0.5 text-sm font-semibold text-gray-900">
+              <dt className="text-xs text-muted-foreground">{t('employees.profile.payRate')}</dt>
+              <dd className="mt-0.5 text-sm font-semibold text-foreground">
                 {formatCurrency(employee.payRate)}/hr
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-gray-500">{t('employees.profile.hireDate')}</dt>
-              <dd className="mt-0.5 text-sm font-medium text-gray-900">
+              <dt className="text-xs text-muted-foreground">{t('employees.profile.hireDate')}</dt>
+              <dd className="mt-0.5 text-sm font-medium text-foreground">
                 {formatDate(employee.hireDate)}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-gray-500">{t('employees.profile.department')}</dt>
-              <dd className="mt-0.5 text-sm font-medium text-gray-900">
+              <dt className="text-xs text-muted-foreground">{t('employees.profile.department')}</dt>
+              <dd className="mt-0.5 text-sm font-medium text-foreground">
                 {employee.department || '—'}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-gray-500">Employee ID</dt>
-              <dd className="mt-0.5 text-sm font-mono text-gray-600">{employee.id}</dd>
+              <dt className="text-xs text-muted-foreground">Employee ID</dt>
+              <dd className="mt-0.5 text-sm font-mono text-muted-foreground">{employee.id}</dd>
             </div>
             <div>
-              <dt className="text-xs text-gray-500 mb-1">{t('employees.profile.paymentMethod')}</dt>
+              <dt className="text-xs text-muted-foreground mb-1">{t('employees.profile.paymentMethod')}</dt>
               <dd>
                 <Select
                   value={paymentMethod}
@@ -231,7 +231,7 @@ export default function EmployeeProfile() {
 
           {/* Bank account — only for Transfer payment method */}
           {paymentMethod === 'transfer' && (
-            <div className="mt-4 border-t border-gray-100 pt-4">
+            <div className="mt-4 border-t border-border pt-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>{bankLabels.bank}</Label>
@@ -257,7 +257,7 @@ export default function EmployeeProfile() {
                   />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-400">{bankLabels.note}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{bankLabels.note}</p>
             </div>
           )}
         </CardContent>
@@ -275,12 +275,12 @@ export default function EmployeeProfile() {
                 <CheckCircle2 className="mr-1 h-3 w-3" />
                 {t('employees.profile.mappedBadge')}
               </Badge>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted-foreground">
                 Hubstaff user ID: <code className="font-mono">{mapping.hubstaffUserId}</code>
               </span>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               {t('employees.profile.notMapped')}{' '}
               <Link to="/nomina/connectors" className="text-emerald-600 hover:underline">
                 {t('employees.profile.configureConnectors')}
@@ -304,7 +304,7 @@ export default function EmployeeProfile() {
         <CardContent className="p-0">
           {deductions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <p className="text-sm text-gray-400">{t('employees.deductions.noDeductions')}</p>
+              <p className="text-sm text-muted-foreground">{t('employees.deductions.noDeductions')}</p>
               <Button variant="outline" size="sm" className="mt-3" onClick={openAdd}>
                 <Plus className="mr-1 h-4 w-4" />
                 {t('employees.deductions.addDeduction')}
@@ -314,25 +314,25 @@ export default function EmployeeProfile() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t('employees.deductions.name')}</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t('employees.deductions.type')}</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{t('employees.deductions.amount')}</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t('employees.deductions.recurring')}</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Active</th>
+                  <tr className="border-b border-border bg-secondary">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('employees.deductions.name')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('employees.deductions.type')}</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('employees.deductions.amount')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('employees.deductions.recurring')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active</th>
                     <th className="px-6 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-border">
                   {deductions.map((d) => (
-                    <tr key={d.id} className={`hover:bg-gray-50 transition-colors ${!d.active ? 'opacity-50' : ''}`}>
-                      <td className="px-6 py-3 font-medium text-gray-900">{d.name}</td>
+                    <tr key={d.id} className={`hover:bg-secondary transition-colors ${!d.active ? 'opacity-50' : ''}`}>
+                      <td className="px-6 py-3 font-medium text-foreground">{d.name}</td>
                       <td className="px-6 py-3">
                         <Badge variant="secondary">
                           {d.type === 'fixed' ? t('employees.deductions.fixedAmount') : t('employees.deductions.percentage')}
                         </Badge>
                       </td>
-                      <td className="px-6 py-3 text-right font-medium text-gray-900">
+                      <td className="px-6 py-3 text-right font-medium text-foreground">
                         {d.type === 'fixed' ? formatCurrency(d.amount) : `${d.amount}%`}
                       </td>
                       <td className="px-6 py-3">
@@ -424,10 +424,10 @@ export default function EmployeeProfile() {
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-lg border border-gray-100 p-3">
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
-                <p className="text-sm font-medium text-gray-900">{t('employees.deductions.recurring')}</p>
-                <p className="text-xs text-gray-400">{t('employees.deductions.oneTime')}</p>
+                <p className="text-sm font-medium text-foreground">{t('employees.deductions.recurring')}</p>
+                <p className="text-xs text-muted-foreground">{t('employees.deductions.oneTime')}</p>
               </div>
               <Switch
                 checked={form.recurring}

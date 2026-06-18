@@ -117,9 +117,9 @@ export function HolidaysTab() {
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <CardTitle>{t('settings.holidays.title')}</CardTitle>
-            <p className="text-xs text-gray-500 mt-1">{t('settings.holidays.subtitle')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('settings.holidays.subtitle')}</p>
           </div>
-          <p className="text-xs text-gray-400">{t('settings.holidays.lastSync', { time: fmtSync })}</p>
+          <p className="text-xs text-muted-foreground">{t('settings.holidays.lastSync', { time: fmtSync })}</p>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -132,12 +132,12 @@ export function HolidaysTab() {
               onClick={() => setCountry(c)}
               className={cn(
                 'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
-                country === c ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50',
+                country === c ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-input text-muted-foreground hover:bg-secondary',
               )}
             >
               <span className="text-sm leading-none">{FLAG[c]}</span>
               {c}
-              <span className={cn('rounded-full px-1.5 text-[10px] font-semibold', country === c ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500')}>
+              <span className={cn('rounded-full px-1.5 text-[10px] font-semibold', country === c ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground')}>
                 {counts[c] ?? 0}
               </span>
             </button>
@@ -146,7 +146,7 @@ export function HolidaysTab() {
 
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-1 rounded-lg border border-gray-200 p-0.5">
+          <div className="flex items-center gap-1 rounded-lg border border-input p-0.5">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setYear((y) => y - 1)}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -175,7 +175,7 @@ export function HolidaysTab() {
 
         {/* Table */}
         {holidays.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-400">{t('settings.holidays.none')}</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t('settings.holidays.none')}</p>
         ) : (
           <div className="space-y-4">
             {upcoming.length > 0 && (
@@ -188,7 +188,7 @@ export function HolidaysTab() {
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-3 text-xs text-gray-400">
+        <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
           <span>{t('settings.holidays.totalCount', { count: holidays.length })}</span>
           <span>{t('settings.holidays.legend')}</span>
         </div>
@@ -249,22 +249,22 @@ function HolidaySection({
 }) {
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">{title}</p>
-      <div className={cn('overflow-hidden rounded-xl border border-gray-100', dim && 'opacity-50')}>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{title}</p>
+      <div className={cn('overflow-hidden rounded-xl border border-border', dim && 'opacity-50')}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <tr className="border-b border-border bg-secondary text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <th className="px-4 py-2">{t('settings.holidays.colDate')}</th>
               <th className="px-4 py-2">{t('settings.holidays.colName')}</th>
               <th className="px-4 py-2">{t('settings.holidays.colSource')}</th>
               <th className="px-4 py-2 text-right">{t('settings.holidays.colActions')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-border">
             {rows.map((h) => (
-              <tr key={h.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 font-mono text-xs text-gray-600 whitespace-nowrap">{fmtDate(h.date)}</td>
-                <td className="px-4 py-2 text-gray-900">
+              <tr key={h.id} className="hover:bg-secondary">
+                <td className="px-4 py-2 font-mono text-xs text-muted-foreground whitespace-nowrap">{fmtDate(h.date)}</td>
+                <td className="px-4 py-2 text-foreground">
                   {h.name}
                   {h.note && (
                     <span className="ml-2 inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 border border-amber-200">

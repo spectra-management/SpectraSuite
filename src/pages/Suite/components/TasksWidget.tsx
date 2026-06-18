@@ -118,36 +118,36 @@ export function TasksWidget() {
 
         {loading ? (
           <div className="flex flex-1 items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : items.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-400">{t('suiteHome.tasks.empty')}</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t('suiteHome.tasks.empty')}</p>
         ) : (
           <ul className="flex-1 space-y-1 overflow-auto">
             {items.map((it) => (
-              <li key={it.id} className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50">
+              <li key={it.id} className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-secondary">
                 <button
                   onClick={() => void handleComplete(it.id)}
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${it.done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300'}`}
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${it.done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-input'}`}
                   aria-label="toggle"
                 >
                   {it.done && <Check className="h-3 w-3" />}
                 </button>
-                <span className={`flex-1 text-sm ${it.done ? 'text-gray-400 line-through' : 'text-gray-700'}`}>{it.title}</span>
+                <span className={`flex-1 text-sm ${it.done ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>{it.title}</span>
                 <button
                   onClick={() => void handleDelete(it.id)}
                   className="opacity-0 transition-opacity group-hover:opacity-100"
                   aria-label="delete"
                 >
-                  <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
+                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
                 </button>
               </li>
             ))}
           </ul>
         )}
         {!useGoogle && !loading && (
-          <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2">
-            <p className="text-[11px] text-gray-400">{t('suiteHome.tasks.localFallback')}</p>
+          <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
+            <p className="text-[11px] text-muted-foreground">{t('suiteHome.tasks.localFallback')}</p>
             <button
               onClick={() => void reconnectGoogle()}
               className="shrink-0 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"

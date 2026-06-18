@@ -27,10 +27,10 @@ export function Sidebar() {
   const company = useSettingsStore((s) => s.company)
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-border bg-white">
+    <aside className="flex h-full w-60 flex-col border-r border-border bg-card">
       {/* Back to Spectra Suite */}
       <div className="border-b border-border px-4 py-3">
-        <Link to="/suite" className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-emerald-700">
+        <Link to="/suite" className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-emerald-700 dark:hover:text-emerald-400">
           <ArrowLeft className="h-3.5 w-3.5" /> {t('suite.back')}
         </Link>
       </div>
@@ -40,7 +40,7 @@ export function Sidebar() {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-grad text-emerald-50">
           <Banknote className="h-4 w-4" strokeWidth={1.75} />
         </span>
-        <span className="text-sm font-bold uppercase tracking-wide text-gray-900">{t('suite.modules.nomina')}</span>
+        <span className="text-sm font-bold uppercase tracking-wide text-foreground">{t('suite.modules.nomina')}</span>
       </div>
 
       {/* Navigation */}
@@ -54,8 +54,8 @@ export function Sidebar() {
               cn(
                 'relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
                 isActive
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'text-gray-600 hover:bg-secondary hover:text-gray-900',
+                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
               )
             }
           >
@@ -64,7 +64,7 @@ export function Sidebar() {
                 {isActive && (
                   <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-emerald-600" />
                 )}
-                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-emerald-600' : 'text-gray-400')} />
+                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')} />
                 {t(`nav.${key}`)}
               </>
             )}
@@ -82,8 +82,8 @@ export function Sidebar() {
           </div>
         )}
         <div className="min-w-0">
-          <p className="truncate text-xs font-semibold text-gray-700">{company.name}</p>
-          <p className="text-[10px] text-gray-400">Spectra Suite</p>
+          <p className="truncate text-xs font-semibold text-foreground">{company.name}</p>
+          <p className="text-[10px] text-muted-foreground">Spectra Suite</p>
         </div>
       </div>
     </aside>

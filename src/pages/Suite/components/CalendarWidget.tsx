@@ -61,17 +61,17 @@ export function CalendarWidget() {
       <CardContent className="flex flex-1 flex-col">
         {loading ? (
           <div className="flex flex-1 items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : !available ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-            <p className="text-sm text-gray-400">{t('suiteHome.calendar.unavailable')}</p>
+            <p className="text-sm text-muted-foreground">{t('suiteHome.calendar.unavailable')}</p>
             <Button variant="outline" size="sm" onClick={() => void reconnectGoogle()}>
               {t('suiteHome.google.reconnect')}
             </Button>
           </div>
         ) : events.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-400">{t('suiteHome.calendar.empty')}</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t('suiteHome.calendar.empty')}</p>
         ) : (
           <ul className="flex-1 space-y-2 overflow-auto">
             {events.map((ev) => (
@@ -80,17 +80,17 @@ export function CalendarWidget() {
                   href={ev.htmlLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="group flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-gray-50"
+                  className="group flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-secondary"
                 >
                   <span
                     className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{ backgroundColor: ev.colorId ? COLOR_MAP[ev.colorId] ?? '#059669' : '#059669' }}
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-gray-800">{ev.summary}</span>
-                    <span className="block text-xs text-gray-400">{formatWhen(ev)}</span>
+                    <span className="block truncate text-sm font-medium text-foreground">{ev.summary}</span>
+                    <span className="block text-xs text-muted-foreground">{formatWhen(ev)}</span>
                   </span>
-                  <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-300 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/60 opacity-0 transition-opacity group-hover:opacity-100" />
                 </a>
               </li>
             ))}

@@ -239,7 +239,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {startDate} – {endDate}
                 </p>
               </div>
@@ -248,7 +248,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
             <div className="flex items-center gap-2 flex-wrap">
               {/* Employee search */}
               <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -258,7 +258,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
               </div>
 
               {/* Filter bar */}
-              <div className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 p-1">
+              <div className="flex items-center gap-1.5 rounded-lg border border-input bg-secondary p-1">
               {FILTERS.map(({ key, label }) => (
                 <button
                   key={key}
@@ -267,14 +267,14 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                   className={[
                     'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                     filter === key
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700',
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-muted-foreground',
                   ].join(' ')}
                 >
                   {label}
                   <span className={[
                     'rounded-full px-1.5 py-px text-[10px] font-semibold',
-                    filter === key ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500',
+                    filter === key ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground',
                   ].join(' ')}>
                     {filterCounts[key]}
                   </span>
@@ -289,40 +289,40 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 w-44">
+                <tr className="border-b border-border bg-secondary">
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground w-44">
                     {t('payroll.review.employee')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.review.regularHours')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.review.otHours')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.review.holidayHours')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.review.nightHours')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.review.totalHours')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.review.payRate')}
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.review.status')}
                   </th>
-                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.review.calculateSolo')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-5 py-8 text-center text-sm text-gray-400">
+                    <td colSpan={9} className="px-5 py-8 text-center text-sm text-muted-foreground">
                       {t('payroll.review.noHours')}
                     </td>
                   </tr>
@@ -332,7 +332,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                     if (!emp) return null
                     const total = totalHours(h)
                     return (
-                      <tr key={h.employeeId} className="hover:bg-gray-50">
+                      <tr key={h.employeeId} className="hover:bg-secondary">
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2">
                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
@@ -340,7 +340,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <p className="font-medium text-gray-900 text-xs truncate">
+                                <p className="font-medium text-foreground text-xs truncate">
                                   {emp.firstName} {emp.lastName}
                                 </p>
                                 {(() => {
@@ -353,7 +353,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                                   return (
                                     <span
                                       title={title}
-                                      className="inline-flex shrink-0 items-center text-gray-400"
+                                      className="inline-flex shrink-0 items-center text-muted-foreground"
                                     >
                                       <Icon className="h-3 w-3" />
                                     </span>
@@ -384,7 +384,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                                   )
                                 })()}
                               </div>
-                              <p className="text-[10px] text-gray-400 truncate">{emp.jobTitle}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{emp.jobTitle}</p>
                             </div>
                           </div>
                         </td>
@@ -412,10 +412,10 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                             onChange={(v) => updateHours(h.employeeId, 'nightHours', v)}
                           />
                         </td>
-                        <td className="px-3 py-3 text-right font-semibold text-gray-900">
+                        <td className="px-3 py-3 text-right font-semibold text-foreground">
                           {total}
                         </td>
-                        <td className="px-3 py-3 text-right text-gray-600 text-xs">
+                        <td className="px-3 py-3 text-right text-muted-foreground text-xs">
                           {emp.payRateCurrency === '' ? (
                             <Input
                               type="number"

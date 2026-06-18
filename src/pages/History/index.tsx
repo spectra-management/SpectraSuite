@@ -253,24 +253,24 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
 
   return (
     <>
-      <tr className="hover:bg-gray-50 transition-colors">
-        <td className="px-6 py-4 font-medium text-gray-900">
+      <tr className="hover:bg-secondary transition-colors">
+        <td className="px-6 py-4 font-medium text-foreground">
           <button
             className="flex items-center gap-2 text-left"
             onClick={() => setExpanded((v) => !v)}
           >
-            {expanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+            {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
             <span className="text-base leading-none" title={payroll.country || 'Unknown'}>
               {countryFlag(payroll.country)}
             </span>
             {formatDate(payroll.startDate)} – {formatDate(payroll.endDate)}
           </button>
         </td>
-        <td className="px-6 py-4 text-gray-500">
+        <td className="px-6 py-4 text-muted-foreground">
           {payroll.processedDate ? formatDate(payroll.processedDate) : '—'}
         </td>
-        <td className="px-6 py-4 text-right text-gray-600">{payroll.totals.employeeCount}</td>
-        <td className="px-6 py-4 text-right font-medium text-gray-900">{formatCurrency(payroll.totals.totalGross)}</td>
+        <td className="px-6 py-4 text-right text-muted-foreground">{payroll.totals.employeeCount}</td>
+        <td className="px-6 py-4 text-right font-medium text-foreground">{formatCurrency(payroll.totals.totalGross)}</td>
         <td className="px-6 py-4 text-right font-semibold text-emerald-700">{formatCurrency(payroll.totals.totalNet)}</td>
         <td className="px-6 py-4">
           <Badge variant={statusVariant(payroll.status)}>
@@ -300,7 +300,7 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
         <tr>
           <td colSpan={7} className="px-6 pb-3">
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{t('history.sendingProgress', { done: batch.done, total: batch.total })}</span>
                 <span>
                   {batch.results.filter((r) => r.success).length} {t('payroll.approve.sent')},
@@ -317,27 +317,27 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
       {expanded && (
         <tr>
           <td colSpan={7} className="px-6 pb-4">
-            <div className="rounded-xl border border-gray-100 overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="px-4 py-2 text-left text-gray-500 font-semibold uppercase tracking-wide">Employee</th>
-                    <th className="px-4 py-2 text-right text-gray-500 font-semibold uppercase tracking-wide">Gross</th>
-                    <th className="px-4 py-2 text-right text-gray-500 font-semibold uppercase tracking-wide">Deductions</th>
-                    <th className="px-4 py-2 text-right text-gray-500 font-semibold uppercase tracking-wide">Net</th>
+                  <tr className="bg-secondary border-b border-border">
+                    <th className="px-4 py-2 text-left text-muted-foreground font-semibold uppercase tracking-wide">Employee</th>
+                    <th className="px-4 py-2 text-right text-muted-foreground font-semibold uppercase tracking-wide">Gross</th>
+                    <th className="px-4 py-2 text-right text-muted-foreground font-semibold uppercase tracking-wide">Deductions</th>
+                    <th className="px-4 py-2 text-right text-muted-foreground font-semibold uppercase tracking-wide">Net</th>
                     <th className="px-4 py-2" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-border">
                   {payroll.entries.map((entry, idx) => (
-                    <tr key={entry.employee.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2.5 font-medium text-gray-900">
+                    <tr key={entry.employee.id} className="hover:bg-secondary">
+                      <td className="px-4 py-2.5 font-medium text-foreground">
                         {entry.employee.firstName} {entry.employee.lastName}
                         {entry.employee.workEmail && (
-                          <span className="block text-gray-400 font-normal">{entry.employee.workEmail}</span>
+                          <span className="block text-muted-foreground font-normal">{entry.employee.workEmail}</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right text-gray-700">{formatCurrency(entry.calculation.grossPay)}</td>
+                      <td className="px-4 py-2.5 text-right text-muted-foreground">{formatCurrency(entry.calculation.grossPay)}</td>
                       <td className="px-4 py-2.5 text-right text-red-600">{formatCurrency(entry.calculation.totalDeductions)}</td>
                       <td className="px-4 py-2.5 text-right font-bold text-emerald-700">{formatCurrency(entry.calculation.netPay)}</td>
                       <td className="px-4 py-2.5">
@@ -411,8 +411,8 @@ export default function History() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('history.title')}</h1>
-        <p className="mt-1 text-sm text-gray-500">{t('history.subtitle')}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t('history.title')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('history.subtitle')}</p>
       </div>
 
       {availableCountries.length > 1 && (
@@ -437,26 +437,26 @@ export default function History() {
         <CardContent className="p-0">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100">
-                <HistoryIcon className="h-7 w-7 text-gray-400" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+                <HistoryIcon className="h-7 w-7 text-muted-foreground" />
               </div>
-              <p className="mt-3 text-sm text-gray-500">{t('history.noHistory')}</p>
+              <p className="mt-3 text-sm text-muted-foreground">{t('history.noHistory')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t('history.table.period')}</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t('history.table.processedDate')}</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{t('history.table.employees')}</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{t('history.table.totalGross')}</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{t('history.table.totalNet')}</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t('history.table.status')}</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{t('common.actions')}</th>
+                  <tr className="border-b border-border bg-secondary">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('history.table.period')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('history.table.processedDate')}</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('history.table.employees')}</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('history.table.totalGross')}</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('history.table.totalNet')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('history.table.status')}</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('common.actions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-border">
                   {filtered.map((p) => <PayrollRow key={p.id} payroll={p} />)}
                 </tbody>
               </table>

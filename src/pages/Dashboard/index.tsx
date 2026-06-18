@@ -32,9 +32,9 @@ function StatCard({ title, value, sub, icon: Icon, colorClass, bgClass }: StatCa
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-500">{title}</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
-            {sub && <p className="mt-0.5 text-xs text-gray-400">{sub}</p>}
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
+            {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
           </div>
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bgClass}`}>
             <Icon className={`h-6 w-6 ${colorClass}`} />
@@ -54,10 +54,10 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-3 shadow-lg">
-      <p className="text-xs font-semibold text-gray-700 mb-1">{label}</p>
+    <div className="rounded-xl border border-border bg-card p-3 shadow-lg">
+      <p className="text-xs font-semibold text-muted-foreground mb-1">{label}</p>
       {payload.map((p) => (
-        <p key={p.name} className="text-xs text-gray-600">
+        <p key={p.name} className="text-xs text-muted-foreground">
           {p.name}: <span className="font-semibold text-emerald-700">{formatCurrency(p.value)}</span>
         </p>
       ))}
@@ -83,8 +83,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
-        <p className="mt-1 text-sm text-gray-500">{t('dashboard.subtitle')}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t('dashboard.title')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
       </div>
 
       {lastPayroll ? (
@@ -162,12 +162,12 @@ export default function Dashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {[...history].reverse().slice(0, 5).map((p) => (
-                    <div key={p.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                    <div key={p.id} className="flex items-center justify-between rounded-lg bg-secondary p-3">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-foreground">
                           {formatDate(p.startDate)} – {formatDate(p.endDate)}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           {p.totals.employeeCount} {t('common.employees')}
                         </p>
                       </div>
@@ -221,7 +221,7 @@ export default function Dashboard() {
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50">
               <DollarSign className="h-8 w-8 text-emerald-600" />
             </div>
-            <p className="mt-4 text-sm text-gray-500">{t('dashboard.noPayrollData')}</p>
+            <p className="mt-4 text-sm text-muted-foreground">{t('dashboard.noPayrollData')}</p>
             <Button asChild className="mt-4">
               <Link to="/nomina/payroll">
                 {t('dashboard.processPayroll')}

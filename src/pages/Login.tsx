@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 import { Loader2, Banknote, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettingsStore } from '@/store/settingsStore'
 import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/lib/supabase'
@@ -102,8 +103,8 @@ export default function Login() {
 
       {/* Right — sign-in */}
       <main className="relative flex flex-1 flex-col items-center justify-center px-6 py-12">
-        {/* Language toggle, anchored top-right of the whole screen */}
-        <div className="absolute right-6 top-6">
+        {/* Language + theme toggles, anchored top-right of the whole screen */}
+        <div className="absolute right-6 top-6 flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -113,6 +114,7 @@ export default function Login() {
           >
             {currentLang === 'en' ? 'ES' : 'EN'}
           </Button>
+          <ThemeToggle />
         </div>
 
         <div className="w-full max-w-sm animate-rise">
@@ -124,12 +126,12 @@ export default function Login() {
                 <Banknote className="h-8 w-8" strokeWidth={1.75} />
               </div>
             )}
-            <h2 className="mt-6 text-2xl font-bold tracking-tight text-gray-900">{t('auth.login.welcome')}</h2>
-            <p className="mt-1.5 text-sm text-gray-500">{t('auth.login.subtitle')}</p>
+            <h2 className="mt-6 text-2xl font-bold tracking-tight text-foreground">{t('auth.login.welcome')}</h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">{t('auth.login.subtitle')}</p>
           </div>
 
           {!isSupabaseConfigured && (
-            <p className="mt-6 rounded-lg bg-amber-50 px-3 py-2 text-center text-xs font-medium text-amber-700">
+            <p className="mt-6 rounded-lg bg-amber-50 px-3 py-2 text-center text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
               {t('auth.login.notConfigured')}
             </p>
           )}
@@ -146,7 +148,7 @@ export default function Login() {
 
           {error && <p className="mt-3 text-center text-xs text-red-600">{error}</p>}
 
-          <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+          <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
             <ShieldCheck className="h-3.5 w-3.5" />
             {t('auth.login.secured')}
           </div>

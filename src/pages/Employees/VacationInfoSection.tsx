@@ -73,7 +73,7 @@ export function VacationInfoSection({ employee }: { employee: Employee }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-400">{t('employees.vacation.notConfigured', { country: country || '—' })}</p>
+          <p className="text-sm text-muted-foreground">{t('employees.vacation.notConfigured', { country: country || '—' })}</p>
         </CardContent>
       </Card>
     )
@@ -90,42 +90,42 @@ export function VacationInfoSection({ employee }: { employee: Employee }) {
         {/* Summary */}
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div>
-            <dt className="text-xs text-gray-500">{t('employees.vacation.yearsOfService')}</dt>
-            <dd className="mt-0.5 text-sm font-semibold text-gray-900">{years}</dd>
+            <dt className="text-xs text-muted-foreground">{t('employees.vacation.yearsOfService')}</dt>
+            <dd className="mt-0.5 text-sm font-semibold text-foreground">{years}</dd>
           </div>
           <div>
-            <dt className="text-xs text-gray-500">{t('employees.vacation.entitledDays')}</dt>
-            <dd className="mt-0.5 text-sm font-semibold text-gray-900">{entitledDays}</dd>
+            <dt className="text-xs text-muted-foreground">{t('employees.vacation.entitledDays')}</dt>
+            <dd className="mt-0.5 text-sm font-semibold text-foreground">{entitledDays}</dd>
           </div>
           <div>
-            <dt className="text-xs text-gray-500">{t('employees.vacation.estimatedPay')}</dt>
+            <dt className="text-xs text-muted-foreground">{t('employees.vacation.estimatedPay')}</dt>
             <dd className="mt-0.5 text-sm font-semibold text-emerald-700">{pay ? fmt(pay.gross) : '—'}</dd>
           </div>
         </dl>
 
         {/* Vacation periods (timeline) */}
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
             {t('employees.vacation.periods', { year })}
           </p>
           {!connected ? (
-            <p className="text-sm text-gray-400">{t('employees.vacation.notConnected')}</p>
+            <p className="text-sm text-muted-foreground">{t('employees.vacation.notConnected')}</p>
           ) : loading ? (
-            <p className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('employees.vacation.loading')}</p>
+            <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('employees.vacation.loading')}</p>
           ) : error ? (
             <p className="text-sm text-amber-600">{t('employees.vacation.fetchError')}</p>
           ) : sorted.length === 0 ? (
-            <p className="text-sm text-gray-400">{t('employees.vacation.noPeriods', { year })}</p>
+            <p className="text-sm text-muted-foreground">{t('employees.vacation.noPeriods', { year })}</p>
           ) : (
             <div className="space-y-1.5">
               {sorted.map((v, i) => (
-                <div key={v.id} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
+                <div key={v.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-800">
+                    <p className="text-sm text-foreground">
                       {formatDate(v.start)} → {formatDate(v.end)}
                       {i === 0 && <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200">1/{sorted.length}</span>}
                     </p>
-                    <p className="text-xs text-gray-400">{t('employees.vacation.days', { count: countVacationDays(v.dates) })}</p>
+                    <p className="text-xs text-muted-foreground">{t('employees.vacation.days', { count: countVacationDays(v.dates) })}</p>
                   </div>
                 </div>
               ))}

@@ -96,9 +96,9 @@ function BambooHRConnector() {
               value={bamboohr.subdomain}
               onChange={(e) => updateBambooHR({ subdomain: e.target.value, connected: false })}
             />
-            <span className="shrink-0 text-sm text-gray-400">.bamboohr.com</span>
+            <span className="shrink-0 text-sm text-muted-foreground">.bamboohr.com</span>
           </div>
-          <p className="text-xs text-gray-400">{t('connectors.bamboohr.subdomainHelp')}</p>
+          <p className="text-xs text-muted-foreground">{t('connectors.bamboohr.subdomainHelp')}</p>
         </div>
         <div className="space-y-1.5">
           <Label>{t('connectors.bamboohr.apiKey')}</Label>
@@ -108,7 +108,7 @@ function BambooHRConnector() {
             value={bamboohr.apiKey}
             onChange={(e) => updateBambooHR({ apiKey: e.target.value, connected: false })}
           />
-          <p className="text-xs text-gray-400">{t('connectors.bamboohr.apiKeyHelp')}</p>
+          <p className="text-xs text-muted-foreground">{t('connectors.bamboohr.apiKeyHelp')}</p>
         </div>
         <Button onClick={handleTest} disabled={testing} variant="outline">
           {testing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -153,27 +153,27 @@ function SearchableSelect({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-8 w-full items-center justify-between gap-1 rounded-md border border-gray-200 bg-white px-2 text-xs text-gray-900 hover:bg-gray-50"
+        className="flex h-8 w-full items-center justify-between gap-1 rounded-md border border-input bg-card px-2 text-xs text-foreground hover:bg-secondary"
       >
         <span className="truncate text-left">{selected ? selected.label : clearLabel}</span>
-        <ChevronDown className="h-3 w-3 shrink-0 text-gray-400" />
+        <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
       </button>
 
       {open && (
         <>
           {/* Backdrop */}
           <div className="fixed inset-0 z-10" onClick={() => { setOpen(false); setQuery('') }} />
-          <div className="absolute left-0 top-9 z-20 w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+          <div className="absolute left-0 top-9 z-20 w-72 overflow-hidden rounded-lg border border-input bg-card shadow-lg">
             {/* Search input */}
-            <div className="flex items-center gap-1.5 border-b border-gray-100 px-2 py-1.5">
-              <Search className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+            <div className="flex items-center gap-1.5 border-b border-border px-2 py-1.5">
+              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <input
                 autoFocus
                 type="text"
                 placeholder={searchPlaceholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full bg-transparent text-xs outline-none placeholder:text-gray-400"
+                className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground"
               />
             </div>
             {/* Options list */}
@@ -181,7 +181,7 @@ function SearchableSelect({
               <button
                 type="button"
                 onClick={() => { onChange(''); setOpen(false); setQuery('') }}
-                className="w-full px-3 py-1.5 text-left text-xs text-gray-400 hover:bg-gray-50"
+                className="w-full px-3 py-1.5 text-left text-xs text-muted-foreground hover:bg-secondary"
               >
                 {clearLabel}
               </button>
@@ -192,15 +192,15 @@ function SearchableSelect({
                   onClick={() => { onChange(o.value); setOpen(false); setQuery('') }}
                   className={[
                     'w-full px-3 py-1.5 text-left text-xs transition-colors',
-                    o.value === value ? 'bg-emerald-50 text-emerald-700' : 'text-gray-900 hover:bg-gray-50',
+                    o.value === value ? 'bg-emerald-50 text-emerald-700' : 'text-foreground hover:bg-secondary',
                   ].join(' ')}
                 >
                   <p className="font-medium truncate">{o.label}</p>
-                  {o.sublabel && <p className="text-[10px] text-gray-400 truncate">{o.sublabel}</p>}
+                  {o.sublabel && <p className="text-[10px] text-muted-foreground truncate">{o.sublabel}</p>}
                 </button>
               ))}
               {filtered.length === 0 && (
-                <p className="px-3 py-2 text-xs text-gray-400">No results</p>
+                <p className="px-3 py-2 text-xs text-muted-foreground">No results</p>
               )}
             </div>
           </div>
@@ -371,8 +371,8 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
       {/* Header row */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-sm font-medium text-gray-900">{t('connectors.hubstaff.mapping')}</p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-sm font-medium text-foreground">{t('connectors.hubstaff.mapping')}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
             {t('connectors.hubstaff.mappingProgress', { mapped: mappedCount, total: localMapping.length })}
           </p>
         </div>
@@ -384,7 +384,7 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
             </Button>
           )}
           {/* View toggle */}
-          <div className="flex overflow-hidden rounded-lg border border-gray-200 text-xs">
+          <div className="flex overflow-hidden rounded-lg border border-input text-xs">
             {(['by-hubstaff', 'by-bamboo'] as MappingView[]).map((v) => (
               <button
                 key={v}
@@ -392,7 +392,7 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
                 onClick={() => setViewMode(v)}
                 className={[
                   'relative px-3 py-1.5 font-medium transition-colors',
-                  viewMode === v ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:text-gray-800',
+                  viewMode === v ? 'bg-gray-900 text-white' : 'bg-card text-muted-foreground hover:text-foreground',
                 ].join(' ')}
               >
                 {v === 'by-hubstaff' ? t('connectors.hubstaff.byHubstaff') : t('connectors.hubstaff.byBamboo')}
@@ -429,10 +429,10 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
             return (
               <div key={m.hubstaffUserId} className="flex items-center gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{displayName}</p>
-                  {member?.email && <p className="text-xs text-gray-400 truncate">{member.email}</p>}
+                  <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                  {member?.email && <p className="text-xs text-muted-foreground truncate">{member.email}</p>}
                 </div>
-                <Link2 className="h-4 w-4 shrink-0 text-gray-300" />
+                <Link2 className="h-4 w-4 shrink-0 text-muted-foreground/60" />
                 <div className="w-56">
                   <SearchableSelect
                     value={m.bambooEmployeeId}
@@ -462,7 +462,7 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
           )}
           <div className="space-y-2">
           {unmappedHourly.length === 0 ? (
-            <p className="py-3 text-xs text-gray-400">{t('connectors.hubstaff.allMapped')}</p>
+            <p className="py-3 text-xs text-muted-foreground">{t('connectors.hubstaff.allMapped')}</p>
           ) : (
             unmappedHourly.map((emp) => {
               const currentHub = localMapping.find(
@@ -478,12 +478,12 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
               return (
                 <div key={emp.id} className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {emp.firstName} {emp.lastName}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">{emp.workEmail}</p>
+                    <p className="text-xs text-muted-foreground truncate">{emp.workEmail}</p>
                   </div>
-                  <Link2 className="h-4 w-4 shrink-0 text-gray-300" />
+                  <Link2 className="h-4 w-4 shrink-0 text-muted-foreground/60" />
                   <div className="w-56">
                     <SearchableSelect
                       value={currentHub?.hubstaffUserId ?? ''}
@@ -623,7 +623,7 @@ function HubstaffConnector() {
             value={hubstaff.refreshToken}
             onChange={(e) => updateHubstaff({ refreshToken: e.target.value, connected: false, cachedAccessToken: undefined, cachedAccessTokenExpiry: undefined })}
           />
-          <p className="text-xs text-gray-400">{t('connectors.hubstaff.refreshTokenHelp')}</p>
+          <p className="text-xs text-muted-foreground">{t('connectors.hubstaff.refreshTokenHelp')}</p>
         </div>
         <div className="space-y-1.5">
           <Label>{t('connectors.hubstaff.organizationId')}</Label>
@@ -640,10 +640,10 @@ function HubstaffConnector() {
                   key={org.id}
                   type="button"
                   onClick={() => updateHubstaff({ organizationId: String(org.id) })}
-                  className="flex w-full items-center justify-between rounded-md bg-white px-3 py-1.5 text-xs text-gray-800 border border-emerald-100 hover:bg-emerald-50 transition-colors"
+                  className="flex w-full items-center justify-between rounded-md bg-card px-3 py-1.5 text-xs text-foreground border border-emerald-100 hover:bg-emerald-50 transition-colors"
                 >
                   <span className="font-medium">{org.name}</span>
-                  <span className="font-mono text-gray-500">ID: {org.id}</span>
+                  <span className="font-mono text-muted-foreground">ID: {org.id}</span>
                 </button>
               ))}
             </div>
@@ -656,7 +656,7 @@ function HubstaffConnector() {
 
         {hubstaff.connected && (
           loadingMembers ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500 pt-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
               <Loader2 className="h-4 w-4 animate-spin" />
               {t('connectors.loadingMembers')}
             </div>
@@ -766,8 +766,8 @@ function ConnectorsInner() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('connectors.title')}</h1>
-        <p className="mt-1 text-sm text-gray-500">{t('connectors.subtitle')}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t('connectors.title')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('connectors.subtitle')}</p>
       </div>
       <div className="grid gap-6 max-w-2xl">
         <BambooHRConnector />

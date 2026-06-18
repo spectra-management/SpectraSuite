@@ -38,8 +38,8 @@ export default function Payroll() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('payroll.title')}</h1>
-        <p className="mt-1 text-sm text-gray-500">{t('payroll.subtitle')}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t('payroll.title')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('payroll.subtitle')}</p>
       </div>
 
       <PayrollStepper steps={steps} currentStep={step} />

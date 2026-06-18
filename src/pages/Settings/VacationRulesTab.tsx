@@ -76,7 +76,7 @@ export function VacationRulesTab() {
     <Card>
       <CardHeader>
         <CardTitle>{t('settings.vacations.title')}</CardTitle>
-        <p className="text-xs text-gray-500 mt-1">{t('settings.vacations.subtitle')}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t('settings.vacations.subtitle')}</p>
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Country tabs with status badges */}
@@ -92,7 +92,7 @@ export function VacationRulesTab() {
                 onClick={() => setCountry(c)}
                 className={cn(
                   'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
-                  country === c ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50',
+                  country === c ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-input text-muted-foreground hover:bg-secondary',
                 )}
               >
                 <span className="text-sm leading-none">{FLAG[c]}</span>
@@ -102,7 +102,7 @@ export function VacationRulesTab() {
                     {tierCount} · {t('settings.vacations.configured')} <Check className="h-2.5 w-2.5" />
                   </span>
                 ) : (
-                  <span className="rounded-full bg-gray-200 px-1.5 text-[10px] font-semibold text-gray-500">
+                  <span className="rounded-full bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground">
                     {t('settings.vacations.notConfigured')}
                   </span>
                 )}
@@ -125,11 +125,11 @@ export function VacationRulesTab() {
           />
         ) : (
           /* Not-configured empty state */
-          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 py-12 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100">
-              <Plane className="h-6 w-6 text-gray-400" />
+          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-input bg-secondary py-12 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary">
+              <Plane className="h-6 w-6 text-muted-foreground" />
             </div>
-            <p className="text-sm text-gray-500">{t('settings.vacations.notConfiguredText', { country })}</p>
+            <p className="text-sm text-muted-foreground">{t('settings.vacations.notConfiguredText', { country })}</p>
             <Button onClick={handleConfigure} className="gap-1.5">
               <Plus className="h-4 w-4" />
               {t('settings.vacations.configureBtn')}
@@ -162,23 +162,23 @@ function VacationForm({
       {/* Seniority tiers */}
       <section className="space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-gray-900">{t('settings.vacations.tiers')}</p>
+          <p className="text-sm font-semibold text-foreground">{t('settings.vacations.tiers')}</p>
           <Button variant="outline" size="sm" onClick={addTier} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" /> {t('settings.vacations.addTier')}
           </Button>
         </div>
-        <div className="overflow-hidden rounded-xl border border-gray-100">
+        <div className="overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <tr className="border-b border-border bg-secondary text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <th className="px-4 py-2">{t('settings.vacations.colYears')}</th>
                 <th className="px-4 py-2 w-32">{t('settings.vacations.colDays')}</th>
                 <th className="px-4 py-2 w-12" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border">
               {form.tiers.map((tr) => (
-                <tr key={tr.id} className="hover:bg-gray-50">
+                <tr key={tr.id} className="hover:bg-secondary">
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
                       <Input
@@ -187,7 +187,7 @@ function VacationForm({
                         onChange={(e) => updateTier(tr.id, { minYears: num(e.target.value) })}
                         onBlur={blurSave}
                       />
-                      <span className="text-gray-400">–</span>
+                      <span className="text-muted-foreground">–</span>
                       <Input
                         type="number" min={0} className="h-8 w-20"
                         placeholder="∞"
@@ -195,7 +195,7 @@ function VacationForm({
                         onChange={(e) => updateTier(tr.id, { maxYears: e.target.value === '' ? null : num(e.target.value) })}
                         onBlur={blurSave}
                       />
-                      <span className="text-xs text-gray-400">{t('settings.vacations.maxYearsOpenHint')}</span>
+                      <span className="text-xs text-muted-foreground">{t('settings.vacations.maxYearsOpenHint')}</span>
                     </div>
                   </td>
                   <td className="px-4 py-2">
@@ -220,14 +220,14 @@ function VacationForm({
 
       {/* Salary formula */}
       <section className="space-y-3">
-        <p className="text-sm font-semibold text-gray-900">{t('settings.vacations.formula')}</p>
+        <p className="text-sm font-semibold text-foreground">{t('settings.vacations.formula')}</p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <FormulaInput label={t('settings.vacations.hoursPerWeek')} value={form.formula.hoursPerWeek} onChange={(v) => setFormula('hoursPerWeek', v)} onBlur={blurSave} />
           <FormulaInput label={t('settings.vacations.weeksPerYear')} value={form.formula.weeksPerYear} onChange={(v) => setFormula('weeksPerYear', v)} onBlur={blurSave} />
           <FormulaInput label={t('settings.vacations.monthsPerYear')} value={form.formula.monthsPerYear} onChange={(v) => setFormula('monthsPerYear', v)} onBlur={blurSave} />
           <FormulaInput label={t('settings.vacations.dailyDivisor')} value={form.formula.dailyDivisor} step={0.01} onChange={(v) => setFormula('dailyDivisor', v)} onBlur={blurSave} help={t('settings.vacations.dailyDivisorHelp')} />
         </div>
-        <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 space-y-1 text-xs text-gray-500">
+        <div className="rounded-xl border border-border bg-secondary px-4 py-2.5 space-y-1 text-xs text-muted-foreground">
           <p>{t('settings.vacations.formulaLine1')}</p>
           <p>{t('settings.vacations.formulaLine2')}</p>
           <p>{t('settings.vacations.formulaLine3')}</p>
@@ -236,7 +236,7 @@ function VacationForm({
 
       {/* Deductions */}
       <section className="space-y-2">
-        <p className="text-sm font-semibold text-gray-900">{t('settings.vacations.deductions')}</p>
+        <p className="text-sm font-semibold text-foreground">{t('settings.vacations.deductions')}</p>
         <div className="space-y-2">
           <ToggleRow label={t('settings.vacations.applySfs')} checked={form.deductions.sfs} onChange={(v) => toggleDeduction('sfs', v)} />
           <ToggleRow label={t('settings.vacations.applyAfp')} checked={form.deductions.afp} onChange={(v) => toggleDeduction('afp', v)} />
@@ -246,8 +246,8 @@ function VacationForm({
 
       {/* Paystub language (auto) */}
       <section className="flex items-center gap-2">
-        <Label className="text-sm text-gray-700">{t('settings.vacations.payStubLanguage')}:</Label>
-        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+        <Label className="text-sm text-muted-foreground">{t('settings.vacations.payStubLanguage')}:</Label>
+        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
           {form.payStubLanguage === 'es' ? t('settings.vacations.langEs') : t('settings.vacations.langEn')}
         </span>
       </section>
@@ -257,7 +257,7 @@ function VacationForm({
         <Button onClick={() => { persist(form); toast({ variant: 'success', title: t('settings.vacations.saved') }) }}>
           {t('settings.vacations.save')}
         </Button>
-        <p className="mt-2 text-xs text-gray-400">{t('settings.vacations.lastModified', { time: fmtModified })}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{t('settings.vacations.lastModified', { time: fmtModified })}</p>
       </div>
     </div>
   )
@@ -275,15 +275,15 @@ function FormulaInput({ label, value, onChange, onBlur, step, help }: {
         onChange={(e) => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
         onBlur={onBlur}
       />
-      {help && <p className="text-[10px] text-gray-400">{help}</p>}
+      {help && <p className="text-[10px] text-muted-foreground">{help}</p>}
     </div>
   )
 }
 
 function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
-      <span className="text-sm text-gray-700">{label}</span>
+    <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+      <span className="text-sm text-muted-foreground">{label}</span>
       <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   )

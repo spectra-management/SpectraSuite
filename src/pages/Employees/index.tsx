@@ -192,8 +192,8 @@ export default function Employees() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('employees.title')}</h1>
-          <p className="mt-1 text-sm text-gray-500">{t('employees.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-foreground">{t('employees.title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('employees.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setReportsOpen(true)}>
@@ -212,7 +212,7 @@ export default function Employees() {
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             <div className="relative min-w-48 flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={t('common.search')}
                 value={search}
@@ -286,7 +286,7 @@ export default function Employees() {
 
             {/* Clear filters */}
             {activeFilterCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-gray-500">
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
                 <X className="mr-1 h-3.5 w-3.5" />
                 {t('employees.filters.clearFilters')}
               </Button>
@@ -301,10 +301,10 @@ export default function Employees() {
         <CardContent className="p-0">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100">
-                <User className="h-7 w-7 text-gray-400" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+                <User className="h-7 w-7 text-muted-foreground" />
               </div>
-              <p className="mt-3 text-sm text-gray-500">
+              <p className="mt-3 text-sm text-muted-foreground">
                 {employees.length === 0 ? t('employees.noEmployees') : 'No employees match the current filters.'}
               </p>
               {activeFilterCount > 0 && (
@@ -318,40 +318,40 @@ export default function Employees() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        <button className="flex items-center hover:text-gray-900 transition-colors" onClick={() => handleSort('name')}>
+                    <tr className="border-b border-border bg-secondary">
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <button className="flex items-center hover:text-foreground transition-colors" onClick={() => handleSort('name')}>
                           {t('employees.table.name')}
                           <SortIcon col="name" sortCol={sortCol} sortDir={sortDir} />
                         </button>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         {t('employees.table.department')}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         {t('employees.table.jobTitle')}
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        <button className="flex items-center ml-auto hover:text-gray-900 transition-colors" onClick={() => handleSort('payRate')}>
+                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <button className="flex items-center ml-auto hover:text-foreground transition-colors" onClick={() => handleSort('payRate')}>
                           {t('employees.table.payRate')}
                           <SortIcon col="payRate" sortCol={sortCol} sortDir={sortDir} />
                         </button>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        <button className="flex items-center hover:text-gray-900 transition-colors" onClick={() => handleSort('hireDate')}>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <button className="flex items-center hover:text-foreground transition-colors" onClick={() => handleSort('hireDate')}>
                           {t('employees.table.hireDate')}
                           <SortIcon col="hireDate" sortCol={sortCol} sortDir={sortDir} />
                         </button>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         {t('employees.table.status')}
                       </th>
                       <th className="px-6 py-3" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-border">
                     {paginated.map((emp) => (
-                      <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={emp.id} className="hover:bg-secondary transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <span className="text-base leading-none shrink-0" title={emp.country || 'Unknown'}>
@@ -361,24 +361,24 @@ export default function Employees() {
                               {getInitials(emp.firstName, emp.lastName)}
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{emp.firstName} {emp.lastName}</p>
-                              <p className="text-xs text-gray-400">{emp.workEmail}</p>
+                              <p className="font-medium text-foreground">{emp.firstName} {emp.lastName}</p>
+                              <p className="text-xs text-muted-foreground">{emp.workEmail}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-600">{emp.department || '—'}</td>
-                        <td className="px-6 py-4 text-gray-600">{emp.jobTitle || '—'}</td>
+                        <td className="px-6 py-4 text-muted-foreground">{emp.department || '—'}</td>
+                        <td className="px-6 py-4 text-muted-foreground">{emp.jobTitle || '—'}</td>
                         <td className="px-6 py-4 text-right">
                           {emp.payRateCurrency === '' ? (
                             <span className="text-xs font-medium text-amber-600">{t('employees.payRateNotSet')}</span>
                           ) : (
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium text-foreground">
                               {formatPayRate(emp.payRate, emp.payRateCurrency)}
                               {emp.payType === 'Hourly' ? '/hr' : ''}
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-gray-500">{formatDate(emp.hireDate)}</td>
+                        <td className="px-6 py-4 text-muted-foreground">{formatDate(emp.hireDate)}</td>
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap items-center gap-1.5">
                             <Badge variant={statusVariant(emp.status)}>

@@ -118,8 +118,8 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
             <CheckCircle2 className="h-8 w-8 text-emerald-600" />
           </div>
-          <h2 className="mt-4 text-xl font-bold text-gray-900">{t('payroll.approve.approved')}</h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <h2 className="mt-4 text-xl font-bold text-foreground">{t('payroll.approve.approved')}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             Payroll for {startDate} – {endDate} has been approved.
           </p>
           <div className="mt-5 flex flex-col items-center gap-3">
@@ -146,16 +146,16 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-xl bg-gray-50 p-4 space-y-3">
+          <div className="rounded-xl bg-secondary p-4 space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Period</span>
-              <span className="font-medium text-gray-900">{startDate} – {endDate}</span>
+              <span className="text-muted-foreground">Period</span>
+              <span className="font-medium text-foreground">{startDate} – {endDate}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Frequency</span>
-              <span className="font-medium text-gray-900">{frequency}</span>
+              <span className="text-muted-foreground">Frequency</span>
+              <span className="font-medium text-foreground">{frequency}</span>
             </div>
-            <div className="h-px bg-gray-200" />
+            <div className="h-px bg-muted" />
             <SummaryRow
               icon={Users}
               label={t('dashboard.employeeCount')}
@@ -166,7 +166,7 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
               icon={DollarSign}
               label={t('dashboard.totalGross')}
               value={formatCurrency(totals.totalGross)}
-              iconClass="text-gray-500 bg-gray-100"
+              iconClass="text-muted-foreground bg-secondary"
             />
             <SummaryRow
               icon={TrendingDown}
@@ -174,14 +174,14 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
               value={formatCurrency(totals.totalDeductions)}
               iconClass="text-red-500 bg-red-50"
             />
-            <div className="h-px bg-gray-200" />
+            <div className="h-px bg-muted" />
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-gray-900">{t('dashboard.totalNet')}</span>
+              <span className="font-semibold text-foreground">{t('dashboard.totalNet')}</span>
               <span className="text-xl font-bold text-emerald-700">{formatCurrency(totals.totalNet)}</span>
             </div>
           </div>
 
-          <p className="text-xs text-gray-500">{t('payroll.approve.confirmMessage')}</p>
+          <p className="text-xs text-muted-foreground">{t('payroll.approve.confirmMessage')}</p>
 
           <div className="flex gap-3">
             <Button variant="outline" onClick={onBack}>{t('common.back')}</Button>
@@ -213,9 +213,9 @@ function SummaryRow({
         <div className={`flex h-6 w-6 items-center justify-center rounded-md ${iconClass}`}>
           <Icon className="h-3.5 w-3.5" />
         </div>
-        <span className="text-sm text-gray-600">{label}</span>
+        <span className="text-sm text-muted-foreground">{label}</span>
       </div>
-      <span className="text-sm font-medium text-gray-900">{value}</span>
+      <span className="text-sm font-medium text-foreground">{value}</span>
     </div>
   )
 }

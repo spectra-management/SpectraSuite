@@ -33,7 +33,7 @@ export function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-gray-200 bg-white py-1 pl-1 pr-2 text-sm outline-none transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-emerald-500">
+      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-2 text-sm outline-none transition-colors hover:bg-secondary focus:ring-2 focus:ring-emerald-500">
         {avatarUrl ? (
           <img src={avatarUrl} alt={name} className="h-7 w-7 rounded-full object-cover" referrerPolicy="no-referrer" />
         ) : (
@@ -41,8 +41,8 @@ export function UserMenu() {
             {initial}
           </span>
         )}
-        <span className="hidden max-w-[10rem] truncate font-medium text-gray-700 sm:block">{name}</span>
-        <ChevronDown className="h-4 w-4 text-gray-400" />
+        <span className="hidden max-w-[10rem] truncate font-medium text-foreground sm:block">{name}</span>
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end">
@@ -56,10 +56,10 @@ export function UserMenu() {
             </span>
           )}
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-gray-900">{name}</p>
-            <p className="truncate text-xs text-gray-500">{email}</p>
+            <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+            <p className="truncate text-xs text-muted-foreground">{email}</p>
             {profile && (
-              <span className="mt-0.5 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+              <span className="mt-0.5 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                 {t(ROLE_LABEL_KEY[profile.role] ?? 'users.roles.viewer')}
               </span>
             )}
@@ -69,13 +69,13 @@ export function UserMenu() {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem onSelect={() => navigate('/suite')}>
-          <UserRound className="h-4 w-4 text-gray-500" />
+          <UserRound className="h-4 w-4 text-muted-foreground" />
           {t('userMenu.profile')}
         </DropdownMenuItem>
 
         {isSuperAdmin && (
           <DropdownMenuItem onSelect={() => navigate('/suite/settings')}>
-            <SettingsIcon className="h-4 w-4 text-gray-500" />
+            <SettingsIcon className="h-4 w-4 text-muted-foreground" />
             {t('userMenu.settings')}
           </DropdownMenuItem>
         )}
@@ -84,7 +84,7 @@ export function UserMenu() {
 
         <DropdownMenuItem
           onSelect={() => void signOut()}
-          className="text-red-600 focus:bg-red-50 focus:text-red-700"
+          className="text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-500/10 dark:focus:text-red-300"
         >
           <LogOut className="h-4 w-4" />
           {t('userMenu.signOut')}

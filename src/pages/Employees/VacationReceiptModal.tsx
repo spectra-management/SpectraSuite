@@ -83,15 +83,15 @@ export function VacationReceiptModal({ employee, country, payRate, entitledDays,
           <DialogDescription className="sr-only">{employee.firstName} {employee.lastName}</DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-xl border border-gray-100 overflow-hidden text-sm">
-          <div className="bg-gray-50 border-l-4 border-l-emerald-500 px-4 py-3">
-            <p className="font-bold text-gray-900">{employee.firstName} {employee.lastName}</p>
-            {periodLabel && <p className="text-xs text-gray-500 mt-0.5">{L.period}: {periodLabel}</p>}
+        <div className="rounded-xl border border-border overflow-hidden text-sm">
+          <div className="bg-secondary border-l-4 border-l-emerald-500 px-4 py-3">
+            <p className="font-bold text-foreground">{employee.firstName} {employee.lastName}</p>
+            {periodLabel && <p className="text-xs text-muted-foreground mt-0.5">{L.period}: {periodLabel}</p>}
           </div>
           {result ? (
             <>
               <table className="w-full">
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-border">
                   <Row label={L.entitledDays} value={String(entitledDays)} bold />
                   {daysTaken != null && <Row label={L.daysTaken} value={String(daysTaken)} muted />}
                   <Row label={monthlyLabel} value={fmt(result.averageMonthlySalary)} />
@@ -102,10 +102,10 @@ export function VacationReceiptModal({ employee, country, payRate, entitledDays,
                   {/* ISR informational only — NOT deducted from vacation net */}
                   {showIsr && (
                     <tr>
-                      <td className="px-4 py-2 text-gray-400">
+                      <td className="px-4 py-2 text-muted-foreground">
                         <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {L.isr}</span>
                       </td>
-                      <td className="px-4 py-2 text-right text-gray-400">{fmt(result.isrAmount)}</td>
+                      <td className="px-4 py-2 text-right text-muted-foreground">{fmt(result.isrAmount)}</td>
                     </tr>
                   )}
                 </tbody>
@@ -117,13 +117,13 @@ export function VacationReceiptModal({ employee, country, payRate, entitledDays,
                 </tfoot>
               </table>
               {showIsr && (
-                <p className="border-t border-gray-100 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+                <p className="border-t border-border bg-amber-50 px-4 py-2 text-xs text-amber-700">
                   🕐 {L.isrNote.replace('{amount}', fmt(result.isrAmount))}
                 </p>
               )}
             </>
           ) : (
-            <p className="px-4 py-6 text-center text-sm text-gray-400">—</p>
+            <p className="px-4 py-6 text-center text-sm text-muted-foreground">—</p>
           )}
         </div>
 
@@ -139,8 +139,8 @@ export function VacationReceiptModal({ employee, country, payRate, entitledDays,
 function Row({ label, value, bold, red, muted }: { label: string; value: string; bold?: boolean; red?: boolean; muted?: boolean }) {
   return (
     <tr>
-      <td className={`px-4 py-2 ${muted ? 'text-gray-400' : 'text-gray-700'}`}>{label}</td>
-      <td className={`px-4 py-2 text-right ${bold ? 'font-bold text-gray-900' : red ? 'text-red-600' : 'text-gray-700'}`}>{value}</td>
+      <td className={`px-4 py-2 ${muted ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{label}</td>
+      <td className={`px-4 py-2 text-right ${bold ? 'font-bold text-foreground' : red ? 'text-red-600' : 'text-muted-foreground'}`}>{value}</td>
     </tr>
   )
 }

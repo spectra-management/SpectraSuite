@@ -10,6 +10,7 @@ import { useSettingsStore } from '@/store/settingsStore'
 import { toast } from '@/hooks/useToast'
 import { Toaster } from '@/components/ui/toaster'
 import { UserMenu } from '@/components/layout/UserMenu'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { UsersPanel } from './components/UsersPanel'
 
 export default function SuiteSettings() {
@@ -42,9 +43,9 @@ export default function SuiteSettings() {
   return (
     <div className="min-h-screen bg-canvas">
       {/* Header */}
-      <header className="border-b border-border bg-white">
+      <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-6 py-4">
-          <Link to="/suite" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-emerald-700">
+          <Link to="/suite" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400">
             <ArrowLeft className="h-4 w-4" /> {t('suite.backToSuite')}
           </Link>
           <div className="flex items-center gap-2">
@@ -57,13 +58,14 @@ export default function SuiteSettings() {
             >
               {currentLang === 'en' ? 'ES' : 'EN'}
             </Button>
+            <ThemeToggle />
             <UserMenu />
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-6 py-8 space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">{t('suite.settings.title')}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('suite.settings.title')}</h1>
 
         <Card>
           <CardHeader>
@@ -76,9 +78,9 @@ export default function SuiteSettings() {
               <Label>{t('settings.company.logo')}</Label>
               <div className="flex items-center gap-4">
                 {form.logoBase64 ? (
-                  <img src={form.logoBase64} alt="logo" className="h-14 w-14 rounded-xl object-contain border border-gray-100" />
+                  <img src={form.logoBase64} alt="logo" className="h-14 w-14 rounded-xl object-contain border border-border" />
                 ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-xl font-bold text-gray-400">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-dashed border-input bg-secondary text-xl font-bold text-muted-foreground">
                     {form.name.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -87,7 +89,7 @@ export default function SuiteSettings() {
                     <Upload className="mr-2 h-4 w-4" />
                     {t('settings.company.logoUpload')}
                   </Button>
-                  <p className="mt-1 text-xs text-gray-400">{t('settings.company.logoHelp')}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t('settings.company.logoHelp')}</p>
                   <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleLogoChange} />
                 </div>
               </div>
@@ -148,13 +150,13 @@ export default function SuiteSettings() {
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div className="space-y-1.5">
-      <span className="text-xs text-gray-500">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <div className="flex items-center gap-2">
         <input
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-12 cursor-pointer rounded-lg border border-gray-200 p-1"
+          className="h-9 w-12 cursor-pointer rounded-lg border border-input p-1"
         />
         <Input value={value} onChange={(e) => onChange(e.target.value)} className="w-28 font-mono text-xs" />
       </div>

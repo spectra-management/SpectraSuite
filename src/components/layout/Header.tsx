@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { UserMenu } from './UserMenu'
 
 export function Header() {
@@ -12,7 +13,7 @@ export function Header() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-end gap-3 border-b border-border bg-white px-6">
+    <header className="flex h-16 items-center justify-end gap-2 border-b border-border bg-card px-6">
       <Button
         variant="outline"
         size="sm"
@@ -22,6 +23,7 @@ export function Header() {
       >
         {currentLang === 'en' ? 'ES' : 'EN'}
       </Button>
+      <ThemeToggle />
       <UserMenu />
     </header>
   )
