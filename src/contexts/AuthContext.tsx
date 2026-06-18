@@ -35,17 +35,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const loadProfile = useCallback(async (uid: string) => {
-    const { data: profileData, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', uid)
-      .maybeSingle()
+    const fetchRow = () =>
+      supabase.from('profiles').select('*').eq('id', uid).maybeSingle()
 
+    const { data: firstFetch, error } = await fetchRow()
     if (error) {
       console.error('[auth] failed to load profile:', error.message)
       setProfile(null)
       setPermissions([])
       return
+    }
+
+    let profileData = firstFetch
+    // First-user bootstrap: if we're not already a super_admin, ask the DB to
+    // promote us — but the SECURITY DEFINER function `claim_super_admin_if_first`
+    // only does so when WE are the very first user AND no super_admin exists yet.
+    // It no-ops otherwise, so this is safe to call on every non-admin login.
+    // (A client-side UPDATE can't do this: profiles RLS only lets super_admins
+    // modify profiles, so the first viewer could never promote itself.)
+    if (profileData && profileData.role !== 'super_admin') {
+      const { error: rpcErr } = await supabase.rpc('claim_super_admin_if_first')
+      if (!rpcErr) {
+        const { data: refreshed } = await fetchRow()
+        if (refreshed) profileData = refreshed
+      } else {
+        console.warn('[auth] claim_super_admin_if_first unavailable:', rpcErr.message)
+      }
     }
     setProfile(profileData ?? null)
 
