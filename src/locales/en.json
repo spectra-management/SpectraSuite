@@ -698,5 +698,82 @@
     "networkError": "Network error. Check your connection.",
     "tokenExpired": "Session expired. Please reconnect.",
     "noHoursData": "No hours data found for this employee in the selected period"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "welcome": "Welcome to Spectra Suite",
+      "subtitle": "Sign in to access your workspace",
+      "notConfigured": "Authentication is not configured in this environment.",
+      "googleButton": "Sign in with Google"
+    },
+    "accessDenied": {
+      "title": "Access Denied",
+      "message": "You don't have permission to access this module. Contact your administrator.",
+      "yourRole": "Your role",
+      "yourModules": "Modules you can access",
+      "noModules": "You don't have access to any modules yet.",
+      "back": "Back to Spectra Suite"
+    }
+  },
+  "userMenu": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "signOut": "Sign Out"
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage who can access Spectra Suite and what they can do.",
+    "inviteEmail": "Invite by email",
+    "sendInvite": "Send Invite",
+    "inviteSent": "Invitation sent",
+    "inviteError": "Could not send invitation",
+    "empty": "No users yet.",
+    "loadError": "Could not load users",
+    "active": "Active",
+    "inactive": "Inactive",
+    "editPermissions": "Edit permissions",
+    "role": "Role",
+    "modulePermissions": "Module permissions",
+    "module": "Module",
+    "canView": "View",
+    "canEdit": "Edit",
+    "canApprove": "Approve",
+    "canAdmin": "Admin",
+    "roles": {
+      "super_admin": "Super Admin",
+      "module_admin": "Module Admin",
+      "viewer": "Viewer",
+      "custom": "Custom"
+    }
+  },
+  "suiteHome": {
+    "greeting": {
+      "morning": "Good morning, {{name}}",
+      "afternoon": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}"
+    },
+    "overview": "Overview",
+    "nomina": {
+      "employees": "Employees",
+      "lastTotal": "Last payroll",
+      "process": "Process Payroll"
+    },
+    "rrhh": {
+      "totalEmployees": "Total employees",
+      "onVacation": "On vacation today"
+    },
+    "tasks": {
+      "title": "My Tasks",
+      "placeholder": "Add a task...",
+      "add": "Add task",
+      "empty": "No tasks. Enjoy your day!",
+      "localFallback": "Showing local tasks (Google Tasks not connected)."
+    },
+    "calendar": {
+      "title": "Upcoming",
+      "empty": "No events in the next 7 days.",
+      "unavailable": "Connect Google Calendar to see your events."
+    }
   }
 }

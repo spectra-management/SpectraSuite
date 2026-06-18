@@ -698,5 +698,82 @@
     "networkError": "Error de red. Verifica tu conexión.",
     "tokenExpired": "Sesión expirada. Reconéctate.",
     "noHoursData": "No se encontraron horas para este empleado en el período seleccionado"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "welcome": "Bienvenido a Spectra Suite",
+      "subtitle": "Inicia sesión para acceder a tu espacio de trabajo",
+      "notConfigured": "La autenticación no está configurada en este entorno.",
+      "googleButton": "Iniciar sesión con Google"
+    },
+    "accessDenied": {
+      "title": "Acceso Denegado",
+      "message": "No tienes permiso para acceder a este módulo. Contacta a tu administrador.",
+      "yourRole": "Tu rol",
+      "yourModules": "Módulos a los que puedes acceder",
+      "noModules": "Aún no tienes acceso a ningún módulo.",
+      "back": "Volver a Spectra Suite"
+    }
+  },
+  "userMenu": {
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "signOut": "Cerrar sesión"
+  },
+  "users": {
+    "title": "Usuarios",
+    "subtitle": "Administra quién puede acceder a Spectra Suite y qué puede hacer.",
+    "inviteEmail": "Invitar por correo",
+    "sendInvite": "Enviar invitación",
+    "inviteSent": "Invitación enviada",
+    "inviteError": "No se pudo enviar la invitación",
+    "empty": "Aún no hay usuarios.",
+    "loadError": "No se pudieron cargar los usuarios",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "editPermissions": "Editar permisos",
+    "role": "Rol",
+    "modulePermissions": "Permisos por módulo",
+    "module": "Módulo",
+    "canView": "Ver",
+    "canEdit": "Editar",
+    "canApprove": "Aprobar",
+    "canAdmin": "Admin",
+    "roles": {
+      "super_admin": "Super Administrador",
+      "module_admin": "Administrador de Módulo",
+      "viewer": "Visualizador",
+      "custom": "Personalizado"
+    }
+  },
+  "suiteHome": {
+    "greeting": {
+      "morning": "Buenos días, {{name}}",
+      "afternoon": "Buenas tardes, {{name}}",
+      "evening": "Buenas noches, {{name}}"
+    },
+    "overview": "Resumen",
+    "nomina": {
+      "employees": "Empleados",
+      "lastTotal": "Última nómina",
+      "process": "Procesar Nómina"
+    },
+    "rrhh": {
+      "totalEmployees": "Total de empleados",
+      "onVacation": "De vacaciones hoy"
+    },
+    "tasks": {
+      "title": "Mis Tareas",
+      "placeholder": "Agregar una tarea...",
+      "add": "Agregar tarea",
+      "empty": "Sin tareas. ¡Disfruta tu día!",
+      "localFallback": "Mostrando tareas locales (Google Tasks no conectado)."
+    },
+    "calendar": {
+      "title": "Próximos Eventos",
+      "empty": "No hay eventos en los próximos 7 días.",
+      "unavailable": "Conecta Google Calendar para ver tus eventos."
+    }
   }
 }

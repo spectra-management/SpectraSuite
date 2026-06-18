@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import { useSettingsStore } from '@/store/settingsStore'
 import { toast } from '@/hooks/useToast'
 import { Toaster } from '@/components/ui/toaster'
+import { UserMenu } from '@/components/layout/UserMenu'
+import { UsersPanel } from './components/UsersPanel'
 
 export default function SuiteSettings() {
   const { t, i18n } = useTranslation()
@@ -45,15 +47,18 @@ export default function SuiteSettings() {
           <Link to="/suite" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-emerald-700">
             <ArrowLeft className="h-4 w-4" /> {t('suite.backToSuite')}
           </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => i18n.changeLanguage(currentLang === 'en' ? 'es' : 'en')}
-            className="font-semibold tracking-wide"
-            aria-label="Toggle language"
-          >
-            {currentLang === 'en' ? 'ES' : 'EN'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => i18n.changeLanguage(currentLang === 'en' ? 'es' : 'en')}
+              className="font-semibold tracking-wide"
+              aria-label="Toggle language"
+            >
+              {currentLang === 'en' ? 'ES' : 'EN'}
+            </Button>
+            <UserMenu />
+          </div>
         </div>
       </header>
 
@@ -131,6 +136,9 @@ export default function SuiteSettings() {
             <Button onClick={handleSave}>{t('common.saveChanges')}</Button>
           </CardContent>
         </Card>
+
+        {/* User management (super_admin only — route is already gated) */}
+        <UsersPanel />
       </main>
       <Toaster />
     </div>

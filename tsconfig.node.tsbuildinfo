@@ -1,1 +1,1 @@
-{"root":["./vite.config.ts","./api/bamboohr.ts","./api/email.ts","./api/hubstaff.ts"],"version":"5.9.3"}
+{"root":["./vite.config.ts","./api/bamboohr.ts","./api/email.ts","./api/hubstaff.ts","./api/invite.ts"],"version":"5.9.3"}

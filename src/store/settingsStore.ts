@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { DEFAULT_FISCAL_PARAMETERS, DEFAULT_PAYROLL_SETTINGS, DEFAULT_NIGHT_SHIFT_SETTINGS } from '@/lib/payroll/constants'
+import {
+  saveCompanySettings,
+  saveBambooIntegration,
+  saveHubstaffIntegration,
+  fetchCompanySettings,
+} from '@/lib/cloudSync'
 import type {
   AppSettings,
   BambooHRConfig,
@@ -51,6 +57,7 @@ const defaultEmailTemplate: EmailTemplate = {
 
 interface SettingsState extends AppSettings {
   updateCompany: (data: Partial<CompanySettings>) => void
+  hydrateCompanyFromCloud: () => Promise<void>
   updatePayrollSettings: (data: Partial<PayrollSettings>) => void
   updateNightShift: (data: Partial<NightShiftSettings>) => void
   updateFiscalParameters: (data: Partial<FiscalParameters>) => void
@@ -88,6 +95,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const updated = { ...get().company, ...data }
     storage.set(STORAGE_KEYS.COMPANY, updated)
     set({ company: updated })
+    void saveCompanySettings(updated)  // best-effort cloud mirror
+  },
+
+  // Hydrate company settings from Supabase (cloud is authoritative when present),
+  // keeping localStorage as the offline cache. Called after auth resolves.
+  hydrateCompanyFromCloud: async () => {
+    const cloud = await fetchCompanySettings()
+    if (!cloud) return
+    const merged = { ...get().company, ...Object.fromEntries(Object.entries(cloud).filter(([, v]) => v != null)) }
+    storage.set(STORAGE_KEYS.COMPANY, merged)
+    set({ company: merged })
   },
 
   updatePayrollSettings: (data) => {
@@ -117,12 +135,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const updated = { ...get().bamboohr, ...data }
     storage.set(STORAGE_KEYS.BAMBOOHR_CONFIG, updated)
     set({ bamboohr: updated })
+    void saveBambooIntegration(updated)  // best-effort cloud mirror
   },
 
   updateHubstaff: (data) => {
     const updated = { ...get().hubstaff, ...data }
     storage.set(STORAGE_KEYS.HUBSTAFF_CONFIG, updated)
     set({ hubstaff: updated })
+    void saveHubstaffIntegration(updated)  // best-effort cloud mirror
   },
 
   updateEmailConfig: (data) => {
