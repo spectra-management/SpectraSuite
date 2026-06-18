@@ -12,7 +12,7 @@ export function Header() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-end gap-3 border-b border-gray-100 bg-white px-6">
+    <header className="flex h-16 items-center justify-end gap-3 border-b border-border bg-white px-6">
       <Button
         variant="outline"
         size="sm"

@@ -40,9 +40,9 @@ export default function SuiteSettings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-canvas">
       {/* Header */}
-      <header className="border-b border-gray-100 bg-white">
+      <header className="border-b border-border bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-6 py-4">
           <Link to="/suite" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-emerald-700">
             <ArrowLeft className="h-4 w-4" /> {t('suite.backToSuite')}

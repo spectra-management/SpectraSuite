@@ -705,7 +705,11 @@
       "welcome": "Welcome to Spectra Suite",
       "subtitle": "Sign in to access your workspace",
       "notConfigured": "Authentication is not configured in this environment.",
-      "googleButton": "Sign in with Google"
+      "googleButton": "Sign in with Google",
+      "brandTagline": "Payroll, precise to the last peso.",
+      "brandSub": "TSS, ISR, and net pay — calculated, reconciled, and paid. Built for teams in the Dominican Republic.",
+      "ledgerLabel": "Net pay · last run",
+      "secured": "Secured with Google"
     },
     "accessDenied": {
       "title": "Access Denied",

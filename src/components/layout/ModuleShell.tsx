@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/toaster'
 import { useSettingsStore } from '@/store/settingsStore'
 import { getSuiteModule, type SuiteModuleId } from '@/lib/suiteModules'
+import { MODULE_ICONS } from '@/components/moduleIcons'
 
 /**
  * Two-panel shell for a placeholder Suite module (RRHH, Facturación, Gastos, IT):
@@ -17,13 +18,14 @@ export function ModuleShell({ moduleId }: { moduleId: SuiteModuleId }) {
   const { t, i18n } = useTranslation()
   const company = useSettingsStore((s) => s.company)
   const mod = getSuiteModule(moduleId)
+  const Icon = MODULE_ICONS[moduleId]
   const name = t(`suite.modules.${moduleId}`)
   const currentLang = i18n.language.startsWith('es') ? 'es' : 'en'
 
   useEffect(() => { document.title = `${name} | Spectra Suite` }, [name])
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-canvas">
       {/* Module sidebar */}
       <aside className="flex h-full w-60 flex-col border-r border-gray-100 bg-white">
         <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-3">
@@ -41,7 +43,9 @@ export function ModuleShell({ moduleId }: { moduleId: SuiteModuleId }) {
           </Button>
         </div>
         <div className="flex items-center gap-2.5 border-b border-gray-100 px-6 py-4">
-          <span className="text-xl leading-none">{mod.icon}</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+            <Icon className="h-4 w-4" />
+          </span>
           <span className="text-sm font-bold uppercase tracking-wide text-gray-900">{name}</span>
         </div>
         {/* Visual-only nav — no routes behind these yet */}
@@ -72,11 +76,13 @@ export function ModuleShell({ moduleId }: { moduleId: SuiteModuleId }) {
       </aside>
 
       {/* Coming Soon content */}
-      <main className="flex flex-1 flex-col items-center justify-center gap-3 overflow-auto p-6 text-center">
-        <span className="text-6xl leading-none">{mod.icon}</span>
-        <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 overflow-auto p-6 text-center">
+        <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-ink-grad text-emerald-50 shadow-soft-lg">
+          <Icon className="h-9 w-9" strokeWidth={1.5} />
+        </span>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900">{name}</h1>
         <p className="max-w-sm text-sm text-gray-500">{t('suite.underDevelopment')}</p>
-        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">
+        <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
           {t('suite.comingSoon')}
         </span>
         <Button variant="outline" asChild className="mt-2">

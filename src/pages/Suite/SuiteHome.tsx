@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { Banknote } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useAuth } from '@/contexts/AuthContext'
 import { SUITE_MODULES } from '@/lib/suiteModules'
+import { MODULE_ICONS } from '@/components/moduleIcons'
 import { UserMenu } from '@/components/layout/UserMenu'
 import { Toaster } from '@/components/ui/toaster'
 import { ModuleSummaryCards } from './components/ModuleSummaryCards'
@@ -33,21 +35,23 @@ export default function SuiteHome() {
     .split(' ')[0]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="border-b border-gray-100 bg-white">
+    <div className="min-h-screen bg-canvas">
+      {/* Top bar */}
+      <header className="border-b border-border bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-6 py-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {company.logoBase64 ? (
-              <img src={company.logoBase64} alt="logo" className="h-9 w-9 rounded-lg object-contain" />
+              <img src={company.logoBase64} alt="logo" className="h-9 w-9 rounded-xl object-contain" />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
-                S
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-grad text-emerald-50">
+                <Banknote className="h-5 w-5" strokeWidth={1.75} />
               </div>
             )}
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">{t('suite.title')}</h1>
-              <p className="text-xs text-gray-500">{company.name}</p>
+            <div className="leading-tight">
+              <span className="block text-base font-bold tracking-tight text-gray-900">
+                Spectra <span className="text-emerald-600">Suite</span>
+              </span>
+              <span className="block text-xs text-gray-400">{company.name}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -66,49 +70,54 @@ export default function SuiteHome() {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-8">
-        {/* Greeting */}
-        <h2 className="text-2xl font-bold text-gray-900">
-          {t(`suiteHome.greeting.${greetingKey()}`, { name: firstName })}
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">{t('suite.subtitle')}</p>
+        {/* Hero — ink "ledger" band with greeting + module launcher */}
+        <section className="relative overflow-hidden rounded-2xl bg-ink-grad p-8 shadow-soft-lg animate-rise">
+          <div className="absolute inset-0 bg-guilloche opacity-90" aria-hidden="true" />
+          <div className="relative">
+            <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+              {t(`suiteHome.greeting.${greetingKey()}`, { name: firstName })}
+            </h1>
+            <p className="mt-1.5 text-sm text-emerald-50/70">{t('suite.subtitle')}</p>
 
-        {/* Module cards row — compact, horizontal */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          {SUITE_MODULES.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => navigate(m.path)}
-              className={cn(
-                'flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all hover:shadow-sm',
-                m.active
-                  ? 'border-emerald-200 bg-white text-gray-900 hover:border-emerald-400'
-                  : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300',
-              )}
-            >
-              <span className="text-lg leading-none">{m.icon}</span>
-              {t(`suite.modules.${m.id}`)}
-            </button>
-          ))}
-        </div>
+            <div className="mt-7 flex flex-wrap gap-2.5">
+              {SUITE_MODULES.map((m) => {
+                const Icon = MODULE_ICONS[m.id]
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => navigate(m.path)}
+                    className={cn(
+                      'group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium backdrop-blur-sm transition-all',
+                      m.active
+                        ? 'border-white/15 bg-white/10 text-white hover:bg-white/20'
+                        : 'border-white/10 bg-white/[0.04] text-emerald-50/60 hover:bg-white/10 hover:text-emerald-50/90',
+                    )}
+                  >
+                    <Icon className="h-4 w-4" strokeWidth={1.75} />
+                    {t(`suite.modules.${m.id}`)}
+                    {m.active && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </section>
 
         {/* 3-column dashboard grid */}
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Left — module summaries */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
+          <div className="animate-rise">
+            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
               {t('suiteHome.overview')}
-            </h3>
+            </h2>
             <ModuleSummaryCards />
           </div>
 
-          {/* Center — tasks */}
-          <div className="min-h-[20rem]">
+          <div className="min-h-[20rem] animate-rise-2">
             <TasksWidget />
           </div>
 
-          {/* Right — calendar */}
-          <div className="min-h-[20rem]">
+          <div className="min-h-[20rem] animate-rise-3">
             <CalendarWidget />
           </div>
         </div>

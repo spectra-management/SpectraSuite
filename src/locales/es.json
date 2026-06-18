@@ -705,7 +705,11 @@
       "welcome": "Bienvenido a Spectra Suite",
       "subtitle": "Inicia sesión para acceder a tu espacio de trabajo",
       "notConfigured": "La autenticación no está configurada en este entorno.",
-      "googleButton": "Iniciar sesión con Google"
+      "googleButton": "Iniciar sesión con Google",
+      "brandTagline": "Nómina, precisa hasta el último peso.",
+      "brandSub": "TSS, ISR y pago neto — calculados, conciliados y pagados. Hecho para equipos en República Dominicana.",
+      "ledgerLabel": "Pago neto · último período",
+      "secured": "Protegido con Google"
     },
     "accessDenied": {
       "title": "Acceso Denegado",

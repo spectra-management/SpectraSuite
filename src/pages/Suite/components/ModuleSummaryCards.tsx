@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useEmployeesStore } from '@/store/employeesStore'
 import { usePayrollStore } from '@/store/payrollStore'
 import { formatCurrency } from '@/lib/utils'
+import { MODULE_ICONS } from '@/components/moduleIcons'
 
 // Module summary cards shown in the dashboard's left column — only for modules
 // the signed-in user can access.
@@ -19,6 +20,7 @@ export function ModuleSummaryCards() {
   const employees = useEmployeesStore((s) => s.employees)
   const history = usePayrollStore((s) => s.history)
 
+  const NominaIcon = MODULE_ICONS.nomina
   const activeCount = useMemo(() => employees.filter((e) => e.status === 'Active').length, [employees])
 
   const lastRun = useMemo(() => {
@@ -29,12 +31,15 @@ export function ModuleSummaryCards() {
 
   return (
     <div className="space-y-4">
-      {/* Nómina */}
+      {/* Nómina — the live module, marked with an emerald ledger rule */}
       {hasModuleAccess('nomina') && (
-        <Card>
+        <Card className="overflow-hidden border-t-2 border-t-emerald-600">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <span>💵</span> {t('suite.modules.nomina')}
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                <NominaIcon className="h-4 w-4" strokeWidth={1.75} />
+              </span>
+              {t('suite.modules.nomina')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -56,7 +61,7 @@ export function ModuleSummaryCards() {
       {/* RRHH — placeholder data */}
       {hasModuleAccess('rrhh') && (
         <ComingSoonCard
-          icon="🏢"
+          moduleId="rrhh"
           title={t('suite.modules.rrhh')}
           stats={[
             { icon: <Users className="h-4 w-4" />, label: t('suiteHome.rrhh.totalEmployees'), value: String(employees.length) },
@@ -67,17 +72,17 @@ export function ModuleSummaryCards() {
 
       {/* Facturación */}
       {hasModuleAccess('facturacion') && (
-        <ComingSoonCard icon="🧾" title={t('suite.modules.facturacion')} stats={[]} />
+        <ComingSoonCard moduleId="facturacion" title={t('suite.modules.facturacion')} stats={[]} />
       )}
 
       {/* Gastos */}
       {hasModuleAccess('gastos') && (
-        <ComingSoonCard icon="💸" title={t('suite.modules.gastos')} stats={[]} />
+        <ComingSoonCard moduleId="gastos" title={t('suite.modules.gastos')} stats={[]} />
       )}
 
       {/* IT */}
       {hasModuleAccess('it') && (
-        <ComingSoonCard icon="💻" title={t('suite.modules.it')} stats={[]} />
+        <ComingSoonCard moduleId="it" title={t('suite.modules.it')} stats={[]} />
       )}
     </div>
   )
@@ -85,26 +90,30 @@ export function ModuleSummaryCards() {
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-gray-50 p-3">
+    <div className="rounded-lg bg-secondary p-3">
       <div className="flex items-center gap-1.5 text-gray-400">{icon}<span className="text-xs">{label}</span></div>
-      <p className="mt-1 truncate text-lg font-bold text-gray-900">{value}</p>
+      <p className="text-figure mt-1 truncate text-lg font-bold text-gray-900">{value}</p>
     </div>
   )
 }
 
 function ComingSoonCard({
-  icon, title, stats,
+  moduleId, title, stats,
 }: {
-  icon: string
+  moduleId: 'rrhh' | 'facturacion' | 'gastos' | 'it'
   title: string
   stats: { icon: React.ReactNode; label: string; value: string }[]
 }) {
   const { t } = useTranslation()
+  const Icon = MODULE_ICONS[moduleId]
   return (
     <Card className="relative overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <span>{icon}</span> {title}
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-gray-500">
+            <Icon className="h-4 w-4" strokeWidth={1.75} />
+          </span>
+          {title}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -115,7 +124,7 @@ function ComingSoonCard({
         ) : (
           <div className="py-4" />
         )}
-        <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/55 backdrop-blur-[1px]">
           <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
             {t('suite.comingSoon')}
           </span>

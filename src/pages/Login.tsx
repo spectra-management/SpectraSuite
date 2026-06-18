@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Banknote, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettingsStore } from '@/store/settingsStore'
@@ -15,6 +15,14 @@ function GoogleIcon({ className }: { className?: string }) {
       <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
     </svg>
+  )
+}
+
+function Wordmark({ onDark = false }: { onDark?: boolean }) {
+  return (
+    <span className={`text-base font-bold tracking-tight ${onDark ? 'text-white' : 'text-gray-900'}`}>
+      Spectra <span className={onDark ? 'text-emerald-300/90' : 'text-emerald-600'}>Suite</span>
+    </span>
   )
 }
 
@@ -46,58 +54,89 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      {/* Language toggle */}
-      <div className="flex justify-end p-6">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => i18n.changeLanguage(currentLang === 'en' ? 'es' : 'en')}
-          className="font-semibold tracking-wide"
-          aria-label="Toggle language"
-        >
-          {currentLang === 'en' ? 'ES' : 'EN'}
-        </Button>
-      </div>
+    <div className="flex min-h-screen bg-canvas">
+      {/* Left — deep-emerald "security paper" brand panel (desktop only) */}
+      <aside className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-ink-grad p-12 lg:flex">
+        <div className="absolute inset-0 bg-guilloche opacity-90" aria-hidden="true" />
+        <div className="relative flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-soft">
+            <Banknote className="h-5 w-5" strokeWidth={2} />
+          </span>
+          <Wordmark onDark />
+        </div>
 
-      {/* Centered card */}
-      <div className="flex flex-1 items-center justify-center px-6 pb-24">
-        <div className="w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-          <div className="flex flex-col items-center text-center">
-            {company.logoBase64 ? (
-              <img src={company.logoBase64} alt="logo" className="h-16 w-16 rounded-2xl object-contain" />
-            ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-2xl font-bold text-white">
-                S
-              </div>
-            )}
-            <h1 className="mt-5 text-xl font-bold text-gray-900">{t('auth.login.welcome')}</h1>
-            <p className="mt-1 text-sm text-gray-500">{t('auth.login.subtitle')}</p>
+        <div className="relative max-w-md animate-rise">
+          <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight text-white">
+            {t('auth.login.brandTagline')}
+          </h1>
+          <p className="mt-5 text-sm leading-relaxed text-emerald-50/70">
+            {t('auth.login.brandSub')}
+          </p>
 
-            {!isSupabaseConfigured && (
-              <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
-                {t('auth.login.notConfigured')}
-              </p>
-            )}
-
-            <Button
-              onClick={handleSignIn}
-              disabled={signingIn || !isSupabaseConfigured}
-              className="mt-6 w-full gap-2"
-              size="lg"
-            >
-              {signingIn ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <GoogleIcon className="h-4 w-4" />
-              )}
-              {t('auth.login.googleButton')}
-            </Button>
-
-            {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
+          {/* Signature: a payslip "net pay" figure as ambient proof of the product */}
+          <div className="mt-10 inline-flex flex-col rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 backdrop-blur-sm">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-200/70">
+              {t('auth.login.ledgerLabel')}
+            </span>
+            <span className="text-figure mt-1 text-3xl font-bold text-white">RD$ 52,480.00</span>
           </div>
         </div>
-      </div>
+
+        <p className="relative text-xs text-emerald-100/40">© Spectra Suite</p>
+      </aside>
+
+      {/* Right — sign-in */}
+      <main className="relative flex flex-1 flex-col items-center justify-center px-6 py-12">
+        {/* Language toggle, anchored top-right of the whole screen */}
+        <div className="absolute right-6 top-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => i18n.changeLanguage(currentLang === 'en' ? 'es' : 'en')}
+            className="font-semibold tracking-wide"
+            aria-label="Toggle language"
+          >
+            {currentLang === 'en' ? 'ES' : 'EN'}
+          </Button>
+        </div>
+
+        <div className="w-full max-w-sm animate-rise">
+          <div className="flex flex-col items-center text-center">
+            {company.logoBase64 ? (
+              <img src={company.logoBase64} alt="logo" className="h-14 w-14 rounded-2xl object-contain" />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ink-grad text-emerald-50 shadow-soft">
+                <Banknote className="h-6 w-6" strokeWidth={1.75} />
+              </div>
+            )}
+            <h2 className="mt-6 text-2xl font-bold tracking-tight text-gray-900">{t('auth.login.welcome')}</h2>
+            <p className="mt-1.5 text-sm text-gray-500">{t('auth.login.subtitle')}</p>
+          </div>
+
+          {!isSupabaseConfigured && (
+            <p className="mt-6 rounded-lg bg-amber-50 px-3 py-2 text-center text-xs font-medium text-amber-700">
+              {t('auth.login.notConfigured')}
+            </p>
+          )}
+
+          <Button
+            onClick={handleSignIn}
+            disabled={signingIn || !isSupabaseConfigured}
+            className="mt-8 w-full gap-2.5"
+            size="lg"
+          >
+            {signingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon className="h-4 w-4" />}
+            {t('auth.login.googleButton')}
+          </Button>
+
+          {error && <p className="mt-3 text-center text-xs text-red-600">{error}</p>}
+
+          <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            {t('auth.login.secured')}
+          </div>
+        </div>
+      </main>
     </div>
   )
 }

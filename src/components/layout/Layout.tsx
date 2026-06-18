@@ -8,7 +8,7 @@ export function Layout() {
   useEffect(() => { document.title = 'Nómina | Spectra Suite' }, [])
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-canvas">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
