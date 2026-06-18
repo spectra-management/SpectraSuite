@@ -17,6 +17,17 @@ interface Props {
 export function ProtectedRoute({ children, module, requireSuperAdmin }: Props) {
   const { user, profile, loading, isSuperAdmin, hasModuleAccess } = useAuth()
 
+  console.log('[ProtectedRoute] →', {
+    module,
+    requireSuperAdmin,
+    loading,
+    hasUser: !!user,
+    role: profile?.role,
+    isActive: profile?.is_active,
+    isSuperAdmin,
+    moduleAllowed: module ? hasModuleAccess(module) : 'n/a',
+  })
+
   // If Supabase isn't configured (offline/local build), don't lock the app out.
   if (!isSupabaseConfigured) return <>{children}</>
 

@@ -39,7 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from('profiles').select('*').eq('id', uid).maybeSingle()
 
     const { data: firstFetch, error } = await fetchRow()
+    console.log('[auth] profile fetch →', { uid, profile: firstFetch, error: error?.message })
     if (error) {
+      // A recursion error here ("infinite recursion detected in policy for
+      // relation profiles") means the RLS policies need migration 003.
       console.error('[auth] failed to load profile:', error.message)
       setProfile(null)
       setPermissions([])
@@ -68,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('user_module_permissions')
       .select('*')
       .eq('user_id', uid)
+    console.log('[auth] permissions fetch →', { uid, permissions: permData, error: permError?.message })
     if (permError) {
       console.error('[auth] failed to load permissions:', permError.message)
       setPermissions([])
@@ -90,6 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const applySession = async (s: Session | null) => {
       if (!active) return
+      console.log('[auth] session →', {
+        hasSession: !!s,
+        userId: s?.user?.id,
+        email: s?.user?.email,
+        hasProviderToken: !!s?.provider_token,
+      })
       setSession(s)
       setUser(s?.user ?? null)
       // provider_token only arrives on fresh OAuth; cache and reuse otherwise.
