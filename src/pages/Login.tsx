@@ -18,14 +18,6 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
-function Wordmark({ onDark = false }: { onDark?: boolean }) {
-  return (
-    <span className={`text-base font-bold tracking-tight ${onDark ? 'text-white' : 'text-gray-900'}`}>
-      Spectra <span className={onDark ? 'text-emerald-300/90' : 'text-emerald-600'}>Suite</span>
-    </span>
-  )
-}
-
 export default function Login() {
   const { t, i18n } = useTranslation()
   const { user, loading } = useAuth()
@@ -58,11 +50,19 @@ export default function Login() {
       {/* Left — deep-emerald "security paper" brand panel (desktop only) */}
       <aside className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-ink-grad p-12 lg:flex">
         <div className="absolute inset-0 bg-guilloche opacity-90" aria-hidden="true" />
-        <div className="relative flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-soft">
-            <Banknote className="h-5 w-5" strokeWidth={2} />
-          </span>
-          <Wordmark onDark />
+        {/* Company logo on a light tile so it reads on the dark panel */}
+        <div className="relative">
+          {company.logoBase64 ? (
+            <img
+              src={company.logoBase64}
+              alt={company.name}
+              className="h-11 rounded-xl bg-white object-contain p-1.5 shadow-soft"
+            />
+          ) : (
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-lg font-bold text-emerald-700 shadow-soft">
+              {(company.name || 'S').charAt(0).toUpperCase()}
+            </span>
+          )}
         </div>
 
         <div className="relative max-w-md animate-rise">
@@ -72,14 +72,6 @@ export default function Login() {
           <p className="mt-5 text-sm leading-relaxed text-emerald-50/70">
             {t('auth.login.brandSub')}
           </p>
-
-          {/* Signature: a payslip "net pay" figure as ambient proof of the product */}
-          <div className="mt-10 inline-flex flex-col rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 backdrop-blur-sm">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-200/70">
-              {t('auth.login.ledgerLabel')}
-            </span>
-            <span className="text-figure mt-1 text-3xl font-bold text-white">RD$ 52,480.00</span>
-          </div>
         </div>
 
         <p className="relative text-xs text-emerald-100/40">© Spectra Suite</p>
@@ -103,10 +95,10 @@ export default function Login() {
         <div className="w-full max-w-sm animate-rise">
           <div className="flex flex-col items-center text-center">
             {company.logoBase64 ? (
-              <img src={company.logoBase64} alt="logo" className="h-14 w-14 rounded-2xl object-contain" />
+              <img src={company.logoBase64} alt={company.name} className="h-20 w-auto object-contain" />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ink-grad text-emerald-50 shadow-soft">
-                <Banknote className="h-6 w-6" strokeWidth={1.75} />
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-ink-grad text-emerald-50 shadow-soft">
+                <Banknote className="h-8 w-8" strokeWidth={1.75} />
               </div>
             )}
             <h2 className="mt-6 text-2xl font-bold tracking-tight text-gray-900">{t('auth.login.welcome')}</h2>

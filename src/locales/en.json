@@ -706,8 +706,8 @@
       "subtitle": "Sign in to access your workspace",
       "notConfigured": "Authentication is not configured in this environment.",
       "googleButton": "Sign in with Google",
-      "brandTagline": "Payroll, precise to the last peso.",
-      "brandSub": "TSS, ISR, and net pay — calculated, reconciled, and paid. Built for teams in the Dominican Republic.",
+      "brandTagline": "One platform. Every team. Anywhere.",
+      "brandSub": "Streamline HR, payroll, billing, and operations — all in one place, built for global teams.",
       "ledgerLabel": "Net pay · last run",
       "secured": "Secured with Google"
     },
