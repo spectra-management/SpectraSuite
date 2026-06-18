@@ -13,6 +13,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { ModuleSummaryCards } from './components/ModuleSummaryCards'
 import { TasksWidget } from './components/TasksWidget'
 import { CalendarWidget } from './components/CalendarWidget'
+import { EmailsWidget } from './components/EmailsWidget'
 
 function greetingKey(): 'morning' | 'afternoon' | 'evening' {
   const h = new Date().getHours()
@@ -120,6 +121,11 @@ export default function SuiteHome() {
           <div className="min-h-[20rem] animate-rise-3">
             <CalendarWidget />
           </div>
+        </div>
+
+        {/* Recent Emails — full-width inbox strip */}
+        <div className="mt-6 animate-rise-3">
+          <EmailsWidget />
         </div>
       </main>
       <Toaster />

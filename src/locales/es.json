@@ -782,6 +782,17 @@
     "google": {
       "reconnect": "Reconectar Google",
       "hint": "Conecta Google para sincronizar tus tareas y calendario."
+    },
+    "emails": {
+      "title": "Correos Recientes",
+      "empty": "Tu bandeja está vacía.",
+      "unavailable": "Conecta Google para ver tu bandeja."
+    },
+    "time": {
+      "now": "ahora",
+      "minutes": "hace {{n}} min",
+      "hours": "hace {{n}} h",
+      "yesterday": "Ayer"
     }
   }
 }

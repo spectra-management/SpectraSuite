@@ -782,6 +782,17 @@
     "google": {
       "reconnect": "Reconnect Google",
       "hint": "Connect Google to sync your tasks and calendar."
+    },
+    "emails": {
+      "title": "Recent Emails",
+      "empty": "Your inbox is empty.",
+      "unavailable": "Connect Google to see your inbox."
+    },
+    "time": {
+      "now": "just now",
+      "minutes": "{{n}}m ago",
+      "hours": "{{n}}h ago",
+      "yesterday": "Yesterday"
     }
   }
 }

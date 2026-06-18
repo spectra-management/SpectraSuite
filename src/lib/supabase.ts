@@ -61,9 +61,10 @@ export function authRedirectTo(path = '/suite'): string {
  * or the provider_token is rejected with 403:
  *   - Google Calendar API: https://console.cloud.google.com/apis/library/calendar-json.googleapis.com
  *   - Google Tasks API:    https://console.cloud.google.com/apis/library/tasks.googleapis.com
+ *   - Gmail API:           https://console.cloud.google.com/apis/library/gmail.googleapis.com
  */
 export const GOOGLE_OAUTH_SCOPES =
-  'openid email profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks'
+  'openid email profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/gmail.readonly'
 
 /**
  * Start Google OAuth. `access_type: offline` + `prompt: consent` force Google to
