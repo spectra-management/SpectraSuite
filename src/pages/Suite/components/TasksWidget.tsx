@@ -23,7 +23,7 @@ function saveLocal(todos: LocalTodo[]) {
 
 export function TasksWidget() {
   const { t } = useTranslation()
-  const { googleProviderToken } = useAuth()
+  const { googleProviderToken, reconnectGoogle } = useAuth()
   const [useGoogle, setUseGoogle] = useState<boolean>(!!googleProviderToken)
   const [loading, setLoading] = useState<boolean>(!!googleProviderToken)
   const [tasks, setTasks] = useState<GoogleTask[]>([])
@@ -146,7 +146,15 @@ export function TasksWidget() {
           </ul>
         )}
         {!useGoogle && !loading && (
-          <p className="text-[11px] text-gray-400">{t('suiteHome.tasks.localFallback')}</p>
+          <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2">
+            <p className="text-[11px] text-gray-400">{t('suiteHome.tasks.localFallback')}</p>
+            <button
+              onClick={() => void reconnectGoogle()}
+              className="shrink-0 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
+            >
+              {t('suiteHome.google.reconnect')}
+            </button>
+          </div>
         )}
       </CardContent>
     </Card>

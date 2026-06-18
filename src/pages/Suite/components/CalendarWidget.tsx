@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CalendarClock, Loader2, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { fetchUpcomingEvents, GoogleAuthError, type GoogleCalendarEvent } from '@/lib/google'
 
@@ -14,7 +15,7 @@ const COLOR_MAP: Record<string, string> = {
 
 export function CalendarWidget() {
   const { t, i18n } = useTranslation()
-  const { googleProviderToken } = useAuth()
+  const { googleProviderToken, reconnectGoogle } = useAuth()
   const [loading, setLoading] = useState<boolean>(!!googleProviderToken)
   const [events, setEvents] = useState<GoogleCalendarEvent[]>([])
   const [available, setAvailable] = useState<boolean>(!!googleProviderToken)
@@ -63,7 +64,12 @@ export function CalendarWidget() {
             <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
           </div>
         ) : !available ? (
-          <p className="py-8 text-center text-sm text-gray-400">{t('suiteHome.calendar.unavailable')}</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
+            <p className="text-sm text-gray-400">{t('suiteHome.calendar.unavailable')}</p>
+            <Button variant="outline" size="sm" onClick={() => void reconnectGoogle()}>
+              {t('suiteHome.google.reconnect')}
+            </Button>
+          </div>
         ) : events.length === 0 ? (
           <p className="py-8 text-center text-sm text-gray-400">{t('suiteHome.calendar.empty')}</p>
         ) : (

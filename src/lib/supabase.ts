@@ -51,3 +51,32 @@ export const supabase = createClient(
 export function authRedirectTo(path = '/suite'): string {
   return `${window.location.origin}${path}`
 }
+
+/**
+ * Google OAuth scopes. `openid email profile` cover the basic identity; the two
+ * Google API scopes grant the Suite Dashboard read/write to Tasks and read to
+ * Calendar.
+ *
+ * These APIs must ALSO be enabled in Google Cloud Console for the OAuth client,
+ * or the provider_token is rejected with 403:
+ *   - Google Calendar API: https://console.cloud.google.com/apis/library/calendar-json.googleapis.com
+ *   - Google Tasks API:    https://console.cloud.google.com/apis/library/tasks.googleapis.com
+ */
+export const GOOGLE_OAUTH_SCOPES =
+  'openid email profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks'
+
+/**
+ * Start Google OAuth. `access_type: offline` + `prompt: consent` force Google to
+ * return a provider_token (and a provider_refresh_token) every time, so the
+ * dashboard always gets a usable token after sign-in / reconnect.
+ */
+export function signInWithGoogle() {
+  return supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: authRedirectTo('/suite'),
+      scopes: GOOGLE_OAUTH_SCOPES,
+      queryParams: { access_type: 'offline', prompt: 'consent' },
+    },
+  })
+}

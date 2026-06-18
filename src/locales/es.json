@@ -774,6 +774,10 @@
       "title": "Próximos Eventos",
       "empty": "No hay eventos en los próximos 7 días.",
       "unavailable": "Conecta Google Calendar para ver tus eventos."
+    },
+    "google": {
+      "reconnect": "Reconectar Google",
+      "hint": "Conecta Google para sincronizar tus tareas y calendario."
     }
   }
 }

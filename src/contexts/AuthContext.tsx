@@ -1,13 +1,16 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/lib/supabase'
 import { useSettingsStore } from '@/store/settingsStore'
 import type { ProfileRow, ModulePermissionRow, ModuleId } from '@/types/supabase'
 
-// Supabase only returns the Google provider_token on the initial sign-in event,
-// not from getSession() after a reload. Cache it so the Suite Dashboard's Google
-// Tasks/Calendar widgets keep working across reloads (best-effort; may expire).
-const GOOGLE_TOKEN_KEY = 'spectra_google_provider_token'
+// Supabase only returns the Google provider_token on the INITIAL sign-in event,
+// not from getSession() after a reload. So we cache it (and the refresh token) in
+// localStorage on SIGNED_IN and fall back to it when a later session has none.
+// (Best-effort: the access token can still expire, hence the "Reconnect Google"
+// path in the dashboard widgets.)
+const GOOGLE_TOKEN_KEY = 'google_provider_token'
+const GOOGLE_REFRESH_KEY = 'google_provider_refresh_token'
 
 interface AuthContextValue {
   session: Session | null
@@ -20,6 +23,8 @@ interface AuthContextValue {
   hasModuleAccess: (module: ModuleId) => boolean
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
+  /** Re-run Google OAuth (with Calendar/Tasks scopes) to obtain a fresh provider_token. */
+  reconnectGoogle: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -102,11 +107,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       setSession(s)
       setUser(s?.user ?? null)
-      // provider_token only arrives on fresh OAuth; cache and reuse otherwise.
+      // provider_token (+ refresh token) only arrive on fresh OAuth — persist them
+      // so they survive reloads. If this session has none, keep using the cached one.
       if (s?.provider_token) {
         localStorage.setItem(GOOGLE_TOKEN_KEY, s.provider_token)
         setGoogleProviderToken(s.provider_token)
+      } else {
+        const cached = localStorage.getItem(GOOGLE_TOKEN_KEY)
+        if (cached) setGoogleProviderToken(cached)
       }
+      if (s?.provider_refresh_token) {
+        localStorage.setItem(GOOGLE_REFRESH_KEY, s.provider_refresh_token)
+      }
+      console.log('[auth] google provider_token →', {
+        fromSession: !!s?.provider_token,
+        fromCache: !s?.provider_token && !!localStorage.getItem(GOOGLE_TOKEN_KEY),
+      })
       if (s?.user) {
         await loadProfile(s.user.id)
         // Cloud is authoritative for company settings once signed in.
@@ -133,12 +149,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
     localStorage.removeItem(GOOGLE_TOKEN_KEY)
+    localStorage.removeItem(GOOGLE_REFRESH_KEY)
     setGoogleProviderToken(null)
     setSession(null)
     setUser(null)
     setProfile(null)
     setPermissions([])
     window.location.assign('/login')
+  }, [])
+
+  const reconnectGoogle = useCallback(async () => {
+    // Force a fresh consent so Google returns a new provider_token with the
+    // Calendar/Tasks scopes; the SIGNED_IN handler re-caches it on return.
+    await signInWithGoogle()
   }, [])
 
   const isSuperAdmin = profile?.role === 'super_admin'
@@ -165,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     hasModuleAccess,
     signOut,
     refreshProfile,
+    reconnectGoogle,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

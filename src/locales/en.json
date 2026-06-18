@@ -774,6 +774,10 @@
       "title": "Upcoming",
       "empty": "No events in the next 7 days.",
       "unavailable": "Connect Google Calendar to see your events."
+    },
+    "google": {
+      "reconnect": "Reconnect Google",
+      "hint": "Connect Google to sync your tasks and calendar."
     }
   }
 }

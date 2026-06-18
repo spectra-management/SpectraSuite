@@ -5,14 +5,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettingsStore } from '@/store/settingsStore'
-import { supabase, isSupabaseConfigured, authRedirectTo } from '@/lib/supabase'
-
-// Google OAuth scopes — the basic profile/email scopes are implicit; these extra
-// scopes grant the Suite Dashboard read access to Google Tasks + Calendar.
-// NOTE: enable "Google Tasks API" and "Google Calendar API" in Google Cloud Console
-// for the same OAuth client, otherwise the provider_token will be rejected by those APIs.
-const GOOGLE_SCOPES =
-  'https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/calendar.readonly'
+import { isSupabaseConfigured, signInWithGoogle } from '@/lib/supabase'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -41,26 +34,10 @@ export default function Login() {
   const handleSignIn = async () => {
     setError(null)
     setSigningIn(true)
-    // IMPORTANT: redirectTo must be derived from the CURRENT window origin, never a
-    // hardcoded host — otherwise production sign-ins bounce back to localhost.
-    // Using `${window.location.origin}/suite` means:
-    //   - In production it resolves to https://spectra-suite.vercel.app/suite
-    //   - When running locally it resolves to http://localhost:3000/suite (or whatever
-    //     port the dev server uses), which requires a local server to be running to
-    //     receive the redirect.
-    // Supabase also enforces an allowlist: Dashboard → Authentication → URL Configuration
-    //   - Site URL:       https://spectra-suite.vercel.app
-    //   - Redirect URLs:  https://spectra-suite.vercel.app/suite  (add localhost too for dev)
-    // A redirectTo that isn't in that allowlist is ignored and Supabase falls back to the
-    // Site URL — which is the usual cause of the "redirected to localhost" symptom.
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: authRedirectTo('/suite'),
-        scopes: GOOGLE_SCOPES,
-        queryParams: { access_type: 'offline', prompt: 'consent' },
-      },
-    })
+    // Shared helper (src/lib/supabase.ts): dynamic redirectTo (window origin) +
+    // openid/email/profile + Calendar/Tasks scopes + access_type=offline & prompt=consent
+    // so Google always returns a provider_token.
+    const { error: oauthError } = await signInWithGoogle()
     if (oauthError) {
       setError(oauthError.message)
       setSigningIn(false)
