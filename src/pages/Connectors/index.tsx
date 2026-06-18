@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useEmployeesStore } from '@/store/employeesStore'
 import { toast } from '@/hooks/useToast'
-import { testHubstaffToken, fetchHubstaffMembers, fetchUserProfiles } from '@/lib/connectors/hubstaff'
+import { testHubstaffToken, fetchHubstaffMembers, fetchUserProfiles, normalizeEmail } from '@/lib/connectors/hubstaff'
 import type { HubstaffOrganization } from '@/lib/connectors/hubstaff'
 import type { HubstaffMember } from '@/lib/connectors/types'
 import type { HubstaffMapping } from '@/types'
@@ -250,8 +250,9 @@ function HubstaffMappingPanel({ hubstaffMembers }: { hubstaffMembers: HubstaffMe
     return hubstaffMembers.map((m) => {
       const existing = saved.find((s) => s.hubstaffUserId === String(m.id))
       if (existing) return existing
-      let autoMatch = m.email
-        ? employees.find((e) => e.workEmail?.toLowerCase() === m.email.toLowerCase())
+      const hubEmail = normalizeEmail(m.email)
+      let autoMatch = hubEmail
+        ? employees.find((e) => normalizeEmail(e.workEmail) === hubEmail)
         : undefined
       if (!autoMatch && m.name) {
         const hubName = normalizeForMatch(m.name)

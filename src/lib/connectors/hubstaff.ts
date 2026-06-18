@@ -4,6 +4,14 @@ import { roundHalfUp } from '@/lib/payroll/calculations'
 
 const ACCESS_TOKEN_MARGIN_MS = 5 * 60 * 1000  // skip exchange if token expires within 5 min
 
+/**
+ * Canonical email for matching: trim + lowercase. Emails frequently differ in casing
+ * (and occasionally whitespace) between BambooHR and Hubstaff, so always compare via this.
+ */
+export function normalizeEmail(email: string | null | undefined): string {
+  return (email ?? '').trim().toLowerCase()
+}
+
 export interface HubstaffTokenState {
   refreshToken: string
   cachedAccessToken?: string
@@ -165,7 +173,13 @@ export async function fetchHubstaffMembers(
 
     allRaw.push(...(data.members ?? []))
     const pageUsers = data.users ?? []
-    for (const u of pageUsers) sideloadedUsers.set(u.id, { name: u.name, email: u.email ?? '' })
+    for (const u of pageUsers) sideloadedUsers.set(u.id, { name: u.name, email: (u.email ?? '').trim() })
+
+    // Check #1: verify the Hubstaff members fetch is returning users WITH an email field.
+    if (pageCount === 0) {
+      console.log('[hubstaff members] RAW users (id / name / email):',
+        pageUsers.map((u) => ({ id: u.id, name: u.name, email: u.email ?? '(none)' })))
+    }
 
     console.log(`[hubstaff members] page ${pageCount + 1} users:`, pageUsers.length, 'total so far:', sideloadedUsers.size)
 
@@ -181,7 +195,7 @@ export async function fetchHubstaffMembers(
     .map((m) => ({
       id: m.user!.id ?? m.user_id,
       name: m.user!.name ?? '',
-      email: m.user!.email ?? '',
+      email: (m.user!.email ?? '').trim(),
       status: m.user!.status ?? 'active',
     }))
 
@@ -198,7 +212,10 @@ export async function fetchHubstaffMembers(
     members = allRaw.map((m) => ({ id: m.user_id, name: '', email: '', status: 'active' }))
   }
 
-  console.log('[hubstaff] fetchHubstaffMembers → total:', members.length, 'hasNames:', members.some(m => !!m.name))
+  console.log('[hubstaff] fetchHubstaffMembers → total:', members.length,
+    'hasNames:', members.some(m => !!m.name), 'hasEmails:', members.some(m => !!m.email))
+  console.log('[hubstaff members] FINAL (id / name / email):',
+    members.map((m) => ({ id: m.id, name: m.name, email: m.email || '(none)' })))
   return { members, tokenUpdate: finalTokenUpdate }
 }
 

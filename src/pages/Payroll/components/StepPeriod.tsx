@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSettingsStore } from '@/store/settingsStore'
 import { useEmployeesStore } from '@/store/employeesStore'
 import { toast } from '@/hooks/useToast'
-import { fetchHoursForPeriod, fetchUserProfiles } from '@/lib/connectors/hubstaff'
+import { fetchHoursForPeriod, fetchUserProfiles, normalizeEmail } from '@/lib/connectors/hubstaff'
 import type { HubstaffActivityUser } from '@/lib/connectors/hubstaff'
 import { roundHalfUp, standardPeriodHours } from '@/lib/payroll/calculations'
 import { getHolidaysInRange } from '@/lib/holidays'
@@ -40,11 +40,10 @@ function findHubstaffUserForEmployee(
   hubUsers: HubstaffActivityUser[],
   debug = false,
 ): HubstaffActivityUser | undefined {
-  // a) exact email match
-  if (emp.workEmail) {
-    const byEmail = hubUsers.find(
-      (u) => u.email?.toLowerCase() === emp.workEmail.toLowerCase(),
-    )
+  // a) exact email match (case-insensitive + whitespace-trimmed)
+  const empEmail = normalizeEmail(emp.workEmail)
+  if (empEmail) {
+    const byEmail = hubUsers.find((u) => normalizeEmail(u.email) === empEmail)
     if (byEmail) return byEmail
   }
   // b) normalized full-name match
