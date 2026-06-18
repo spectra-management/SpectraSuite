@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettingsStore } from '@/store/settingsStore'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured, authRedirectTo } from '@/lib/supabase'
 
 // Google OAuth scopes — the basic profile/email scopes are implicit; these extra
 // scopes grant the Suite Dashboard read access to Google Tasks + Calendar.
@@ -56,7 +56,7 @@ export default function Login() {
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/suite`,
+        redirectTo: authRedirectTo('/suite'),
         scopes: GOOGLE_SCOPES,
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },

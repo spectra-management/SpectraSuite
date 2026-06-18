@@ -13,7 +13,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { supabase } from '@/lib/supabase'
+import { supabase, authRedirectTo } from '@/lib/supabase'
 import { toast } from '@/hooks/useToast'
 import type { ProfileRow, ModulePermissionRow, UserRole, ModuleId } from '@/types/supabase'
 
@@ -76,7 +76,7 @@ export function UsersPanel() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session?.access_token ?? ''}`,
         },
-        body: JSON.stringify({ email, redirectTo: window.location.origin + '/suite' }),
+        body: JSON.stringify({ email, redirectTo: authRedirectTo('/suite') }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Invite failed')

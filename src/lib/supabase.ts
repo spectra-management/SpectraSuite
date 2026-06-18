@@ -32,3 +32,22 @@ export const supabase = createClient(
     },
   },
 )
+
+/**
+ * Single source of truth for the post-login OAuth/invite redirect target.
+ *
+ * ALWAYS derived from the live browser origin — NEVER a hardcoded host or env
+ * var — so it resolves correctly everywhere:
+ *   - Production: https://spectra-suite.vercel.app/suite
+ *   - Local dev:  http://localhost:3000/suite (requires a local server running)
+ *
+ * ⚠️ IMPORTANT — the remaining cause of "redirected to localhost:3000" is NOT in
+ * this code. Supabase only honors `redirectTo` if the URL is in the Dashboard
+ * allowlist. If it isn't, Supabase ignores it and falls back to the Site URL.
+ * So in Supabase Dashboard → Authentication → URL Configuration set:
+ *   - Site URL:      https://spectra-suite.vercel.app   (NOT localhost)
+ *   - Redirect URLs: https://spectra-suite.vercel.app/suite   (add localhost:3000/suite for dev)
+ */
+export function authRedirectTo(path = '/suite'): string {
+  return `${window.location.origin}${path}`
+}
