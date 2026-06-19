@@ -105,8 +105,11 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
 
   // Rate shown in the earnings table. For Salary, the per-hour figure is gross ÷ period
   // hours (pay is fixed), so hours × rate = gross stays consistent. Hourly shows its rate.
+  // Worked holiday hours are part of regular pay, so the "Regular Hours" line shows
+  // regular + holiday hours (and regularPay is the pay for all of them).
+  const regularDisplayHours = hoursEntry.regularHours + hoursEntry.holidayHours
   const displayRate = employee.payType === 'Salary'
-    ? (hoursEntry.regularHours > 0 ? calculation.regularPay / hoursEntry.regularHours : 0)
+    ? (regularDisplayHours > 0 ? calculation.regularPay / regularDisplayHours : 0)
     : effectiveRate
 
   const otMultiplier = 1 + payrollSettings.otRatePercent / 100
@@ -274,10 +277,10 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {/* Regular hours - always shown */}
+              {/* Regular hours (includes worked holiday hours) - always shown */}
               <tr>
                 <td className="px-4 py-2 text-muted-foreground">{L.regular}</td>
-                <td className="px-3 py-2 text-right text-muted-foreground">{hoursEntry.regularHours}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground">{regularDisplayHours}</td>
                 <td className="px-3 py-2 text-right text-muted-foreground text-xs">{fmt(displayRate)}/hr</td>
                 <td className="px-4 py-2 text-right font-semibold">{fmt(calculation.regularPay)}</td>
               </tr>
@@ -288,11 +291,11 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
                 <td className="px-3 py-2 text-right text-muted-foreground text-xs">15%</td>
                 <td className="px-4 py-2 text-right font-semibold">{fmt(calculation.nightIncentiveAmount)}</td>
               </tr>
-              {/* Double Holiday hours - always shown */}
+              {/* Holiday bonus (premium on top of regular pay) - always shown */}
               <tr>
                 <td className="px-4 py-2 text-muted-foreground">{L.holiday}</td>
                 <td className="px-3 py-2 text-right text-muted-foreground">{hoursEntry.holidayHours}</td>
-                <td className="px-3 py-2 text-right text-muted-foreground text-xs">{fmt(displayRate)}/hr</td>
+                <td className="px-3 py-2 text-right text-muted-foreground text-xs">{fmt(displayRate)}/hr × {payrollSettings.holidayRatePercent}%</td>
                 <td className="px-4 py-2 text-right font-semibold">{fmt(calculation.holidayPay)}</td>
               </tr>
               {/* Overtime - always shown */}

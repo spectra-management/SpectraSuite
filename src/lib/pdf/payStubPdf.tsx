@@ -134,10 +134,13 @@ export function PayStubDocument({
   holidayRatePercent = 100,
 }: Props) {
   const { employee: emp, calculation: c, hours: h } = entry
+  // Worked holiday hours are paid as regular hours, so the "Regular Hours" line shows
+  // regular + holiday hours; the holiday line shows only the additional premium.
+  const regularDisplayHours = safeNum(h.regularHours) + safeNum(h.holidayHours)
   // Rate shown in the earnings table. Salary pay is fixed, so the per-hour figure is
   // gross ÷ period hours (keeps hours × rate = gross). Hourly shows its stored/override rate.
   const effectiveRate = emp.payType === 'Salary'
-    ? (safeNum(h.regularHours) > 0 ? safeNum(c.regularPay) / safeNum(h.regularHours) : 0)
+    ? (regularDisplayHours > 0 ? safeNum(c.regularPay) / regularDisplayHours : 0)
     : safeNum(h.payRateOverride ?? emp.payRate)
   const logo = logoSrc(company.logoBase64)
   // FEATURE 1: paystub language follows the employee's country (DR/Mexico → Spanish).
@@ -151,7 +154,6 @@ export function PayStubDocument({
   const today = new Date().toLocaleDateString(lang === 'es' ? 'es-DO' : 'en-US')
 
   const otMultiplier = (1 + otRatePercent / 100).toFixed(2)
-  void holidayRatePercent // holiday is always ×2 in DR; column shows base rate with "Double" in label
 
   // Country-specific labels and currency. US uses its statutory names (Medicare/SS/Federal);
   // DR & every other country use the language-map deduction labels.
@@ -232,7 +234,7 @@ export function PayStubDocument({
           {/* Regular hours */}
           <View style={S.tRow}>
             <Text style={[S.earnCell, { flex: eD }]}>{l.regular}</Text>
-            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{safeNum(h.regularHours)}</Text>
+            <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{regularDisplayHours}</Text>
             <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>{fmt(effectiveRate)}/hr</Text>
             <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(c.regularPay)}</Text>
           </View>
@@ -249,7 +251,7 @@ export function PayStubDocument({
           <View style={S.tRow}>
             <Text style={[S.earnCell, { flex: eD }]}>{l.holiday}</Text>
             <Text style={[S.earnCell, { flex: eH, textAlign: 'right' }]}>{safeNum(h.holidayHours)}</Text>
-            <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>{fmt(effectiveRate)}/hr</Text>
+            <Text style={[S.earnCell, { flex: eR, textAlign: 'right' }]}>{fmt(effectiveRate)}/hr × {holidayRatePercent}%</Text>
             <Text style={[S.earnCellBold, { flex: eA, textAlign: 'right' }]}>{fmt(c.holidayPay)}</Text>
           </View>
 

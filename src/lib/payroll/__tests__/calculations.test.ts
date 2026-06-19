@@ -207,7 +207,7 @@ describe('Overtime Calculation', () => {
 
 // ─── Test 5: Holiday hours ────────────────────────────────────────────────────
 describe('Holiday Calculation', () => {
-  it('holiday hours at 100% extra → rate = 2.0×', () => {
+  it('worked holiday hours count as regular hours + a 100% bonus (not double rate)', () => {
     const hourlyRate = 400
     const holidayHours = 8
     const input = makeInput({
@@ -218,9 +218,30 @@ describe('Holiday Calculation', () => {
       holidayRatePercent: 100,
     })
     const result = calculatePayroll(input)
-    const expectedHolidayPay = roundHalfUp(hourlyRate * holidayHours * 2.0)
-    expect(result.holidayPay).toBe(expectedHolidayPay)
-    expect(result.grossPay).toBe(expectedHolidayPay)
+    // Regular pay covers the worked holiday hours; the holiday line is the bonus only.
+    expect(result.regularPay).toBe(roundHalfUp(hourlyRate * holidayHours))      // 3,200
+    expect(result.holidayPay).toBe(roundHalfUp(hourlyRate * holidayHours * 1.0)) // 3,200 bonus
+    expect(result.grossPay).toBe(roundHalfUp(hourlyRate * holidayHours * 2.0))   // 6,400 total
+  })
+
+  it('Idaly Peña June 1-15 2026 (verified paystub): holiday bonus is non-cotizable', () => {
+    // 88 tracked hours incl. 8 on a holiday (Corpus Christi), rate RD$350, 1st quincena.
+    const input = makeInput({
+      hourlyRate: 350,
+      regularHours: 80,        // disjoint buckets: 80 regular + 8 holiday = 88 worked
+      holidayHours: 8,
+      holidayRatePercent: 100,
+      periodStart: '2026-06-01', // 1st quincena → ISR deferred
+    })
+    const r = calculatePayroll(input)
+    expect(r.regularPay).toBe(30800)   // 88 × 350
+    expect(r.holidayPay).toBe(2800)    // 8 × 350 × 100% bonus
+    expect(r.grossPay).toBe(33600)     // 30,800 + 2,800
+    // AFP + SFS computed on the cotizable base 30,800 (excludes the holiday bonus)
+    expect(r.afpAmount).toBe(883.96)   // 30,800 × 2.87%
+    expect(r.sfsAmount).toBe(936.32)   // 30,800 × 3.04%
+    expect(r.isrPeriod).toBe(0)        // 1st quincena defers ISR
+    expect(r.netPay).toBe(31779.72)    // 33,600 − 1,820.28
   })
 })
 

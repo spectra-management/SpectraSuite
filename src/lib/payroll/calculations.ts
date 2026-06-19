@@ -38,6 +38,17 @@ export function formatCurrencyWithSymbol(value: number, symbol: string): string 
 
 /**
  * Calculate hourly earnings (regular, OT, holiday).
+ *
+ * Holiday hours are hours WORKED on a holiday: they count as regular hours
+ * (paid at the normal rate as part of regular pay) AND earn an additional
+ * holidayRatePercent bonus on top — they are NOT paid as a separate double rate.
+ *
+ *   regularPay  = rate × (regularHours + holidayHours)
+ *   holidayPay  = rate × holidayHours × (holidayRatePercent / 100)   // additional bonus only
+ *
+ * So worked-holiday hours appear once in the regular-pay base and once as the
+ * extra bonus, never double-counted. (regularHours and holidayHours are stored
+ * as disjoint buckets; regularHours excludes the holiday hours.)
  */
 function calculateHourlyEarnings(
   hourlyRate: number,
@@ -47,11 +58,12 @@ function calculateHourlyEarnings(
   otRatePercent: number,
   holidayRatePercent: number,
 ): { regularPay: number; otPay: number; holidayPay: number; grossPay: number } {
-  const regularPay = roundHalfUp(hourlyRate * regularHours)
+  // Worked holiday hours are part of regular pay.
+  const regularPay = roundHalfUp(hourlyRate * (regularHours + holidayHours))
   const otMultiplier = 1 + otRatePercent / 100
-  const holidayMultiplier = 1 + holidayRatePercent / 100
   const otPay = roundHalfUp(hourlyRate * otHours * otMultiplier)
-  const holidayPay = roundHalfUp(hourlyRate * holidayHours * holidayMultiplier)
+  // Holiday pay is the ADDITIONAL premium only (e.g. +100%), on top of regular pay.
+  const holidayPay = roundHalfUp(hourlyRate * holidayHours * (holidayRatePercent / 100))
   const grossPay = roundHalfUp(regularPay + otPay + holidayPay)
   return { regularPay, otPay, holidayPay, grossPay }
 }
@@ -261,19 +273,26 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
   // Period gross including the nocturnal incentive.
   const grossPay = roundHalfUp(earnings.grossPay + nightIncentiveAmount)
 
+  // The DR holiday premium is a NON-cotizable bonus: AFP/SFS and the ISR base are
+  // computed on income EXCLUDING the holiday bonus (worked holiday hours are already
+  // paid as regular hours, which ARE cotizable). Other countries use the full gross.
+  const holidayBonus = earnings.holidayPay
+  const contributoryBase = isDR ? roundHalfUp(grossPay - holidayBonus) : grossPay
+
   // Pension (AFP / Social Security)
-  const afpBase = roundHalfUp(Math.min(grossPay, rules.pensionCap ?? grossPay))
+  const afpBase = roundHalfUp(Math.min(contributoryBase, rules.pensionCap ?? contributoryBase))
   const afpAmount = roundHalfUp(afpBase * (rules.pensionRate / 100))
 
   // Health insurance (SFS / Medicare)
-  const sfsBase = roundHalfUp(Math.min(grossPay, rules.healthInsuranceCap ?? grossPay))
+  const sfsBase = roundHalfUp(Math.min(contributoryBase, rules.healthInsuranceCap ?? contributoryBase))
   const sfsAmount = roundHalfUp(sfsBase * (rules.healthInsuranceRate / 100))
 
   const tssTotal = roundHalfUp(afpAmount + sfsAmount)
 
   // ── Income tax (ISR) ───────────────────────────────────────────────────────
-  // This fortnight's income net of TSS (ISR is applied AFTER AFP + SFS).
-  const netThisPeriod = roundHalfUp(grossPay - tssTotal)
+  // This fortnight's cotizable income net of TSS (ISR is applied AFTER AFP + SFS,
+  // and on the same base that excludes the non-cotizable holiday bonus).
+  const netThisPeriod = roundHalfUp(contributoryBase - tssTotal)
 
   // TSS for an arbitrary gross (applies the same caps as this period) — used to
   // derive the 1st fortnight's net from its gross.
