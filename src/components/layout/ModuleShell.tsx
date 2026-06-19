@@ -51,19 +51,7 @@ export function ModuleShell({ moduleId }: { moduleId: SuiteModuleId }) {
           >
             <ArrowLeft className="h-3.5 w-3.5" /> {!collapsed && t('suite.back')}
           </Link>
-          <div className={cn('flex items-center gap-1.5', collapsed && 'flex-col')}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-xs font-semibold tracking-wide"
-              onClick={() => i18n.changeLanguage(currentLang === 'en' ? 'es' : 'en')}
-              aria-label="Toggle language"
-            >
-              {currentLang === 'en' ? 'ES' : 'EN'}
-            </Button>
-            <ThemeToggle className="h-7 w-7" />
-            <SidebarToggle collapsed={collapsed} onToggle={toggle} />
-          </div>
+          <SidebarToggle collapsed={collapsed} onToggle={toggle} />
         </div>
         <div
           className={cn(
@@ -116,7 +104,21 @@ export function ModuleShell({ moduleId }: { moduleId: SuiteModuleId }) {
       </aside>
 
       {/* Coming Soon content */}
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 overflow-auto p-6 text-center">
+      <main className="relative flex flex-1 flex-col items-center justify-center gap-4 overflow-auto p-6 text-center">
+        {/* Language + theme toggles, top-right of the content area (matches Nómina) */}
+        <div className="absolute right-6 top-6 z-10 flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-semibold tracking-wide"
+            onClick={() => i18n.changeLanguage(currentLang === 'en' ? 'es' : 'en')}
+            aria-label="Toggle language"
+          >
+            {currentLang === 'en' ? 'ES' : 'EN'}
+          </Button>
+          <ThemeToggle />
+        </div>
+
         <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-ink-grad text-emerald-50 shadow-soft-lg">
           <Icon className="h-9 w-9" strokeWidth={1.5} />
         </span>
