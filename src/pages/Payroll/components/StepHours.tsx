@@ -258,14 +258,14 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
               </div>
 
               {/* Filter bar */}
-              <div className="flex items-center gap-1.5 rounded-lg border border-input bg-secondary p-1">
+              <div className="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-lg border border-input bg-secondary p-1">
               {FILTERS.map(({ key, label }) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setFilter(key)}
                   className={[
-                    'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+                    'flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                     filter === key
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-muted-foreground',

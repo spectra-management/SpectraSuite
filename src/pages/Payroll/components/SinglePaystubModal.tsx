@@ -202,7 +202,7 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[calc(100vw-1.5rem)] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="pr-6">{t('payroll.soloPaystub.title')}</DialogTitle>
           <DialogDescription className="sr-only">

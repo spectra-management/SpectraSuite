@@ -225,8 +225,8 @@ function FiscalTab() {
 
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-3">{t('settings.fiscal.isrBrackets')}</p>
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-xs">
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full min-w-[32rem] text-xs">
               <thead>
                 <tr className="bg-secondary border-b border-border">
                   <th className="px-4 py-2 text-left text-muted-foreground">From (RD$)</th>
@@ -366,12 +366,12 @@ export default function Settings() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">{t('settings.title')}</h1>
       </div>
-      <div className="flex gap-1 rounded-xl bg-secondary p-1 w-fit">
+      <div className="flex w-full gap-1 overflow-x-auto rounded-xl bg-secondary p-1 md:w-fit">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
+            className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
               activeTab === tab.key
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-muted-foreground'

@@ -240,8 +240,8 @@ function EditUserDialog({
           {role === 'custom' && (
             <div className="space-y-2">
               <Label>{t('users.modulePermissions')}</Label>
-              <div className="overflow-hidden rounded-xl border border-border">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full min-w-[26rem] text-sm">
                   <thead className="bg-secondary text-xs text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 text-left">{t('users.module')}</th>
