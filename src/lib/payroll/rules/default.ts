@@ -3,9 +3,9 @@ import { getCurrencySymbol } from './currency'
 
 export function getDefaultPayrollRules(
   country: string,
-  frequency: 'biweekly' | 'weekly',
+  frequency: 'biweekly' | 'weekly' | 'full_month',
 ): PayrollRules {
-  const payPeriodsPerYear = frequency === 'weekly' ? 52 : 24
+  const payPeriodsPerYear = frequency === 'full_month' ? 12 : frequency === 'weekly' ? 52 : 24
   return {
     country,
     currency: 'USD',

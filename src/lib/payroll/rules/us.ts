@@ -33,8 +33,8 @@ function calculateUSFederalIncomeTax(annualGross: number): number {
   return roundHalfUp(55678.50 + (annualGross - 243725) * 0.35)
 }
 
-export function getUSPayrollRules(frequency: 'biweekly' | 'weekly'): PayrollRules {
-  const payPeriodsPerYear = frequency === 'biweekly' ? 24 : 52
+export function getUSPayrollRules(frequency: 'biweekly' | 'weekly' | 'full_month'): PayrollRules {
+  const payPeriodsPerYear = frequency === 'full_month' ? 12 : frequency === 'biweekly' ? 24 : 52
 
   // Social Security 6.2% annual cap $168,600 → per-period cap
   const ssCap = roundHalfUp(168600 / payPeriodsPerYear)

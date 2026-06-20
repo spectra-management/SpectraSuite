@@ -120,7 +120,7 @@ function buildDeptSummary(entries: PayrollEntry[]): DeptRow[] {
 export interface ManagerReportProps {
   startDate: string
   endDate: string
-  frequency: 'biweekly' | 'weekly'
+  frequency: 'biweekly' | 'weekly' | 'full_month'
   entries: PayrollEntry[]
   totals: PayrollTotals
   company: CompanySettings

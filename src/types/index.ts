@@ -55,7 +55,7 @@ export interface PayrollPeriod {
   id: string
   startDate: string
   endDate: string
-  frequency: 'biweekly' | 'weekly'
+  frequency: 'biweekly' | 'weekly' | 'full_month'
   status: 'draft' | 'approved' | 'sent'
   processedDate?: string
   entries: PayrollEntry[]
@@ -118,7 +118,7 @@ export interface CompanySettings {
 }
 
 export interface PayrollSettings {
-  frequency: 'biweekly' | 'weekly'
+  frequency: 'biweekly' | 'weekly' | 'full_month'
   otThresholdHours: number
   otRatePercent: number
   holidayRatePercent: number

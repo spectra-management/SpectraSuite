@@ -63,7 +63,7 @@ function PayrollTab() {
           <Label>{t('settings.payroll.frequency')}</Label>
           <Select
             value={form.frequency}
-            onValueChange={(v) => setForm((f) => ({ ...f, frequency: v as 'biweekly' | 'weekly' }))}
+            onValueChange={(v) => setForm((f) => ({ ...f, frequency: v as 'biweekly' | 'weekly' | 'full_month' }))}
           >
             <SelectTrigger>
               <SelectValue />

@@ -202,24 +202,16 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
   const otHours = safeNum(input.otHours)
   const holidayHours = safeNum(input.holidayHours)
 
-  // Detect quincena / full-month from the period dates (DR biweekly rule only).
-  // Full month = starts on day 1 AND ends on the last day of the same month.
+  // Full-month frequency: the whole month is one run. DR computes the month's ISR on
+  // the net-of-TSS base (the dedicated branch below); other countries fall through to
+  // the generic per-period branch, which with payPeriodsPerYear = 12 annualizes ×12.
+  // The DR biweekly quincena rule only applies to the biweekly frequency.
   const isDR = rules.country.toLowerCase().includes('dominican')
+  const isFullMonth = isDR && frequency === 'full_month'
   let quincena: 1 | 2 | null = null
-  let isFullMonth = false
   if (isDR && frequency === 'biweekly' && input.periodStart) {
-    const sd = new Date(input.periodStart + 'T00:00:00')
-    const day = sd.getDate()
-    if (input.periodEnd) {
-      const ed = new Date(input.periodEnd + 'T00:00:00')
-      const lastDay = new Date(ed.getFullYear(), ed.getMonth() + 1, 0).getDate()
-      isFullMonth =
-        day === 1 &&
-        ed.getDate() === lastDay &&
-        sd.getMonth() === ed.getMonth() &&
-        sd.getFullYear() === ed.getFullYear()
-    }
-    if (!isFullMonth) quincena = day <= 15 ? 1 : 2
+    const day = new Date(input.periodStart + 'T00:00:00').getDate()
+    quincena = day <= 15 ? 1 : 2
   }
 
   // Hourly needs hours to earn; Salary is paid regardless of hours.

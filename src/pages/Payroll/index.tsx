@@ -10,7 +10,7 @@ import type { EmployeeHoursEntry, PayrollEntry, PayrollTotals } from '@/types'
 interface PeriodData {
   startDate: string
   endDate: string
-  frequency: 'biweekly' | 'weekly'
+  frequency: 'biweekly' | 'weekly' | 'full_month'
   employeeHours: EmployeeHoursEntry[]
   country: string
 }

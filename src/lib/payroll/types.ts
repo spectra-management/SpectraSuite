@@ -11,7 +11,7 @@ export interface CalculationInput {
   holidayHours: number
   customDeductions: CustomDeduction[]
   rules: PayrollRules
-  frequency: 'biweekly' | 'weekly'
+  frequency: 'biweekly' | 'weekly' | 'full_month'
   // OT and holiday rate — passed from PayrollSettings
   otRatePercent?: number       // default 35
   holidayRatePercent?: number  // default 100

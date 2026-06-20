@@ -318,7 +318,7 @@ export async function fetchHoursForPeriod(
   startDate: string,
   endDate: string,
   otThreshold: number,
-  frequency: 'biweekly' | 'weekly',
+  frequency: 'biweekly' | 'weekly' | 'full_month',
   // YYYY-MM-DD dates that are public holidays for the period's country. Hours tracked on
   // these days are split out as holiday hours (paid at the holiday rate) and excluded from
   // the weekly OT calculation. Matched by EXACT string equality — no Date/timezone parsing.
@@ -440,7 +440,7 @@ function groupDailyIntoWeeks(
   dailyMap: Record<string, number>,
   startDate: string,
   endDate: string,
-  _frequency: 'biweekly' | 'weekly',
+  _frequency: 'biweekly' | 'weekly' | 'full_month',
   otThreshold: number,
 ): WeeklyHours[] {
   const weekHours = new Map<string, number>()

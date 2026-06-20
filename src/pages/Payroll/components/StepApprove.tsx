@@ -17,7 +17,7 @@ import type { PayrollEntry, PayrollTotals } from '@/types'
 interface Props {
   startDate: string
   endDate: string
-  frequency: 'biweekly' | 'weekly'
+  frequency: 'biweekly' | 'weekly' | 'full_month'
   country: string
   entries: PayrollEntry[]
   totals: PayrollTotals

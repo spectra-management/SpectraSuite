@@ -22,7 +22,7 @@ interface Props {
   hoursEntry: EmployeeHoursEntry
   startDate: string
   endDate: string
-  frequency: 'biweekly' | 'weekly'
+  frequency: 'biweekly' | 'weekly' | 'full_month'
   country: string
   onClose: () => void
 }

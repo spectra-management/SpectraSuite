@@ -21,7 +21,7 @@ export function isKnownCountry(country: string): boolean {
 
 export function getPayrollRules(
   country: string,
-  frequency: 'biweekly' | 'weekly',
+  frequency: 'biweekly' | 'weekly' | 'full_month',
   fiscal: FiscalParameters,
   payroll: PayrollSettings,
 ): PayrollRules {

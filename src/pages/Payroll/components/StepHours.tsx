@@ -33,7 +33,7 @@ interface Props {
   employeeHours: EmployeeHoursEntry[]
   startDate: string
   endDate: string
-  frequency: 'biweekly' | 'weekly'
+  frequency: 'biweekly' | 'weekly' | 'full_month'
   country: string
   onNext: (hours: EmployeeHoursEntry[]) => void
   onBack: () => void

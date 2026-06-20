@@ -19,6 +19,7 @@ const baseFiscal = DEFAULT_FISCAL_PARAMETERS
 const basePayroll = DEFAULT_PAYROLL_SETTINGS
 
 function makeInput(overrides: Partial<CalculationInput> = {}): CalculationInput {
+  const frequency = overrides.frequency ?? 'biweekly'
   return {
     employeeId: 'emp-1',
     hourlyRate: 200,
@@ -26,8 +27,8 @@ function makeInput(overrides: Partial<CalculationInput> = {}): CalculationInput 
     otHours: 0,
     holidayHours: 0,
     customDeductions: [],
-    rules: getDOPayrollRules(baseFiscal, basePayroll, 'biweekly'),
-    frequency: 'biweekly',
+    rules: getDOPayrollRules(baseFiscal, basePayroll, frequency),
+    frequency,
     otRatePercent: basePayroll.otRatePercent,
     holidayRatePercent: basePayroll.holidayRatePercent,
     ...overrides,
@@ -245,16 +246,16 @@ describe('Holiday Calculation', () => {
   })
 })
 
-// ─── Full month (DR biweekly, day 1 → last day) ───────────────────────────────
+// ─── Full month frequency (DR) ────────────────────────────────────────────────
 describe('Full-month DR run', () => {
-  it('salaried employee gets the FULL monthly salary (not half) for a full-month period', () => {
+  it('salaried employee gets the FULL monthly salary (not half)', () => {
     const full = makeInput({
       payType: 'Salary', hourlyRate: 50000, regularHours: 0,
-      periodStart: '2026-03-01', periodEnd: '2026-03-31',
+      frequency: 'full_month', periodStart: '2026-03-01',
     })
     const half = makeInput({
       payType: 'Salary', hourlyRate: 50000, regularHours: 0,
-      periodStart: '2026-03-01', // 1st quincena, no periodEnd → half
+      periodStart: '2026-03-01', // biweekly 1st quincena → half
     })
     expect(calculatePayroll(full).grossPay).toBe(50000)   // whole month
     expect(calculatePayroll(half).grossPay).toBe(25000)   // monthly / 2
@@ -263,7 +264,7 @@ describe('Full-month DR run', () => {
   it('retains the whole month ISR (not deferred like a 1st quincena)', () => {
     const r = calculatePayroll(makeInput({
       payType: 'Salary', hourlyRate: 90000, regularHours: 0,
-      periodStart: '2026-03-01', periodEnd: '2026-03-31',
+      frequency: 'full_month', periodStart: '2026-03-01',
     }))
     expect(r.isrDeferred).toBe(false)
     expect(r.isrPeriod).toBeGreaterThan(0)
@@ -271,10 +272,9 @@ describe('Full-month DR run', () => {
     expect(r.taxableIncome).toBe(roundHalfUp(r.isrMonthlyBase * 12))
   })
 
-  it('partial month (day 1 → 15) is still a 1st quincena (ISR deferred)', () => {
+  it('biweekly 1st quincena still defers ISR', () => {
     const r = calculatePayroll(makeInput({
-      hourlyRate: 420, regularHours: 80,
-      periodStart: '2026-03-01', periodEnd: '2026-03-15',
+      hourlyRate: 420, regularHours: 80, periodStart: '2026-03-01',
     }))
     expect(r.isrDeferred).toBe(true)
     expect(r.isrPeriod).toBe(0)

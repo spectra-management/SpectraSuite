@@ -6,9 +6,9 @@ import type { PayrollRules } from './types'
 export function getDOPayrollRules(
   fiscal: FiscalParameters,
   payroll: PayrollSettings,
-  frequency: 'biweekly' | 'weekly',
+  frequency: 'biweekly' | 'weekly' | 'full_month',
 ): PayrollRules {
-  const payPeriodsPerYear = frequency === 'biweekly' ? 24 : 52
+  const payPeriodsPerYear = frequency === 'full_month' ? 12 : frequency === 'biweekly' ? 24 : 52
 
   // DR holidays for current + next year, from the hybrid store (Nager.Date + manual),
   // falling back to the computed statutory set before the first sync.

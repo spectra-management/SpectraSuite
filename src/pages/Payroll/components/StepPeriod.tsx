@@ -20,7 +20,7 @@ interface Props {
   onNext: (data: {
     startDate: string
     endDate: string
-    frequency: 'biweekly' | 'weekly'
+    frequency: 'biweekly' | 'weekly' | 'full_month'
     employeeHours: EmployeeHoursEntry[]
     country: string
   }) => void
@@ -103,7 +103,7 @@ export function StepPeriod({ onNext }: Props) {
   const employees = useEmployeesStore((s) => s.employees)
 
   const today = new Date()
-  const [frequency, setFrequency] = useState<'biweekly' | 'weekly'>(payrollSettings.frequency)
+  const [frequency, setFrequency] = useState<'biweekly' | 'weekly' | 'full_month'>(payrollSettings.frequency)
 
   // ── Country selection ────────────────────────────────────────────────────────
   // All active employees (Hourly + Salary) determine which countries appear
@@ -143,18 +143,24 @@ export function StepPeriod({ onNext }: Props) {
   // ── Biweekly picker state ──────────────────────────────────────────────────
   const [bwYear, setBwYear] = useState(today.getFullYear())
   const [bwMonth, setBwMonth] = useState(today.getMonth()) // 0-indexed
-  const [bwQuincena, setBwQuincena] = useState<1 | 2 | 'full'>(today.getDate() <= 15 ? 1 : 2)
+  const [bwQuincena, setBwQuincena] = useState<1 | 2>(today.getDate() <= 15 ? 1 : 2)
 
   const bwDates = useMemo(() => {
-    const last = lastDayOfMonth(bwYear, bwMonth)
     if (bwQuincena === 1) {
       return { start: toISODate(bwYear, bwMonth, 1), end: toISODate(bwYear, bwMonth, 15) }
     }
-    if (bwQuincena === 'full') {
-      return { start: toISODate(bwYear, bwMonth, 1), end: toISODate(bwYear, bwMonth, last) }
-    }
+    const last = lastDayOfMonth(bwYear, bwMonth)
     return { start: toISODate(bwYear, bwMonth, 16), end: toISODate(bwYear, bwMonth, last) }
   }, [bwYear, bwMonth, bwQuincena])
+
+  // Full month: day 1 → last day of the selected month (28/29/30/31 aware).
+  const fullMonthDates = useMemo(() => ({
+    start: toISODate(bwYear, bwMonth, 1),
+    end: toISODate(bwYear, bwMonth, lastDayOfMonth(bwYear, bwMonth)),
+  }), [bwYear, bwMonth])
+
+  // Active non-custom range for the month-based frequencies (biweekly / full_month).
+  const pickerDates = frequency === 'full_month' ? fullMonthDates : bwDates
 
   // ── Weekly free-form date state ────────────────────────────────────────────
   const defaultWeeklyEnd = today.toISOString().split('T')[0]
@@ -169,19 +175,17 @@ export function StepPeriod({ onNext }: Props) {
 
   const handleToggleCustomDates = () => {
     if (!useCustomDates) {
-      setCustomStart(bwDates.start)
-      setCustomEnd(bwDates.end)
+      setCustomStart(pickerDates.start)
+      setCustomEnd(pickerDates.end)
     }
     setUseCustomDates((v) => !v)
   }
 
   // ── Effective dates passed to fetch ───────────────────────────────────────
-  const effectiveStart = frequency === 'biweekly'
-    ? (useCustomDates ? customStart : bwDates.start)
-    : weeklyStart
-  const effectiveEnd = frequency === 'biweekly'
-    ? (useCustomDates ? customEnd : bwDates.end)
-    : weeklyEnd
+  // Custom dates apply to the month-based frequencies (biweekly / full_month).
+  const usingCustom = frequency !== 'weekly' && useCustomDates
+  const effectiveStart = frequency === 'weekly' ? weeklyStart : (usingCustom ? customStart : pickerDates.start)
+  const effectiveEnd = frequency === 'weekly' ? weeklyEnd : (usingCustom ? customEnd : pickerDates.end)
 
   // ── Month name list (locale-aware) ────────────────────────────────────────
   const monthNames = useMemo(() =>
@@ -400,7 +404,7 @@ export function StepPeriod({ onNext }: Props) {
           <Label>{t('payroll.period.frequency')}</Label>
           <Select
             value={frequency}
-            onValueChange={(v) => setFrequency(v as 'biweekly' | 'weekly')}
+            onValueChange={(v) => setFrequency(v as 'biweekly' | 'weekly' | 'full_month')}
           >
             <SelectTrigger>
               <SelectValue />
@@ -408,12 +412,13 @@ export function StepPeriod({ onNext }: Props) {
             <SelectContent>
               <SelectItem value="biweekly">{t('payroll.period.biweekly')}</SelectItem>
               <SelectItem value="weekly">{t('payroll.period.weekly')}</SelectItem>
+              <SelectItem value="full_month">{t('payroll.period.fullMonth')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Biweekly: quincena picker */}
-        {frequency === 'biweekly' ? (
+        {/* Month-based pickers (biweekly + full month) */}
+        {frequency !== 'weekly' ? (
           <div className="space-y-4">
             {/* Month + Year */}
             <div className="grid grid-cols-2 gap-3">
@@ -451,41 +456,39 @@ export function StepPeriod({ onNext }: Props) {
               </div>
             </div>
 
-            {/* Quincena toggle */}
-            <div className="space-y-1.5">
-              <Label>Quincena</Label>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {([1, 2, 'full'] as const).map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => setBwQuincena(q)}
-                    className={cn(
-                      'flex items-center gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
-                      bwQuincena === q
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
-                        : 'border-input bg-card text-muted-foreground hover:border-input hover:bg-secondary',
-                    )}
-                  >
-                    <div className={cn(
-                      'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
-                      bwQuincena === q ? 'border-emerald-500 bg-emerald-500' : 'border-input',
-                    )}>
-                      {bwQuincena === q && (
-                        <div className="h-1.5 w-1.5 rounded-full bg-card" />
+            {/* Quincena toggle — biweekly only (full month uses the whole month) */}
+            {frequency === 'biweekly' && (
+              <div className="space-y-1.5">
+                <Label>Quincena</Label>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {([1, 2] as const).map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => setBwQuincena(q)}
+                      className={cn(
+                        'flex items-center gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
+                        bwQuincena === q
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
+                          : 'border-input bg-card text-muted-foreground hover:border-input hover:bg-secondary',
                       )}
-                    </div>
-                    <span className="font-medium leading-tight">
-                      {q === 1
-                        ? t('payroll.period.quincena1')
-                        : q === 2
-                          ? t('payroll.period.quincena2')
-                          : t('payroll.period.fullMonth')}
-                    </span>
-                  </button>
-                ))}
+                    >
+                      <div className={cn(
+                        'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
+                        bwQuincena === q ? 'border-emerald-500 bg-emerald-500' : 'border-input',
+                      )}>
+                        {bwQuincena === q && (
+                          <div className="h-1.5 w-1.5 rounded-full bg-card" />
+                        )}
+                      </div>
+                      <span className="font-medium leading-tight">
+                        {q === 1 ? t('payroll.period.quincena1') : t('payroll.period.quincena2')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Computed period display — hidden when custom dates active */}
             {!useCustomDates && (
@@ -496,9 +499,9 @@ export function StepPeriod({ onNext }: Props) {
                     {t('payroll.period.selectedPeriod')}
                   </p>
                   <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900">
-                    <span>{bwDates.start}</span>
+                    <span>{pickerDates.start}</span>
                     <ChevronRight className="h-3.5 w-3.5 text-emerald-500" />
-                    <span>{bwDates.end}</span>
+                    <span>{pickerDates.end}</span>
                   </div>
                 </div>
               </div>
