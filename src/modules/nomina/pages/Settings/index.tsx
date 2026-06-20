@@ -1,0 +1,392 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { Info } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
+import { Button } from '@/shared/components/ui/button'
+import { Input } from '@/shared/components/ui/input'
+import { Label } from '@/shared/components/ui/label'
+import { Textarea } from '@/shared/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
+import { useSettingsStore } from '@/shared/store/settingsStore'
+import { HolidaysTab } from './HolidaysTab'
+import { VacationRulesTab } from './VacationRulesTab'
+import { toast } from '@/shared/hooks/useToast'
+
+type Tab = 'company' | 'payroll' | 'fiscal' | 'holidays' | 'vacations' | 'email'
+
+// Company settings now live at the Suite level (Settings → Company shows a notice).
+function CompanyTab() {
+  const { t } = useTranslation()
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('settings.company.title')}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+          <p className="text-sm text-blue-700">
+            {t('suite.settings.managedNotice')}{' '}
+            <Link to="/suite/settings" className="font-semibold underline underline-offset-2 hover:text-blue-900">
+              ⚙️ {t('suite.settings.goToSuiteSettings')}
+            </Link>
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function PayrollTab() {
+  const { t } = useTranslation()
+  const payroll = useSettingsStore((s) => s.payroll)
+  const updatePayrollSettings = useSettingsStore((s) => s.updatePayrollSettings)
+  const nightShift = useSettingsStore((s) => s.nightShift)
+  const updateNightShift = useSettingsStore((s) => s.updateNightShift)
+  const [form, setForm] = useState(payroll)
+  const [nightForm, setNightForm] = useState(nightShift)
+
+  const handleSave = () => {
+    updatePayrollSettings(form)
+    updateNightShift(nightForm)
+    toast({ variant: 'success', title: t('common.success') })
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('settings.payroll.title')}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 max-w-lg">
+        <div className="space-y-1.5">
+          <Label>{t('settings.payroll.frequency')}</Label>
+          <Select
+            value={form.frequency}
+            onValueChange={(v) => setForm((f) => ({ ...f, frequency: v as 'biweekly' | 'weekly' | 'full_month' }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="biweekly">{t('settings.payroll.biweekly')}</SelectItem>
+              <SelectItem value="weekly">{t('settings.payroll.weekly')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t('settings.payroll.otThreshold')}</Label>
+          <Input
+            type="number"
+            min={0}
+            value={form.otThresholdHours}
+            onChange={(e) => setForm((f) => ({ ...f, otThresholdHours: Number(e.target.value) }))}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label>{t('settings.payroll.otRate')}</Label>
+            <Input
+              type="number"
+              min={0}
+              value={form.otRatePercent}
+              onChange={(e) => setForm((f) => ({ ...f, otRatePercent: Number(e.target.value) }))}
+            />
+            <p className="text-xs text-muted-foreground">{t('settings.payroll.otRateHelp')}</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t('settings.payroll.holidayRate')}</Label>
+            <Input
+              type="number"
+              min={0}
+              value={form.holidayRatePercent}
+              onChange={(e) => setForm((f) => ({ ...f, holidayRatePercent: Number(e.target.value) }))}
+            />
+            <p className="text-xs text-muted-foreground">{t('settings.payroll.holidayRateHelp')}</p>
+          </div>
+        </div>
+
+        {/* ── Night shift (15% incentive) ── */}
+        <div className="border-t border-border pt-4 space-y-4">
+          <p className="text-sm font-semibold text-foreground">{t('settings.payroll.nightShiftSection')}</p>
+
+          <div className="space-y-1.5">
+            <Label>{t('settings.payroll.nightStart')}</Label>
+            <Input
+              type="time"
+              className="max-w-[160px]"
+              value={nightForm.nightStartTime}
+              onChange={(e) => setNightForm((f) => ({ ...f, nightStartTime: e.target.value }))}
+            />
+            <p className="text-xs text-muted-foreground">{t('settings.payroll.nightStartHelp')}</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t('settings.payroll.mixedThreshold')}</Label>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <input
+                type="radio"
+                name="mixedThreshold"
+                className="h-4 w-4 accent-emerald-600"
+                checked={nightForm.mixedThresholdMode === 'percent'}
+                onChange={() => setNightForm((f) => ({ ...f, mixedThresholdMode: 'percent' }))}
+              />
+              {t('settings.payroll.mixedPercent')}
+            </label>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                <input
+                  type="radio"
+                  name="mixedThreshold"
+                  className="h-4 w-4 accent-emerald-600"
+                  checked={nightForm.mixedThresholdMode === 'hours'}
+                  onChange={() => setNightForm((f) => ({ ...f, mixedThresholdMode: 'hours' }))}
+                />
+                {t('settings.payroll.mixedHours')}
+              </label>
+              <Input
+                type="number"
+                min={0}
+                step={0.5}
+                className="h-8 w-20"
+                value={nightForm.mixedThresholdHours}
+                disabled={nightForm.mixedThresholdMode !== 'hours'}
+                onChange={(e) => setNightForm((f) => ({ ...f, mixedThresholdHours: Number(e.target.value) }))}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">{t('settings.payroll.mixedThresholdHelp')}</p>
+          </div>
+        </div>
+
+        <Button onClick={handleSave}>{t('common.saveChanges')}</Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+function FiscalTab() {
+  const { t } = useTranslation()
+  const fiscal = useSettingsStore((s) => s.fiscal)
+  const updateFiscalParameters = useSettingsStore((s) => s.updateFiscalParameters)
+  const resetFiscalParameters = useSettingsStore((s) => s.resetFiscalParameters)
+  const [form, setForm] = useState(fiscal)
+
+  const handleSave = () => {
+    updateFiscalParameters(form)
+    toast({ variant: 'success', title: t('common.success') })
+  }
+
+  const handleReset = () => {
+    resetFiscalParameters()
+    setForm({ ...fiscal })
+    toast({ title: t('settings.fiscal.resetToDefaults') })
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('settings.fiscal.title')}</CardTitle>
+        <CardDescription>{t('settings.fiscal.subtitle')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6 max-w-lg">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground mb-3">TSS</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>{t('settings.fiscal.afpRate')}</Label>
+              <Input type="number" step="0.01" value={form.afpRate} onChange={(e) => setForm((f) => ({ ...f, afpRate: Number(e.target.value) }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('settings.fiscal.sfsRate')}</Label>
+              <Input type="number" step="0.01" value={form.sfsRate} onChange={(e) => setForm((f) => ({ ...f, sfsRate: Number(e.target.value) }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('settings.fiscal.afpCap')}</Label>
+              <Input type="number" value={form.afpCapMultiplier} onChange={(e) => setForm((f) => ({ ...f, afpCapMultiplier: Number(e.target.value) }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('settings.fiscal.sfsCap')}</Label>
+              <Input type="number" value={form.sfsCapMultiplier} onChange={(e) => setForm((f) => ({ ...f, sfsCapMultiplier: Number(e.target.value) }))} />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>{t('settings.fiscal.minCotizableSalary')}</Label>
+          <Input type="number" step="0.01" value={form.minCotizableSalary} onChange={(e) => setForm((f) => ({ ...f, minCotizableSalary: Number(e.target.value) }))} />
+          <p className="text-xs text-muted-foreground">{t('settings.fiscal.minCotizableSalaryHelp')}</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>{t('settings.fiscal.dailyDivisor')}</Label>
+          <Input type="number" step="0.01" value={form.dailyDivisor} onChange={(e) => setForm((f) => ({ ...f, dailyDivisor: Number(e.target.value) }))} />
+          <p className="text-xs text-muted-foreground">{t('settings.fiscal.dailyDivisorHelp')}</p>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-muted-foreground mb-3">{t('settings.fiscal.isrBrackets')}</p>
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full min-w-[32rem] text-xs">
+              <thead>
+                <tr className="bg-secondary border-b border-border">
+                  <th className="px-4 py-2 text-left text-muted-foreground">From (RD$)</th>
+                  <th className="px-4 py-2 text-left text-muted-foreground">To (RD$)</th>
+                  <th className="px-4 py-2 text-right text-muted-foreground">Rate (%)</th>
+                  <th className="px-4 py-2 text-right text-muted-foreground">Fixed (RD$)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {form.isrBrackets.map((bracket, i) => (
+                  <tr key={i}>
+                    <td className="px-4 py-2 font-mono text-muted-foreground">{bracket.minAmount.toLocaleString()}</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground">
+                      {bracket.maxAmount !== null ? bracket.maxAmount.toLocaleString() : '∞'}
+                    </td>
+                    <td className="px-4 py-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step="0.01"
+                        className="h-6 text-right text-xs w-16 ml-auto"
+                        value={bracket.rate}
+                        onChange={(e) => {
+                          const updated = form.isrBrackets.map((b, bi) =>
+                            bi === i ? { ...b, rate: Number(e.target.value) } : b,
+                          )
+                          setForm((f) => ({ ...f, isrBrackets: updated }))
+                        }}
+                      />
+                    </td>
+                    <td className="px-4 py-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        className="h-6 text-right text-xs w-24 ml-auto"
+                        value={bracket.fixedAmount}
+                        onChange={(e) => {
+                          const updated = form.isrBrackets.map((b, bi) =>
+                            bi === i ? { ...b, fixedAmount: Number(e.target.value) } : b,
+                          )
+                          setForm((f) => ({ ...f, isrBrackets: updated }))
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <Button onClick={handleSave}>{t('common.saveChanges')}</Button>
+          <Button variant="outline" onClick={handleReset}>{t('settings.fiscal.resetToDefaults')}</Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function EmailTab() {
+  const { t } = useTranslation()
+  const emailTemplate = useSettingsStore((s) => s.emailTemplate)
+  const updateEmailTemplate = useSettingsStore((s) => s.updateEmailTemplate)
+  const [form, setForm] = useState(emailTemplate)
+
+  const handleSave = () => {
+    updateEmailTemplate(form)
+    toast({ variant: 'success', title: t('common.success') })
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('settings.emailTemplate.title')}</CardTitle>
+        <CardDescription>{t('settings.emailTemplate.subtitle')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4 max-w-lg">
+        <div className="space-y-1.5">
+          <Label>{t('settings.emailTemplate.payStubLanguage')}</Label>
+          <Select
+            value={form.payStubLanguage}
+            onValueChange={(v) => setForm((f) => ({ ...f, payStubLanguage: v as 'en' | 'es' }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="es">{t('settings.emailTemplate.spanish')} (Recomendado)</SelectItem>
+              <SelectItem value="en">{t('settings.emailTemplate.english')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{t('settings.emailTemplate.payStubLanguageHelp')}</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t('settings.emailTemplate.subject')}</Label>
+          <Input
+            value={form.subject}
+            onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t('settings.emailTemplate.body')}</Label>
+          <Textarea
+            rows={6}
+            value={form.body}
+            onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+          />
+        </div>
+        <div className="rounded-lg border border-border bg-secondary p-3">
+          <p className="text-xs font-medium text-muted-foreground">{t('settings.emailTemplate.variables')}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('settings.emailTemplate.variablesList')}</p>
+        </div>
+        <Button onClick={handleSave}>{t('common.saveChanges')}</Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function Settings() {
+  const { t } = useTranslation()
+  const [activeTab, setActiveTab] = useState<Tab>('company')
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'company', label: t('settings.tabs.company') },
+    { key: 'payroll', label: t('settings.tabs.payroll') },
+    { key: 'fiscal', label: t('settings.tabs.fiscal') },
+    { key: 'holidays', label: t('settings.tabs.holidays') },
+    { key: 'vacations', label: t('settings.tabs.vacations') },
+    { key: 'email', label: t('settings.tabs.email') },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">{t('settings.title')}</h1>
+      </div>
+      <div className="flex w-full gap-1 overflow-x-auto rounded-xl bg-secondary p-1 md:w-fit">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
+              activeTab === tab.key
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-muted-foreground'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      {activeTab === 'company' && <CompanyTab />}
+      {activeTab === 'payroll' && <PayrollTab />}
+      {activeTab === 'fiscal' && <FiscalTab />}
+      {activeTab === 'holidays' && <HolidaysTab />}
+      {activeTab === 'vacations' && <VacationRulesTab />}
+      {activeTab === 'email' && <EmailTab />}
+    </div>
+  )
+}

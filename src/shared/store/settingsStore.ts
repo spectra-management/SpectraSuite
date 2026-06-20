@@ -1,0 +1,159 @@
+import { create } from 'zustand'
+import { storage, STORAGE_KEYS } from '@/shared/lib/storage'
+import { DEFAULT_FISCAL_PARAMETERS, DEFAULT_PAYROLL_SETTINGS, DEFAULT_NIGHT_SHIFT_SETTINGS } from '@/shared/lib/payroll-defaults'
+import {
+  saveCompanySettings,
+  saveBambooIntegration,
+  saveHubstaffIntegration,
+  fetchCompanySettings,
+} from '@/shared/lib/cloudSync'
+import type {
+  AppSettings,
+  BambooHRConfig,
+  CompanySettings,
+  EmailConfig,
+  EmailTemplate,
+  FiscalParameters,
+  HubstaffConfig,
+  PayrollSettings,
+  NightShiftSettings,
+} from '@/shared/types'
+
+const defaultCompany: CompanySettings = {
+  name: 'My Company',
+  rnc: '',
+  address: '',
+  phone: '',
+  email: '',
+  accentColor: '#059669',
+  secondaryColor: '#065F46',
+}
+
+const defaultBambooHR: BambooHRConfig = {
+  subdomain: '',
+  apiKey: '',
+  connected: false,
+}
+
+const defaultHubstaff: HubstaffConfig = {
+  refreshToken: '',
+  organizationId: '',
+  connected: false,
+  employeeMapping: [],
+}
+
+const defaultEmail: EmailConfig = {
+  provider: 'resend',
+  fromName: '',
+  fromEmail: '',
+  connected: false,
+}
+
+const defaultEmailTemplate: EmailTemplate = {
+  subject: 'Pay Stub - {period} | {company}',
+  body: 'Dear {name},\n\nPlease find attached your pay stub for the period {period}.\n\nBest regards,\n{company}',
+  payStubLanguage: 'es',
+}
+
+interface SettingsState extends AppSettings {
+  updateCompany: (data: Partial<CompanySettings>) => void
+  hydrateCompanyFromCloud: () => Promise<void>
+  updatePayrollSettings: (data: Partial<PayrollSettings>) => void
+  updateNightShift: (data: Partial<NightShiftSettings>) => void
+  updateFiscalParameters: (data: Partial<FiscalParameters>) => void
+  resetFiscalParameters: () => void
+  updateBambooHR: (data: Partial<BambooHRConfig>) => void
+  updateHubstaff: (data: Partial<HubstaffConfig>) => void
+  updateEmailConfig: (data: Partial<EmailConfig>) => void
+  updateEmailTemplate: (data: Partial<EmailTemplate>) => void
+}
+
+export const useSettingsStore = create<SettingsState>((set, get) => ({
+  company: { ...defaultCompany, ...(storage.get<CompanySettings>(STORAGE_KEYS.COMPANY) ?? {}) },
+  payroll: storage.get<PayrollSettings>(STORAGE_KEYS.PAYROLL_SETTINGS) ?? DEFAULT_PAYROLL_SETTINGS,
+  nightShift: { ...DEFAULT_NIGHT_SHIFT_SETTINGS, ...(storage.get<NightShiftSettings>(STORAGE_KEYS.NIGHT_SETTINGS) ?? {}) },
+  fiscal: storage.get<FiscalParameters>(STORAGE_KEYS.FISCAL_PARAMETERS) ?? DEFAULT_FISCAL_PARAMETERS,
+  bamboohr: storage.get<BambooHRConfig>(STORAGE_KEYS.BAMBOOHR_CONFIG) ?? defaultBambooHR,
+  hubstaff: (() => {
+    const raw = storage.get<Record<string, unknown>>(STORAGE_KEYS.HUBSTAFF_CONFIG)
+    if (!raw) return defaultHubstaff
+    // Migrate: field was renamed accessToken → refreshToken in commit ac715042.
+    // Old localStorage data has { accessToken: '...' } with no refreshToken key.
+    const needsMigration = !raw.refreshToken && !!raw.accessToken
+    const refreshToken =
+      (raw.refreshToken as string | undefined) ||
+      (raw.accessToken as string | undefined) ||
+      ''
+    const migrated = { ...defaultHubstaff, ...raw, refreshToken } as HubstaffConfig
+    if (needsMigration) storage.set(STORAGE_KEYS.HUBSTAFF_CONFIG, migrated)
+    return migrated
+  })(),
+  email: storage.get<EmailConfig>(STORAGE_KEYS.EMAIL_CONFIG) ?? defaultEmail,
+  emailTemplate: storage.get<EmailTemplate>(STORAGE_KEYS.EMAIL_TEMPLATE) ?? defaultEmailTemplate,
+
+  updateCompany: (data) => {
+    const updated = { ...get().company, ...data }
+    storage.set(STORAGE_KEYS.COMPANY, updated)
+    set({ company: updated })
+    void saveCompanySettings(updated)  // best-effort cloud mirror
+  },
+
+  // Hydrate company settings from Supabase (cloud is authoritative when present),
+  // keeping localStorage as the offline cache. Called after auth resolves.
+  hydrateCompanyFromCloud: async () => {
+    const cloud = await fetchCompanySettings()
+    if (!cloud) return
+    const merged = { ...get().company, ...Object.fromEntries(Object.entries(cloud).filter(([, v]) => v != null)) }
+    storage.set(STORAGE_KEYS.COMPANY, merged)
+    set({ company: merged })
+  },
+
+  updatePayrollSettings: (data) => {
+    const updated = { ...get().payroll, ...data }
+    storage.set(STORAGE_KEYS.PAYROLL_SETTINGS, updated)
+    set({ payroll: updated })
+  },
+
+  updateNightShift: (data) => {
+    const updated = { ...get().nightShift, ...data }
+    storage.set(STORAGE_KEYS.NIGHT_SETTINGS, updated)
+    set({ nightShift: updated })
+  },
+
+  updateFiscalParameters: (data) => {
+    const updated = { ...get().fiscal, ...data }
+    storage.set(STORAGE_KEYS.FISCAL_PARAMETERS, updated)
+    set({ fiscal: updated })
+  },
+
+  resetFiscalParameters: () => {
+    storage.set(STORAGE_KEYS.FISCAL_PARAMETERS, DEFAULT_FISCAL_PARAMETERS)
+    set({ fiscal: DEFAULT_FISCAL_PARAMETERS })
+  },
+
+  updateBambooHR: (data) => {
+    const updated = { ...get().bamboohr, ...data }
+    storage.set(STORAGE_KEYS.BAMBOOHR_CONFIG, updated)
+    set({ bamboohr: updated })
+    void saveBambooIntegration(updated)  // best-effort cloud mirror
+  },
+
+  updateHubstaff: (data) => {
+    const updated = { ...get().hubstaff, ...data }
+    storage.set(STORAGE_KEYS.HUBSTAFF_CONFIG, updated)
+    set({ hubstaff: updated })
+    void saveHubstaffIntegration(updated)  // best-effort cloud mirror
+  },
+
+  updateEmailConfig: (data) => {
+    const updated = { ...get().email, ...data }
+    storage.set(STORAGE_KEYS.EMAIL_CONFIG, updated)
+    set({ email: updated })
+  },
+
+  updateEmailTemplate: (data) => {
+    const updated = { ...get().emailTemplate, ...data }
+    storage.set(STORAGE_KEYS.EMAIL_TEMPLATE, updated)
+    set({ emailTemplate: updated })
+  },
+}))

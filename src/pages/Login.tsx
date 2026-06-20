@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 import { Loader2, Banknote, ShieldCheck } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { useAuth } from '@/contexts/AuthContext'
-import { useSettingsStore } from '@/store/settingsStore'
-import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/lib/supabase'
+import { Button } from '@/shared/components/ui/button'
+import { ThemeToggle } from '@/shared/components/ThemeToggle'
+import { useAuth } from '@/shared/context/AuthContext'
+import { useSettingsStore } from '@/shared/store/settingsStore'
+import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/shared/lib/supabase'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
