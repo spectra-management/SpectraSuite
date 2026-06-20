@@ -56,7 +56,14 @@ export default function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="employees" element={<Employees />} />
             <Route path="employees/:id" element={<EmployeeProfile />} />
-            <Route path="payroll" element={<Payroll />} />
+            <Route
+              path="payroll"
+              element={
+                <ProtectedRoute module="nomina" action="edit">
+                  <Payroll />
+                </ProtectedRoute>
+              }
+            />
             <Route path="history" element={<History />} />
             <Route path="connectors" element={<Connectors />} />
             <Route path="settings" element={<Settings />} />

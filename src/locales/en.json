@@ -55,7 +55,8 @@
     "payroll": "Process Payroll",
     "history": "History",
     "connectors": "Connectors",
-    "settings": "Settings"
+    "settings": "Settings",
+    "noPermission": "You don't have permission for this."
   },
   "common": {
     "save": "Save",
@@ -731,7 +732,8 @@
       "yourRole": "Your role",
       "yourModules": "Modules you can access",
       "noModules": "You don't have access to any modules yet.",
-      "back": "Back to Spectra Suite"
+      "back": "Back to Spectra Suite",
+      "needPermission": "You don't have {{module}} {{action}} permission."
     },
     "sessionWarning": {
       "title": "Session Expiring Soon",
@@ -769,6 +771,19 @@
       "module_admin": "Module Admin",
       "viewer": "Viewer",
       "custom": "Custom"
+    },
+    "assignedRoles": "Assigned roles",
+    "availableRoles": "Available roles",
+    "superAdminAll": "Super Admin has access to everything.",
+    "effectiveAccess": "Effective access",
+    "noAccess": "No module access.",
+    "noRolesWarning": "This user has no roles. They will not have access to any module.",
+    "removeRoleConfirm": "Remove '{{role}}' role from {{name}}?",
+    "canShort": {
+      "view": "view",
+      "edit": "edit",
+      "approve": "approve",
+      "admin": "admin"
     }
   },
   "suiteHome": {
@@ -842,5 +857,28 @@
       "resource": "Resource",
       "status": "Status"
     }
+  },
+  "roles": {
+    "title": "Roles & Permissions",
+    "subtitle": "Define what each role can do, then assign roles to users.",
+    "systemRoles": "System roles",
+    "customRoles": "Custom roles",
+    "createNew": "Create role",
+    "noCustom": "No custom roles yet.",
+    "users": "users",
+    "allAccess": "Full access to all modules",
+    "createRole": "Create role",
+    "editRole": "Edit role",
+    "name": "Role name",
+    "namePlaceholder": "e.g. Regional Manager",
+    "description": "Description",
+    "permissions": "Permissions",
+    "nameRequired": "Role name is required",
+    "created": "Role created. Assign it to users in User Management.",
+    "deleted": "Role deleted",
+    "update": "Update Role",
+    "create": "Create Role",
+    "editWarning": "Changes will affect all {{count}} users with this role.",
+    "deleteConfirm": "Delete this role? {{count}} users will lose it but keep their other roles."
   }
 }

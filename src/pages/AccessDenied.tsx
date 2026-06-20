@@ -4,6 +4,7 @@ import { Lock, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { SUITE_MODULES } from '@/lib/suiteModules'
+import type { ModuleId, PermAction } from '@/types/supabase'
 
 const ROLE_LABEL_KEY: Record<string, string> = {
   super_admin: 'users.roles.super_admin',
@@ -12,11 +13,17 @@ const ROLE_LABEL_KEY: Record<string, string> = {
   custom: 'users.roles.custom',
 }
 
-export default function AccessDenied() {
+export default function AccessDenied({ module, action }: { module?: ModuleId; action?: PermAction }) {
   const { t } = useTranslation()
   const { profile, hasModuleAccess } = useAuth()
 
   const accessibleModules = SUITE_MODULES.filter((m) => hasModuleAccess(m.id))
+  const detailMsg = module
+    ? t('auth.accessDenied.needPermission', {
+        module: t(`suite.modules.${module}`),
+        action: t(`users.canShort.${action ?? 'view'}`),
+      })
+    : t('auth.accessDenied.message')
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-6">
@@ -25,7 +32,7 @@ export default function AccessDenied() {
           <Lock className="h-7 w-7 text-red-500" />
         </div>
         <h1 className="mt-5 text-xl font-bold text-foreground">{t('auth.accessDenied.title')}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{t('auth.accessDenied.message')}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{detailMsg}</p>
 
         {profile && (
           <div className="mt-6 space-y-3 rounded-xl bg-secondary p-4 text-left">

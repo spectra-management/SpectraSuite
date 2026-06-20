@@ -14,6 +14,7 @@ import { UserMenu } from '@/components/layout/UserMenu'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { UsersPanel } from './components/UsersPanel'
 import { SecuritySettingsPanel } from './components/SecuritySettingsPanel'
+import { RolesPanel } from './components/RolesPanel'
 import { AuditLogPanel } from './components/AuditLogPanel'
 
 export default function SuiteSettings() {
@@ -146,6 +147,7 @@ export default function SuiteSettings() {
 
         {/* Super-admin only (route is already gated to super_admin) */}
         <SecuritySettingsPanel />
+        <RolesPanel />
         <UsersPanel />
         <AuditLogPanel />
       </main>

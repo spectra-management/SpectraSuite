@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Loader2, UserPlus, Pencil } from 'lucide-react'
+import { Loader2, UserPlus, Pencil, Plus, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,18 +8,14 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-} from '@/components/ui/select'
-import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { supabase, authRedirectTo } from '@/lib/supabase'
 import { logAuditEvent } from '@/lib/audit'
 import { toast } from '@/hooks/useToast'
-import type { ProfileRow, ModulePermissionRow, UserRole, ModuleId } from '@/types/supabase'
+import type { ProfileRow, UserRole, ModuleId, RoleRow, RolePermissionRow, ModulePerm } from '@/types/supabase'
 
 const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'gastos', 'it']
-const ROLES: UserRole[] = ['super_admin', 'module_admin', 'viewer', 'custom']
 
 const ROLE_BADGE: Record<UserRole, string> = {
   super_admin: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
@@ -28,28 +24,22 @@ const ROLE_BADGE: Record<UserRole, string> = {
   custom: 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
 }
 
-interface PermDraft { can_view: boolean; can_edit: boolean; can_approve: boolean; can_admin: boolean }
-
 export function UsersPanel() {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<ProfileRow[]>([])
-  const [perms, setPerms] = useState<ModulePermissionRow[]>([])
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviting, setInviting] = useState(false)
   const [editing, setEditing] = useState<ProfileRow | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: profiles, error: pErr }, { data: permRows }] = await Promise.all([
-      supabase.from('profiles').select('*').order('created_at', { ascending: true }),
-      supabase.from('user_module_permissions').select('*'),
-    ])
+    const { data: profiles, error: pErr } = await supabase
+      .from('profiles').select('*').order('created_at', { ascending: true })
     if (pErr) {
       toast({ variant: 'destructive', title: t('users.loadError') })
     }
     setUsers(profiles ?? [])
-    setPerms(permRows ?? [])
     setLoading(false)
   }, [t])
 
@@ -168,8 +158,6 @@ export function UsersPanel() {
       {editing && (
         <EditUserDialog
           user={editing}
-          perms={perms.filter((p) => p.user_id === editing.id)}
-          onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); void load() }}
         />
       )}
@@ -177,140 +165,161 @@ export function UsersPanel() {
   )
 }
 
+const PERM_LABELS: { key: keyof ModulePerm; label: string }[] = [
+  { key: 'can_view', label: 'view' },
+  { key: 'can_edit', label: 'edit' },
+  { key: 'can_approve', label: 'approve' },
+  { key: 'can_admin', label: 'admin' },
+]
+
 function EditUserDialog({
-  user, perms, onClose, onSaved,
+  user, onSaved,
 }: {
   user: ProfileRow
-  perms: ModulePermissionRow[]
-  onClose: () => void
   onSaved: () => void
 }) {
   const { t } = useTranslation()
-  const [role, setRole] = useState<UserRole>(user.role)
-  const [saving, setSaving] = useState(false)
-  const [draft, setDraft] = useState<Record<ModuleId, PermDraft>>(() => {
-    const base = {} as Record<ModuleId, PermDraft>
-    for (const m of MODULES) {
-      const existing = perms.find((p) => p.module === m)
-      base[m] = {
-        can_view: existing?.can_view ?? false,
-        can_edit: existing?.can_edit ?? false,
-        can_approve: existing?.can_approve ?? false,
-        can_admin: existing?.can_admin ?? false,
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [roles, setRoles] = useState<RoleRow[]>([])
+  const [rolePerms, setRolePerms] = useState<RolePermissionRow[]>([])
+  const [assigned, setAssigned] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    let active = true
+    void (async () => {
+      const [{ data: r }, { data: rp }, { data: ur }] = await Promise.all([
+        supabase.from('roles').select('*').order('is_system', { ascending: false }).order('name'),
+        supabase.from('role_permissions').select('*'),
+        supabase.from('user_roles').select('role_id').eq('user_id', user.id),
+      ])
+      if (!active) return
+      setRoles(r ?? [])
+      setRolePerms(rp ?? [])
+      setAssigned(new Set((ur ?? []).map((x: { role_id: string }) => x.role_id)))
+      setLoading(false)
+    })()
+    return () => { active = false }
+  }, [user.id])
+
+  const superAdminRole = roles.find((r) => r.name === 'Super Admin')
+  const hasSuperAdmin = superAdminRole ? assigned.has(superAdminRole.id) : false
+  const assignedRoles = roles.filter((r) => assigned.has(r.id))
+  const availableRoles = roles.filter((r) => !assigned.has(r.id))
+
+  // Aggregate permissions across the assigned roles (preview).
+  const aggregate = useMemo(() => {
+    const agg = {} as Record<ModuleId, ModulePerm>
+    for (const m of MODULES) agg[m] = { can_view: false, can_edit: false, can_approve: false, can_admin: false }
+    if (hasSuperAdmin) return agg
+    for (const p of rolePerms) {
+      if (!assigned.has(p.role_id) || !agg[p.module]) continue
+      agg[p.module] = {
+        can_view: agg[p.module].can_view || p.can_view,
+        can_edit: agg[p.module].can_edit || p.can_edit,
+        can_approve: agg[p.module].can_approve || p.can_approve,
+        can_admin: agg[p.module].can_admin || p.can_admin,
       }
     }
-    return base
-  })
+    return agg
+  }, [assigned, rolePerms, hasSuperAdmin])
 
-  const setPerm = (m: ModuleId, key: keyof PermDraft, value: boolean) =>
-    setDraft((d) => ({ ...d, [m]: { ...d[m], [key]: value } }))
-
-  const handleSave = async () => {
-    setSaving(true)
-    try {
-      const { error: roleErr } = await supabase
-        .from('profiles')
-        .update({ role, updated_at: new Date().toISOString() })
-        .eq('id', user.id)
-      if (roleErr) throw roleErr
-      if (role !== user.role) {
-        void logAuditEvent({
-          action: 'role_changed',
-          category: 'user_management',
-          resource_type: 'user',
-          resource_id: user.id,
-          details: { email: user.email, oldRole: user.role, newRole: role },
-        })
-      }
-
-      // Replace this user's module permission rows. Only persist rows for the
-      // 'custom' role; other roles derive access from the role itself.
-      await supabase.from('user_module_permissions').delete().eq('user_id', user.id)
-      if (role === 'custom') {
-        const rows = MODULES
-          .filter((m) => draft[m].can_view || draft[m].can_edit || draft[m].can_approve || draft[m].can_admin)
-          .map((m) => ({ user_id: user.id, module: m, ...draft[m] }))
-        if (rows.length > 0) {
-          const { error: insErr } = await supabase.from('user_module_permissions').insert(rows)
-          if (insErr) throw insErr
-        }
-        void logAuditEvent({
-          action: 'permissions_changed',
-          category: 'user_management',
-          resource_type: 'user',
-          resource_id: user.id,
-          details: { email: user.email, permissions: draft },
-        })
-      }
-      toast({ variant: 'success', title: t('common.success') })
-      onSaved()
-    } catch (e) {
-      toast({ variant: 'destructive', title: t('common.error'), description: (e as Error).message })
-    } finally {
-      setSaving(false)
-    }
+  const assignRole = async (role: RoleRow) => {
+    setBusy(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const { error } = await supabase.from('user_roles').insert({ user_id: user.id, role_id: role.id, assigned_by: session?.user.id ?? null })
+    setBusy(false)
+    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); return }
+    setAssigned((prev) => new Set(prev).add(role.id))
+    void logAuditEvent({ action: 'role_assigned', category: 'user_management', resource_type: 'user', resource_id: user.id, details: { roleName: role.name, email: user.email } })
   }
 
+  const removeRole = async (role: RoleRow) => {
+    if (!window.confirm(t('users.removeRoleConfirm', { role: role.name, name: user.full_name || user.email }))) return
+    setBusy(true)
+    const { error } = await supabase.from('user_roles').delete().eq('user_id', user.id).eq('role_id', role.id)
+    setBusy(false)
+    if (error) { toast({ variant: 'destructive', title: t('common.error'), description: error.message }); return }
+    setAssigned((prev) => { const n = new Set(prev); n.delete(role.id); return n })
+    void logAuditEvent({ action: 'role_removed', category: 'user_management', resource_type: 'user', resource_id: user.id, details: { roleName: role.name, email: user.email } })
+  }
+
+  const grantedModules = MODULES.filter((m) => aggregate[m].can_view || aggregate[m].can_admin)
+
   return (
-    <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
+    <Dialog open onOpenChange={(o) => { if (!o) onSaved() }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{user.full_name || user.email}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>{t('users.role')}</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ROLES.map((r) => <SelectItem key={r} value={r}>{t(`users.roles.${r}`)}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {role === 'custom' && (
+        {loading ? (
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        ) : (
+          <div className="space-y-5">
+            {/* Assigned roles */}
             <div className="space-y-2">
-              <Label>{t('users.modulePermissions')}</Label>
-              <div className="overflow-x-auto rounded-xl border border-border">
-                <table className="w-full min-w-[26rem] text-sm">
-                  <thead className="bg-secondary text-xs text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2 text-left">{t('users.module')}</th>
-                      <th className="px-2 py-2">{t('users.canView')}</th>
-                      <th className="px-2 py-2">{t('users.canEdit')}</th>
-                      <th className="px-2 py-2">{t('users.canApprove')}</th>
-                      <th className="px-2 py-2">{t('users.canAdmin')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {MODULES.map((m) => (
-                      <tr key={m}>
-                        <td className="px-3 py-2 font-medium text-muted-foreground">{t(`suite.modules.${m}`)}</td>
-                        {(['can_view', 'can_edit', 'can_approve', 'can_admin'] as (keyof PermDraft)[]).map((k) => (
-                          <td key={k} className="px-2 py-2 text-center">
-                            <Switch
-                              checked={draft[m][k]}
-                              onCheckedChange={(v) => setPerm(m, k, v)}
-                              aria-label={`${m}-${k}`}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <Label>{t('users.assignedRoles')}</Label>
+              {assignedRoles.length === 0 ? (
+                <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                  ⚠️ {t('users.noRolesWarning')}
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {assignedRoles.map((r) => (
+                    <span key={r.id} className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                      {r.name}
+                      <button type="button" onClick={() => void removeRole(r)} disabled={busy} aria-label={t('common.delete')} className="hover:text-red-600">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Available roles */}
+            <div className="space-y-2">
+              <Label>{t('users.availableRoles')}</Label>
+              {hasSuperAdmin && (
+                <p className="text-xs text-muted-foreground">{t('users.superAdminAll')}</p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                {availableRoles.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => void assignRole(r)}
+                    disabled={busy || hasSuperAdmin}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
+                  >
+                    <Plus className="h-3 w-3" /> {r.name}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-        </div>
+
+            {/* Aggregate preview */}
+            <div className="space-y-2 rounded-xl border border-border bg-secondary/50 p-3">
+              <p className="text-xs font-semibold text-foreground">{t('users.effectiveAccess')}</p>
+              {hasSuperAdmin ? (
+                <p className="text-xs text-emerald-700 dark:text-emerald-400">{t('users.superAdminAll')}</p>
+              ) : grantedModules.length === 0 ? (
+                <p className="text-xs text-muted-foreground">{t('users.noAccess')}</p>
+              ) : (
+                <ul className="space-y-0.5 text-xs text-muted-foreground">
+                  {grantedModules.map((m) => {
+                    const actions = PERM_LABELS.filter(({ key }) => aggregate[m][key]).map(({ label }) => t(`users.canShort.${label}`))
+                    return <li key={m}>✓ {t(`suite.modules.${m}`)}: {actions.join(', ')}</li>
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => void handleSave()} disabled={saving} className="gap-1.5">
-            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {t('common.saveChanges')}
-          </Button>
+          <Button onClick={onSaved}>{t('common.close')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

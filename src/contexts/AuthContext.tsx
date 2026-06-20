@@ -4,7 +4,34 @@ import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/lib/supabase
 import { useSettingsStore } from '@/store/settingsStore'
 import { logAuditEvent } from '@/lib/audit'
 import { SessionTimeoutModal } from '@/components/SessionTimeoutModal'
-import type { ProfileRow, ModulePermissionRow, ModuleId } from '@/types/supabase'
+import type { ProfileRow, ModulePermissionRow, ModuleId, ModulePerm, PermAction } from '@/types/supabase'
+
+const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'gastos', 'it']
+
+interface AssignedRole { id: string; name: string; description: string | null }
+
+function emptyPerms(): Record<ModuleId, ModulePerm> {
+  const base = {} as Record<ModuleId, ModulePerm>
+  for (const m of MODULES) base[m] = { can_view: false, can_edit: false, can_approve: false, can_admin: false }
+  return base
+}
+
+// Aggregate permission rows (legacy user_module_permissions + role_permissions):
+// a user has a permission if ANY of their roles/rows grants it.
+function aggregatePerms(rows: Array<{ module: string; can_view: boolean; can_edit: boolean; can_approve: boolean; can_admin: boolean }>): Record<ModuleId, ModulePerm> {
+  const agg = emptyPerms()
+  for (const r of rows) {
+    const m = r.module as ModuleId
+    if (!agg[m]) continue
+    agg[m] = {
+      can_view: agg[m].can_view || !!r.can_view,
+      can_edit: agg[m].can_edit || !!r.can_edit,
+      can_approve: agg[m].can_approve || !!r.can_approve,
+      can_admin: agg[m].can_admin || !!r.can_admin,
+    }
+  }
+  return agg
+}
 
 const DEFAULT_TIMEOUT_MIN = 480
 const MIN_TIMEOUT_MIN = 5
@@ -27,7 +54,12 @@ interface AuthContextValue {
   loading: boolean
   isSuperAdmin: boolean
   googleProviderToken: string | null
-  hasModuleAccess: (module: ModuleId) => boolean
+  /** Roles assigned to the signed-in user (new RBAC). */
+  userRoles: AssignedRole[]
+  /** Aggregated module permissions across all the user's roles. */
+  userPermissions: Record<ModuleId, ModulePerm>
+  /** Check access. `action` defaults to 'view'. super_admin (and legacy module_admin) bypass. */
+  hasModuleAccess: (module: ModuleId, action?: PermAction) => boolean
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
   /** Re-run Google OAuth (with Calendar/Tasks scopes) to obtain a fresh provider_token. */
@@ -45,6 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<ProfileRow | null>(null)
   const [permissions, setPermissions] = useState<ModulePermissionRow[]>([])
+  const [userRoles, setUserRoles] = useState<AssignedRole[]>([])
+  const [userPermissions, setUserPermissions] = useState<Record<ModuleId, ModulePerm>>(emptyPerms)
   const [loading, setLoading] = useState(true)
   const [googleProviderToken, setGoogleProviderToken] = useState<string | null>(
     () => localStorage.getItem(GOOGLE_TOKEN_KEY),
@@ -90,13 +124,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('user_module_permissions')
       .select('*')
       .eq('user_id', uid)
-    console.log('[auth] permissions fetch →', { uid, permissions: permData, error: permError?.message })
     if (permError) {
       console.error('[auth] failed to load permissions:', permError.message)
-      setPermissions([])
-    } else {
-      setPermissions(permData ?? [])
     }
+    const legacyPerms: ModulePermissionRow[] = permData ?? []
+    setPermissions(legacyPerms)
+
+    // New RBAC: assigned roles + their permissions.
+    let rolePerms: Array<{ module: string; can_view: boolean; can_edit: boolean; can_approve: boolean; can_admin: boolean }> = []
+    try {
+      const { data: urData } = await supabase
+        .from('user_roles')
+        .select('role_id, roles(id, name, description)')
+        .eq('user_id', uid)
+      const assigned: AssignedRole[] = (urData ?? [])
+        .map((r: { roles?: AssignedRole | AssignedRole[] | null }) =>
+          Array.isArray(r.roles) ? r.roles[0] : r.roles)
+        .filter((r): r is AssignedRole => !!r)
+      setUserRoles(assigned)
+
+      const roleIds = (urData ?? []).map((r: { role_id: string }) => r.role_id)
+      if (roleIds.length > 0) {
+        const { data: rp } = await supabase.from('role_permissions').select('*').in('role_id', roleIds)
+        rolePerms = rp ?? []
+      }
+    } catch (e) {
+      // roles tables may not exist yet (migration 006 not run) — fall back to legacy perms.
+      console.warn('[auth] roles unavailable; using legacy permissions:', (e as Error).message)
+      setUserRoles([])
+    }
+
+    // Aggregate legacy per-module perms + role perms (any grant wins).
+    setUserPermissions(aggregatePerms([...legacyPerms, ...rolePerms]))
   }, [])
 
   const refreshProfile = useCallback(async () => {
@@ -255,14 +314,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isSuperAdmin = profile?.role === 'super_admin'
 
   const hasModuleAccess = useCallback(
-    (module: ModuleId): boolean => {
+    (module: ModuleId, action: PermAction = 'view'): boolean => {
       if (!profile || profile.is_active === false) return false
-      // super_admin and module_admin can reach every module.
+      // super_admin and (legacy) module_admin can do everything.
       if (profile.role === 'super_admin' || profile.role === 'module_admin') return true
-      // viewer / custom: governed by per-module permission rows.
-      return permissions.some((p) => p.module === module && p.can_view)
+      const p = userPermissions[module]
+      if (!p) return false
+      switch (action) {
+        case 'view': return p.can_view
+        case 'edit': return p.can_view && p.can_edit
+        case 'approve': return p.can_view && p.can_edit && p.can_approve
+        case 'admin': return p.can_admin
+        default: return false
+      }
     },
-    [profile, permissions],
+    [profile, userPermissions],
   )
 
   const value: AuthContextValue = {
@@ -273,6 +339,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     isSuperAdmin,
     googleProviderToken,
+    userRoles,
+    userPermissions,
     hasModuleAccess,
     signOut,
     refreshProfile,

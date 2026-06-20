@@ -4,36 +4,27 @@ import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import AccessDenied from '@/pages/AccessDenied'
-import type { ModuleId } from '@/types/supabase'
+import type { ModuleId, PermAction } from '@/types/supabase'
 
 interface Props {
   children: ReactNode
-  /** Restrict to a specific Suite module (requires can_view on that module). */
+  /** Restrict to a specific Suite module. */
   module?: ModuleId
+  /** Required action on the module (default 'view'). */
+  action?: PermAction
   /** Restrict to super_admin only (e.g. Suite Settings). */
   requireSuperAdmin?: boolean
 }
 
-export function ProtectedRoute({ children, module, requireSuperAdmin }: Props) {
+export function ProtectedRoute({ children, module, action = 'view', requireSuperAdmin }: Props) {
   const { user, profile, loading, isSuperAdmin, hasModuleAccess } = useAuth()
-
-  console.log('[ProtectedRoute] →', {
-    module,
-    requireSuperAdmin,
-    loading,
-    hasUser: !!user,
-    role: profile?.role,
-    isActive: profile?.is_active,
-    isSuperAdmin,
-    moduleAllowed: module ? hasModuleAccess(module) : 'n/a',
-  })
 
   // If Supabase isn't configured (offline/local build), don't lock the app out.
   if (!isSupabaseConfigured) return <>{children}</>
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-canvas">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     )
@@ -46,7 +37,9 @@ export function ProtectedRoute({ children, module, requireSuperAdmin }: Props) {
 
   if (requireSuperAdmin && !isSuperAdmin) return <AccessDenied />
 
-  if (module && !hasModuleAccess(module)) return <AccessDenied />
+  if (module && !hasModuleAccess(module, action)) {
+    return <AccessDenied module={module} action={action} />
+  }
 
   return <>{children}</>
 }

@@ -91,6 +91,44 @@ export interface VacationPaymentRow {
 
 // Shape must satisfy supabase-js's GenericTable (needs Relationships) so the
 // typed client resolves Row/Insert/Update instead of falling back to `never`.
+export interface RoleRow {
+  id: string
+  name: string
+  description: string | null
+  is_system: boolean
+  is_editable: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface RolePermissionRow {
+  id: string
+  role_id: string
+  module: ModuleId
+  can_view: boolean
+  can_edit: boolean
+  can_approve: boolean
+  can_admin: boolean
+}
+
+export interface UserRoleRow {
+  id: string
+  user_id: string
+  role_id: string
+  assigned_by: string | null
+  assigned_at: string
+}
+
+/** Aggregated module permission (any role granting it wins). */
+export interface ModulePerm {
+  can_view: boolean
+  can_edit: boolean
+  can_approve: boolean
+  can_admin: boolean
+}
+export type PermAction = 'view' | 'edit' | 'approve' | 'admin'
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
   Row: Row
   Insert: Insert
@@ -107,6 +145,9 @@ export interface Database {
       integrations: Table<IntegrationRow>
       vacation_payments: Table<VacationPaymentRow>
       audit_log: Table<AuditLogRow>
+      roles: Table<RoleRow>
+      role_permissions: Table<RolePermissionRow>
+      user_roles: Table<UserRoleRow>
     }
     Views: Record<string, never>
     Functions: Record<string, never>

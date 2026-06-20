@@ -13,15 +13,17 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSettingsStore } from '@/store/settingsStore'
+import { useAuth } from '@/contexts/AuthContext'
 import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed'
 import { SidebarToggle } from './SidebarToggle'
+import type { PermAction } from '@/types/supabase'
 
-const navItems = [
+const navItems: { key: string; to: string; icon: typeof LayoutDashboard; end: boolean; requires?: PermAction }[] = [
   { key: 'dashboard', to: '/nomina/dashboard', icon: LayoutDashboard, end: false },
   { key: 'employees', to: '/nomina/employees', icon: Users, end: false },
-  { key: 'payroll', to: '/nomina/payroll', icon: DollarSign, end: false },
+  { key: 'payroll', to: '/nomina/payroll', icon: DollarSign, end: false, requires: 'edit' },
   { key: 'history', to: '/nomina/history', icon: History, end: false },
-  { key: 'connectors', to: '/nomina/connectors', icon: Plug, end: false },
+  { key: 'connectors', to: '/nomina/connectors', icon: Plug, end: false, requires: 'admin' },
   { key: 'settings', to: '/nomina/settings', icon: Settings, end: false },
 ]
 
@@ -33,6 +35,7 @@ const navItems = [
 export function Sidebar({ mobileOpen = false, onClose }: { mobileOpen?: boolean; onClose?: () => void }) {
   const { t } = useTranslation()
   const company = useSettingsStore((s) => s.company)
+  const { hasModuleAccess } = useAuth()
   const { collapsed, toggle } = useSidebarCollapsed()
 
   return (
@@ -82,7 +85,25 @@ export function Sidebar({ mobileOpen = false, onClose }: { mobileOpen?: boolean;
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-auto p-3">
-        {navItems.map(({ key, to, icon: Icon, end }) => (
+        {navItems.map(({ key, to, icon: Icon, end, requires }) => {
+          // Lock items the user lacks permission for (kept visible but greyed/disabled).
+          const locked = !!requires && !hasModuleAccess('nomina', requires)
+          if (locked) {
+            return (
+              <div
+                key={key}
+                title={t('nav.noPermission')}
+                className={cn(
+                  'relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground/40',
+                  collapsed && 'md:justify-center md:gap-0 md:px-0',
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className={cn(collapsed && 'md:hidden')}>{t(`nav.${key}`)}</span>
+              </div>
+            )
+          }
+          return (
           <NavLink
             key={key}
             to={to}
@@ -109,7 +130,8 @@ export function Sidebar({ mobileOpen = false, onClose }: { mobileOpen?: boolean;
               </>
             )}
           </NavLink>
-        ))}
+          )
+        })}
       </nav>
 
       {/* Footer: company + version */}

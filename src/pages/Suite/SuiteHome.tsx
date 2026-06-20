@@ -27,7 +27,7 @@ export default function SuiteHome() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const company = useSettingsStore((s) => s.company)
-  const { user, profile } = useAuth()
+  const { user, profile, hasModuleAccess } = useAuth()
   const currentLang = i18n.language.startsWith('es') ? 'es' : 'en'
 
   useEffect(() => { document.title = 'Spectra Suite' }, [])
@@ -83,7 +83,7 @@ export default function SuiteHome() {
             <p className="mt-1.5 text-sm text-emerald-50/70">{t('suite.subtitle')}</p>
 
             <div className="mt-7 flex flex-wrap gap-2.5">
-              {SUITE_MODULES.map((m) => {
+              {SUITE_MODULES.filter((m) => hasModuleAccess(m.id)).map((m) => {
                 const Icon = MODULE_ICONS[m.id]
                 return (
                   <button

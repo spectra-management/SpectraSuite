@@ -55,7 +55,8 @@
     "payroll": "Procesar Nómina",
     "history": "Historial",
     "connectors": "Conectores",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "noPermission": "No tienes permiso para esto."
   },
   "common": {
     "save": "Guardar",
@@ -731,7 +732,8 @@
       "yourRole": "Tu rol",
       "yourModules": "Módulos a los que puedes acceder",
       "noModules": "Aún no tienes acceso a ningún módulo.",
-      "back": "Volver a Spectra Suite"
+      "back": "Volver a Spectra Suite",
+      "needPermission": "No tienes permiso de {{action}} en {{module}}."
     },
     "sessionWarning": {
       "title": "Tu sesión vencerá pronto",
@@ -769,6 +771,19 @@
       "module_admin": "Administrador de Módulo",
       "viewer": "Visualizador",
       "custom": "Personalizado"
+    },
+    "assignedRoles": "Roles asignados",
+    "availableRoles": "Roles disponibles",
+    "superAdminAll": "Super Administrador tiene acceso a todo.",
+    "effectiveAccess": "Acceso efectivo",
+    "noAccess": "Sin acceso a módulos.",
+    "noRolesWarning": "Este usuario no tiene roles. No tendrá acceso a ningún módulo.",
+    "removeRoleConfirm": "¿Quitar el rol '{{role}}' a {{name}}?",
+    "canShort": {
+      "view": "ver",
+      "edit": "editar",
+      "approve": "aprobar",
+      "admin": "admin"
     }
   },
   "suiteHome": {
@@ -842,5 +857,28 @@
       "resource": "Recurso",
       "status": "Estado"
     }
+  },
+  "roles": {
+    "title": "Roles y Permisos",
+    "subtitle": "Define qué puede hacer cada rol y asígnalos a los usuarios.",
+    "systemRoles": "Roles del sistema",
+    "customRoles": "Roles personalizados",
+    "createNew": "Crear rol",
+    "noCustom": "Aún no hay roles personalizados.",
+    "users": "usuarios",
+    "allAccess": "Acceso completo a todos los módulos",
+    "createRole": "Crear rol",
+    "editRole": "Editar rol",
+    "name": "Nombre del rol",
+    "namePlaceholder": "ej. Gerente Regional",
+    "description": "Descripción",
+    "permissions": "Permisos",
+    "nameRequired": "El nombre del rol es obligatorio",
+    "created": "Rol creado. Asígnalo a usuarios en Gestión de Usuarios.",
+    "deleted": "Rol eliminado",
+    "update": "Actualizar rol",
+    "create": "Crear rol",
+    "editWarning": "Los cambios afectarán a los {{count}} usuarios con este rol.",
+    "deleteConfirm": "¿Eliminar este rol? {{count}} usuarios lo perderán pero conservarán sus otros roles."
   }
 }
