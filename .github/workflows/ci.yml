@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # Import boundaries: no cross-module imports + no circular dependencies
+      # (see src/IMPORT_RULES.md). Fails the build on any violation.
+      - name: Import rules
+        run: npm run lint:imports
+
+      # Type-check + production build (tsc -b also enforces no unused imports/locals).
+      - name: Build
+        run: npm run build
+
+      # Unit tests (payroll engine, vacations, holidays, PDF labels…).
+      - name: Tests
+        run: npm run test:run
