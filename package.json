@@ -12,7 +12,8 @@
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "lint:imports": "madge --circular --extensions ts,tsx --ts-config tsconfig.app.json src && node scripts/check-imports.mjs"
+    "lint:imports": "madge --circular --extensions ts,tsx --ts-config tsconfig.app.json src && node scripts/check-imports.mjs",
+    "check:imports": "madge --circular --extensions ts,tsx --ts-config tsconfig.app.json src && node scripts/check-imports.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.0.0",
