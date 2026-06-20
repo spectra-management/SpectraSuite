@@ -245,6 +245,42 @@ describe('Holiday Calculation', () => {
   })
 })
 
+// ─── Full month (DR biweekly, day 1 → last day) ───────────────────────────────
+describe('Full-month DR run', () => {
+  it('salaried employee gets the FULL monthly salary (not half) for a full-month period', () => {
+    const full = makeInput({
+      payType: 'Salary', hourlyRate: 50000, regularHours: 0,
+      periodStart: '2026-03-01', periodEnd: '2026-03-31',
+    })
+    const half = makeInput({
+      payType: 'Salary', hourlyRate: 50000, regularHours: 0,
+      periodStart: '2026-03-01', // 1st quincena, no periodEnd → half
+    })
+    expect(calculatePayroll(full).grossPay).toBe(50000)   // whole month
+    expect(calculatePayroll(half).grossPay).toBe(25000)   // monthly / 2
+  })
+
+  it('retains the whole month ISR (not deferred like a 1st quincena)', () => {
+    const r = calculatePayroll(makeInput({
+      payType: 'Salary', hourlyRate: 90000, regularHours: 0,
+      periodStart: '2026-03-01', periodEnd: '2026-03-31',
+    }))
+    expect(r.isrDeferred).toBe(false)
+    expect(r.isrPeriod).toBeGreaterThan(0)
+    // monthly base = net of the full month; annual = ×12
+    expect(r.taxableIncome).toBe(roundHalfUp(r.isrMonthlyBase * 12))
+  })
+
+  it('partial month (day 1 → 15) is still a 1st quincena (ISR deferred)', () => {
+    const r = calculatePayroll(makeInput({
+      hourlyRate: 420, regularHours: 80,
+      periodStart: '2026-03-01', periodEnd: '2026-03-15',
+    }))
+    expect(r.isrDeferred).toBe(true)
+    expect(r.isrPeriod).toBe(0)
+  })
+})
+
 // ─── Test 6: Custom deductions ────────────────────────────────────────────────
 describe('Custom Deductions', () => {
   it('fixed + percentage deductions combined', () => {

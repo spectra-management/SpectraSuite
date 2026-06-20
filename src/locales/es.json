@@ -279,7 +279,8 @@
       "quincena2": "2da Quincena (16–fin de mes)",
       "selectedPeriod": "Período seleccionado",
       "useCustomDates": "Usar fechas personalizadas",
-      "useQuincenaPicker": "Usar selector quincenal"
+      "useQuincenaPicker": "Usar selector quincenal",
+      "fullMonth": "Mes completo"
     },
     "review": {
       "title": "Revisar Horas",

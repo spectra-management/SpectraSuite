@@ -19,6 +19,10 @@ export interface CalculationInput {
   //   day 1-15  → 1st quincena: ISR deferred (retained = 0)
   //   day 16-31 → 2nd quincena: ISR retained = full month's ISR
   periodStart?: string
+  // Period end date (YYYY-MM-DD). When periodStart is day 1 and periodEnd is the last
+  // day of the same month, the DR engine treats the run as a FULL MONTH: salaried pay
+  // is the full monthly salary and the whole month's ISR is retained (not deferred).
+  periodEnd?: string
   // Gross pay of the SAME employee's 1st fortnight (same month/country). Required for the
   // DR 2nd-quincena ISR: monthly base = net(1st fortnight) + net(2nd fortnight). When absent
   // the engine falls back to assuming both fortnights are equal.

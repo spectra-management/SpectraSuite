@@ -143,13 +143,16 @@ export function StepPeriod({ onNext }: Props) {
   // ── Biweekly picker state ──────────────────────────────────────────────────
   const [bwYear, setBwYear] = useState(today.getFullYear())
   const [bwMonth, setBwMonth] = useState(today.getMonth()) // 0-indexed
-  const [bwQuincena, setBwQuincena] = useState<1 | 2>(today.getDate() <= 15 ? 1 : 2)
+  const [bwQuincena, setBwQuincena] = useState<1 | 2 | 'full'>(today.getDate() <= 15 ? 1 : 2)
 
   const bwDates = useMemo(() => {
+    const last = lastDayOfMonth(bwYear, bwMonth)
     if (bwQuincena === 1) {
       return { start: toISODate(bwYear, bwMonth, 1), end: toISODate(bwYear, bwMonth, 15) }
     }
-    const last = lastDayOfMonth(bwYear, bwMonth)
+    if (bwQuincena === 'full') {
+      return { start: toISODate(bwYear, bwMonth, 1), end: toISODate(bwYear, bwMonth, last) }
+    }
     return { start: toISODate(bwYear, bwMonth, 16), end: toISODate(bwYear, bwMonth, last) }
   }, [bwYear, bwMonth, bwQuincena])
 
@@ -451,8 +454,8 @@ export function StepPeriod({ onNext }: Props) {
             {/* Quincena toggle */}
             <div className="space-y-1.5">
               <Label>Quincena</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {([1, 2] as const).map((q) => (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {([1, 2, 'full'] as const).map((q) => (
                   <button
                     key={q}
                     type="button"
@@ -473,7 +476,11 @@ export function StepPeriod({ onNext }: Props) {
                       )}
                     </div>
                     <span className="font-medium leading-tight">
-                      {q === 1 ? t('payroll.period.quincena1') : t('payroll.period.quincena2')}
+                      {q === 1
+                        ? t('payroll.period.quincena1')
+                        : q === 2
+                          ? t('payroll.period.quincena2')
+                          : t('payroll.period.fullMonth')}
                     </span>
                   </button>
                 ))}

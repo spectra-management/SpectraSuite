@@ -279,7 +279,8 @@
       "quincena2": "2nd Fortnight (16–end of month)",
       "selectedPeriod": "Selected Period",
       "useCustomDates": "Use custom dates",
-      "useQuincenaPicker": "Use quincena picker"
+      "useQuincenaPicker": "Use quincena picker",
+      "fullMonth": "Full month"
     },
     "review": {
       "title": "Review Hours",

@@ -202,12 +202,24 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
   const otHours = safeNum(input.otHours)
   const holidayHours = safeNum(input.holidayHours)
 
-  // Detect quincena from period start date (DR biweekly rule only)
+  // Detect quincena / full-month from the period dates (DR biweekly rule only).
+  // Full month = starts on day 1 AND ends on the last day of the same month.
   const isDR = rules.country.toLowerCase().includes('dominican')
   let quincena: 1 | 2 | null = null
+  let isFullMonth = false
   if (isDR && frequency === 'biweekly' && input.periodStart) {
-    const day = new Date(input.periodStart + 'T00:00:00').getDate()
-    quincena = day <= 15 ? 1 : 2
+    const sd = new Date(input.periodStart + 'T00:00:00')
+    const day = sd.getDate()
+    if (input.periodEnd) {
+      const ed = new Date(input.periodEnd + 'T00:00:00')
+      const lastDay = new Date(ed.getFullYear(), ed.getMonth() + 1, 0).getDate()
+      isFullMonth =
+        day === 1 &&
+        ed.getDate() === lastDay &&
+        sd.getMonth() === ed.getMonth() &&
+        sd.getFullYear() === ed.getFullYear()
+    }
+    if (!isFullMonth) quincena = day <= 15 ? 1 : 2
   }
 
   // Hourly needs hours to earn; Salary is paid regardless of hours.
@@ -239,9 +251,12 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
   }
 
   const earnings = isSalary
-    // Salary: fixed pay per period = monthly salary × 12 / pay periods per year (e.g. monthly/2 biweekly).
+    // Salary: fixed pay per period = monthly salary × 12 / pay periods per year (e.g. monthly/2
+    // biweekly). A full-month run pays the WHOLE monthly salary.
     ? (() => {
-        const periodGross = roundHalfUp((baseRate * 12) / rules.payPeriodsPerYear)
+        const periodGross = isFullMonth
+          ? roundHalfUp(baseRate)
+          : roundHalfUp((baseRate * 12) / rules.payPeriodsPerYear)
         return { regularPay: periodGross, otPay: 0, holidayPay: 0, grossPay: periodGross }
       })()
     : calculateHourlyEarnings(
@@ -307,7 +322,15 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
   let isrRetained: number     // ISR actually withheld this period
   let annualTaxable: number   // annualized taxable base (for reference/display)
 
-  if (quincena === 1) {
+  if (isFullMonth) {
+    // DR full month: this single run already covers the whole month, so the monthly
+    // ISR base is this period's net; annualize ×12 and retain the full month's ISR.
+    isrMonthlyBase = netThisPeriod
+    annualTaxable = roundHalfUp(isrMonthlyBase * 12)
+    const annualTax = rules.calculateIncomeTax(annualTaxable)
+    isrMonthly = roundHalfUp(annualTax / 12)
+    isrRetained = isrMonthly
+  } else if (quincena === 1) {
     // DR 1st quincena: defer ISR to the 2nd fortnight
     isrMonthlyBase = 0
     annualTaxable = 0
@@ -331,14 +354,15 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
     isrMonthlyBase = grossPay
   }
 
-  // isrCalculated kept for compatibility: monthly ISR on DR quincena runs, per-period ISR otherwise
-  const isrCalculated = quincena !== null ? isrMonthly : isrRetained
+  // isrCalculated kept for compatibility: monthly ISR on DR quincena/full-month runs, per-period otherwise
+  const isrCalculated = quincena !== null || isFullMonth ? isrMonthly : isrRetained
   const isrDeferred = quincena === 1
 
   const customDeds = calculateCustomDeductions(grossPay, input.customDeductions)
 
-  // Pending vacation ISR is collected on the DR 2nd fortnight only (where ISR is retained).
-  const vacationIsr = quincena === 2 ? roundHalfUp(safeNum(input.pendingVacationIsr)) : 0
+  // Pending vacation ISR is collected where the month's ISR is retained: the DR 2nd
+  // fortnight, or a full-month run.
+  const vacationIsr = quincena === 2 || isFullMonth ? roundHalfUp(safeNum(input.pendingVacationIsr)) : 0
 
   const totalDeductions = roundHalfUp(tssTotal + isrRetained + vacationIsr + customDeds.total)
   const netPay = roundHalfUp(grossPay - totalDeductions)

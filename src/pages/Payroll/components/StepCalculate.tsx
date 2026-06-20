@@ -28,7 +28,17 @@ function isFirstQuincena(startDate: string): boolean {
   return new Date(startDate + 'T00:00:00').getDate() <= 15
 }
 
-export function StepCalculate({ employeeHours, startDate, endDate: _endDate, frequency, country, onNext, onBack }: Props) {
+// Full month = starts day 1 and ends on the last day of the same month.
+function isFullMonthPeriod(start: string, end: string): boolean {
+  const sd = new Date(start + 'T00:00:00')
+  const ed = new Date(end + 'T00:00:00')
+  if (isNaN(sd.getTime()) || isNaN(ed.getTime())) return false
+  const lastDay = new Date(ed.getFullYear(), ed.getMonth() + 1, 0).getDate()
+  return sd.getDate() === 1 && ed.getDate() === lastDay &&
+    sd.getMonth() === ed.getMonth() && sd.getFullYear() === ed.getFullYear()
+}
+
+export function StepCalculate({ employeeHours, startDate, endDate, frequency, country, onNext, onBack }: Props) {
   const { t } = useTranslation()
   const employees = useEmployeesStore((s) => s.employees)
   const fiscal = useSettingsStore((s) => s.fiscal)
@@ -47,7 +57,8 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
   const isDR = rules.country.toLowerCase().includes('dominican')
   const isUS = rules.country.toLowerCase().includes('united states') || rules.country.toLowerCase() === 'us'
   const isGenericCountry = !isDR && !isUS && rules.country !== 'Unknown' && rules.country !== ''
-  const firstQuincena = isDR && frequency === 'biweekly' && isFirstQuincena(startDate)
+  const fullMonth = isDR && frequency === 'biweekly' && isFullMonthPeriod(startDate, endDate)
+  const firstQuincena = isDR && frequency === 'biweekly' && !fullMonth && isFirstQuincena(startDate)
 
   const { entries, totals } = useMemo(() => {
     const computedEntries: PayrollEntry[] = []
@@ -69,6 +80,7 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
         otRatePercent: payrollSettings.otRatePercent,
         holidayRatePercent: payrollSettings.holidayRatePercent,
         periodStart: startDate,
+        periodEnd: endDate,
         firstFortnightGross: findFirstFortnightGross(history, country, startDate, emp.id),
         nightHours: h.nightHours,
         nightShift,
@@ -94,7 +106,7 @@ export function StepCalculate({ employeeHours, startDate, endDate: _endDate, fre
     }
 
     return { entries: computedEntries, totals }
-  }, [employeeHours, employees, rules, frequency, payrollSettings, startDate, country, history, nightShift, pendingVacationIsr])
+  }, [employeeHours, employees, rules, frequency, payrollSettings, startDate, endDate, country, history, nightShift, pendingVacationIsr])
 
   const ActionButtons = () => (
     <div className="flex gap-3">
