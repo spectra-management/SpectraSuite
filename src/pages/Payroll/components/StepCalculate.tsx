@@ -9,7 +9,9 @@ import { usePayrollStore } from '@/store/payrollStore'
 import { usePendingVacationIsrStore } from '@/store/pendingVacationIsrStore'
 import { calculatePayroll, findFirstFortnightGross } from '@/lib/payroll/calculations'
 import { getPayrollRules } from '@/lib/payroll/rules'
-import { formatCurrency, getInitials } from '@/lib/utils'
+import { getInitials } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils/currency'
+import { countryFlag } from '@/lib/utils/countryFlag'
 import { roundHalfUp } from '@/lib/payroll/calculations'
 import type { EmployeeHoursEntry, PayrollEntry, PayrollTotals } from '@/types'
 
@@ -37,24 +39,39 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
   const history = usePayrollStore((s) => s.history)
   const pendingVacationIsr = usePendingVacationIsrStore((s) => s.pending)
 
-  // Build country-specific payroll rules
+  // Global run = all countries in one pass; each employee is calculated with its
+  // OWN country's tax rules.
+  const isGlobal = country === 'Global'
+
+  // Build country-specific payroll rules (the selected country in single mode).
   const rules = useMemo(
     () => getPayrollRules(country, frequency, fiscal, payrollSettings),
     [country, frequency, fiscal, payrollSettings],
   )
 
   // For UI banners only — actual quincena logic is inside calculatePayroll
-  const isDR = rules.country.toLowerCase().includes('dominican')
-  const isUS = rules.country.toLowerCase().includes('united states') || rules.country.toLowerCase() === 'us'
-  const isGenericCountry = !isDR && !isUS && rules.country !== 'Unknown' && rules.country !== ''
+  const isDR = !isGlobal && rules.country.toLowerCase().includes('dominican')
+  const isUS = !isGlobal && (rules.country.toLowerCase().includes('united states') || rules.country.toLowerCase() === 'us')
+  const isGenericCountry = !isGlobal && !isDR && !isUS && rules.country !== 'Unknown' && rules.country !== ''
   const firstQuincena = isDR && frequency === 'biweekly' && isFirstQuincena(startDate)
 
   const { entries, totals } = useMemo(() => {
     const computedEntries: PayrollEntry[] = []
+    // Cache rules per country so a Global run builds each country's ruleset once.
+    const rulesByCountry = new Map<string, ReturnType<typeof getPayrollRules>>()
+    const rulesFor = (c: string) => {
+      const key = c || 'Unknown'
+      let r = rulesByCountry.get(key)
+      if (!r) { r = getPayrollRules(key, frequency, fiscal, payrollSettings); rulesByCountry.set(key, r) }
+      return r
+    }
 
     for (const h of employeeHours) {
       const emp = employees.find((e) => e.id === h.employeeId)
       if (!emp) continue
+
+      const empCountry = emp.country?.trim() || (isGlobal ? 'Unknown' : country)
+      const empRules = isGlobal ? rulesFor(empCountry) : rules
 
       const calculation = calculatePayroll({
         employeeId: emp.id,
@@ -64,13 +81,13 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
         otHours: h.otHours,
         holidayHours: h.holidayHours,
         customDeductions: emp.customDeductions?.filter((d) => d.active) ?? [],
-        rules,
+        rules: empRules,
         frequency,
         otRatePercent: payrollSettings.otRatePercent,
         holidayRatePercent: payrollSettings.holidayRatePercent,
         periodStart: startDate,
         periodEnd: endDate,
-        firstFortnightGross: findFirstFortnightGross(history, country, startDate, emp.id),
+        firstFortnightGross: findFirstFortnightGross(history, empCountry, startDate, emp.id),
         nightHours: h.nightHours,
         nightShift,
         pendingVacationIsr: (() => {
@@ -95,7 +112,21 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
     }
 
     return { entries: computedEntries, totals }
-  }, [employeeHours, employees, rules, frequency, payrollSettings, startDate, endDate, country, history, nightShift, pendingVacationIsr])
+  }, [employeeHours, employees, rules, isGlobal, fiscal, frequency, payrollSettings, startDate, endDate, country, history, nightShift, pendingVacationIsr])
+
+  // Per-country rollup for Global mode (native currencies, no conversion).
+  const byCountry = useMemo(() => {
+    const map = new Map<string, { country: string; count: number; gross: number; net: number }>()
+    for (const e of entries) {
+      const c = e.employee.country?.trim() || 'Unknown'
+      const agg = map.get(c) ?? { country: c, count: 0, gross: 0, net: 0 }
+      agg.count++
+      agg.gross += e.calculation.grossPay
+      agg.net += e.calculation.netPay
+      map.set(c, agg)
+    }
+    return [...map.values()].map((a) => ({ ...a, gross: roundHalfUp(a.gross), net: roundHalfUp(a.net) }))
+  }, [entries])
 
   const ActionButtons = () => (
     <div className="flex gap-3">
@@ -130,13 +161,41 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
         </div>
       )}
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <SummaryCard label={t('payroll.calculate.grossPay')} value={formatCurrency(totals.totalGross)} color="text-foreground" />
-        <SummaryCard label={t('payroll.calculate.tss')} value={formatCurrency(totals.totalTss)} color="text-orange-600" />
-        <SummaryCard label={t('payroll.calculate.isr')} value={formatCurrency(totals.totalIsr)} color="text-red-600" />
-        <SummaryCard label={t('payroll.calculate.netPay')} value={formatCurrency(totals.totalNet)} color="text-emerald-700" highlight />
-      </div>
+      {/* Summary — per-country in Global mode (native currencies, no conversion) */}
+      {isGlobal ? (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+            🌎 {t('payroll.global')} — {entries.length} {t('common.employees')} · {byCountry.length} {t('payroll.countries')}
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {byCountry.map((c) => (
+              <div key={c.country} className="rounded-xl border border-border bg-card p-4 shadow-soft">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <span>{countryFlag(c.country)}</span> {c.country}
+                  <span className="ml-auto text-xs font-normal text-muted-foreground">{c.count} {t('common.employees')}</span>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-muted-foreground">{t('payroll.calculate.grossPay')}</p>
+                    <p className="text-figure font-bold text-foreground">{formatCurrency(c.gross, c.country)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">{t('payroll.calculate.netPay')}</p>
+                    <p className="text-figure font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(c.net, c.country)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <SummaryCard label={t('payroll.calculate.grossPay')} value={formatCurrency(totals.totalGross, country)} color="text-foreground" />
+          <SummaryCard label={t('payroll.calculate.tss')} value={formatCurrency(totals.totalTss, country)} color="text-orange-600" />
+          <SummaryCard label={t('payroll.calculate.isr')} value={formatCurrency(totals.totalIsr, country)} color="text-red-600" />
+          <SummaryCard label={t('payroll.calculate.netPay')} value={formatCurrency(totals.totalNet, country)} color="text-emerald-700" highlight />
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -155,6 +214,11 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.calculate.employee')}
                   </th>
+                  {isGlobal && (
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t('payroll.country')}
+                    </th>
+                  )}
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.calculate.grossPay')}
                   </th>
@@ -176,11 +240,13 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {entries.map(({ employee: emp, calculation: c }) => (
+                {entries.map(({ employee: emp, calculation: c }) => {
+                  const ec = emp.country?.trim() || country
+                  return (
                   <tr key={emp.id} className="hover:bg-secondary">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                           {getInitials(emp.firstName, emp.lastName)}
                         </div>
                         <span className="font-medium text-foreground text-xs">
@@ -188,35 +254,44 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right text-foreground">{formatCurrency(c.grossPay)}</td>
-                    <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(c.afpAmount)}</td>
-                    <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(c.sfsAmount)}</td>
+                    {isGlobal && (
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        <span className="mr-1">{countryFlag(ec)}</span>{ec}
+                      </td>
+                    )}
+                    <td className="px-4 py-3 text-right text-foreground">{formatCurrency(c.grossPay, ec)}</td>
+                    <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(c.afpAmount, ec)}</td>
+                    <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(c.sfsAmount, ec)}</td>
                     <td className="px-4 py-3 text-right text-red-600">
                       {firstQuincena
-                        ? <span className="text-muted-foreground italic">{formatCurrency(0)}</span>
-                        : formatCurrency(c.isrPeriod)
+                        ? <span className="text-muted-foreground italic">{formatCurrency(0, ec)}</span>
+                        : formatCurrency(c.isrPeriod, ec)
                       }
                     </td>
-                    <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(c.customDeductions)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-emerald-700 bg-emerald-50">
-                      {formatCurrency(c.netPay)}
+                    <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(c.customDeductions, ec)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300">
+                      {formatCurrency(c.netPay, ec)}
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
-              <tfoot>
-                <tr className="border-t-2 border-input bg-secondary font-semibold">
-                  <td className="px-5 py-3 text-xs uppercase text-muted-foreground">{t('payroll.calculate.totals')}</td>
-                  <td className="px-4 py-3 text-right">{formatCurrency(totals.totalGross)}</td>
-                  <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(totals.totalAfp)}</td>
-                  <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(totals.totalSfs)}</td>
-                  <td className="px-4 py-3 text-right text-red-600">{formatCurrency(totals.totalIsr)}</td>
-                  <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(totals.totalCustomDeductions)}</td>
-                  <td className="px-4 py-3 text-right font-bold text-emerald-700 bg-emerald-50">
-                    {formatCurrency(totals.totalNet)}
-                  </td>
-                </tr>
-              </tfoot>
+              {/* Single-currency grand total — hidden in Global (use per-country summary above) */}
+              {!isGlobal && (
+                <tfoot>
+                  <tr className="border-t-2 border-input bg-secondary font-semibold">
+                    <td className="px-5 py-3 text-xs uppercase text-muted-foreground">{t('payroll.calculate.totals')}</td>
+                    <td className="px-4 py-3 text-right">{formatCurrency(totals.totalGross, country)}</td>
+                    <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(totals.totalAfp, country)}</td>
+                    <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(totals.totalSfs, country)}</td>
+                    <td className="px-4 py-3 text-right text-red-600">{formatCurrency(totals.totalIsr, country)}</td>
+                    <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(totals.totalCustomDeductions, country)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300">
+                      {formatCurrency(totals.totalNet, country)}
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
         </CardContent>

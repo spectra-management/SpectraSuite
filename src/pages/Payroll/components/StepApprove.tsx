@@ -9,7 +9,7 @@ import { usePayrollStore } from '@/store/payrollStore'
 import { useSettingsStore } from '@/store/settingsStore'
 import { usePendingVacationIsrStore } from '@/store/pendingVacationIsrStore'
 import { toast } from '@/hooks/useToast'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils/currency'
 import { generatePdfBlob, downloadBlob } from '@/lib/pdf/generatePdf'
 import { generatePayrollCSV, downloadCSV } from '@/lib/pdf/generateCsv'
 import type { PayrollEntry, PayrollTotals } from '@/types'
@@ -165,19 +165,19 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
             <SummaryRow
               icon={DollarSign}
               label={t('dashboard.totalGross')}
-              value={formatCurrency(totals.totalGross)}
+              value={formatCurrency(totals.totalGross, country)}
               iconClass="text-muted-foreground bg-secondary"
             />
             <SummaryRow
               icon={TrendingDown}
               label={t('dashboard.totalDeductions')}
-              value={formatCurrency(totals.totalDeductions)}
+              value={formatCurrency(totals.totalDeductions, country)}
               iconClass="text-red-500 bg-red-50"
             />
             <div className="h-px bg-muted" />
             <div className="flex items-center justify-between">
               <span className="font-semibold text-foreground">{t('dashboard.totalNet')}</span>
-              <span className="text-xl font-bold text-emerald-700">{formatCurrency(totals.totalNet)}</span>
+              <span className="text-xl font-bold text-emerald-700">{formatCurrency(totals.totalNet, country)}</span>
             </div>
           </div>
 

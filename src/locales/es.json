@@ -406,7 +406,10 @@
       "generate": "Reporte Gerencial",
       "downloadPdf": "Descargar PDF",
       "downloadCsv": "Descargar CSV"
-    }
+    },
+    "global": "Global",
+    "countries": "países",
+    "country": "País"
   },
   "history": {
     "title": "Historial de Nómina",

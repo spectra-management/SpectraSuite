@@ -406,7 +406,10 @@
       "generate": "Manager Report",
       "downloadPdf": "Download PDF",
       "downloadCsv": "Download CSV"
-    }
+    },
+    "global": "Global",
+    "countries": "countries",
+    "country": "Country"
   },
   "history": {
     "title": "Payroll History",

@@ -213,9 +213,11 @@ export function StepPeriod({ onNext }: Props) {
       return
     }
 
-    // All active employees for the selected country (Hourly + Salary)
+    // All active employees for the selected country (Hourly + Salary). Global → all.
+    const isGlobal = selectedCountry === 'Global'
     const activeEmployees = employees.filter((e) => {
       if (e.status !== 'Active') return false
+      if (isGlobal) return true
       const empCountry = e.country && e.country.trim() ? e.country.trim() : 'Unknown'
       return empCountry === selectedCountry
     })
@@ -231,7 +233,10 @@ export function StepPeriod({ onNext }: Props) {
 
     // Public holidays within the period for the selected country (YYYY-MM-DD strings).
     // Hours tracked on these dates are auto-flagged as holiday hours.
-    const holidayDates = getHolidaysInRange(selectedCountry, effectiveStart, effectiveEnd).map((h) => h.date)
+    const holidayDates = isGlobal
+      ? [...new Set(activeEmployees.flatMap((e) =>
+          getHolidaysInRange(e.country?.trim() || 'Unknown', effectiveStart, effectiveEnd).map((h) => h.date)))]
+      : getHolidaysInRange(selectedCountry, effectiveStart, effectiveEnd).map((h) => h.date)
 
     const missingToken = !hubstaff.refreshToken
     const missingOrg = !hubstaff.organizationId
@@ -363,6 +368,29 @@ export function StepPeriod({ onNext }: Props) {
           <div className="space-y-1.5">
             <Label>{t('payroll.selectCountry')}</Label>
             <div className="flex flex-col gap-2">
+              {/* Global — all active employees from all countries */}
+              <button
+                type="button"
+                onClick={() => setSelectedCountry('Global')}
+                className={cn(
+                  'flex items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
+                  selectedCountry === 'Global'
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
+                    : 'border-input bg-card text-muted-foreground hover:border-input hover:bg-secondary',
+                )}
+              >
+                <div className={cn(
+                  'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2',
+                  selectedCountry === 'Global' ? 'border-emerald-500 bg-emerald-500' : 'border-input',
+                )}>
+                  {selectedCountry === 'Global' && <div className="h-1.5 w-1.5 rounded-full bg-card" />}
+                </div>
+                <span className="text-base leading-none">🌎</span>
+                <span className="font-medium leading-tight flex-1">{t('payroll.global')}</span>
+                <span className="text-xs text-muted-foreground">
+                  {employees.filter((e) => e.status === 'Active').length} {t('common.employees')}
+                </span>
+              </button>
               {availableCountries.map(([country, count]) => (
                 <button
                   key={country}

@@ -11,7 +11,8 @@ import { usePaymentMethodsStore } from '@/store/paymentMethodsStore'
 import { useBankAccountsStore } from '@/store/bankAccountsStore'
 import { useSettingsStore } from '@/store/settingsStore'
 import { usePendingVacationIsrStore } from '@/store/pendingVacationIsrStore'
-import { formatCurrency, formatDate, getInitials, maskAccount } from '@/lib/utils'
+import { formatDate, getInitials, maskAccount } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils/currency'
 import { roundHalfUp, formatCurrencyWithSymbol } from '@/lib/payroll/calculations'
 import { getCurrencySymbol } from '@/lib/payroll/rules'
 import { getHolidaysInRange } from '@/lib/holidays'
@@ -172,6 +173,18 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
     { key: 'ot', label: t('payroll.review.filterOT') },
   ]
 
+  // Global multi-country run: employee count per country for the banner.
+  const isGlobal = country === 'Global'
+  const byCountryCounts = useMemo(() => {
+    const acc: Record<string, number> = {}
+    for (const h of hours) {
+      const c = employees.find((e) => e.id === h.employeeId)?.country?.trim() || 'Unknown'
+      acc[c] = (acc[c] ?? 0) + 1
+    }
+    return Object.entries(acc).sort((a, b) => b[1] - a[1])
+  }, [hours, employees])
+  const colCount = isGlobal ? 10 : 9
+
   return (
     <div className="space-y-4">
       {/* Unmapped employees banner */}
@@ -234,8 +247,8 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                 <div className="flex items-center gap-2">
                   <CardTitle>{t('payroll.review.title')}</CardTitle>
                   {country && (
-                    <span className="text-base leading-none" title={country}>
-                      {countryFlag(country)}
+                    <span className="text-base leading-none" title={country === 'Global' ? t('payroll.global') : country}>
+                      {country === 'Global' ? '🌎' : countryFlag(country)}
                     </span>
                   )}
                 </div>
@@ -285,6 +298,19 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
           </div>
         </CardHeader>
 
+        {isGlobal && (
+          <div className="border-b border-border bg-emerald-50 px-5 py-3 dark:bg-emerald-500/10">
+            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+              🌎 {t('payroll.global')} — {hours.length} {t('common.employees')}
+            </p>
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-emerald-700/90 dark:text-emerald-400/80">
+              {byCountryCounts.map(([c, n]) => (
+                <span key={c}>{countryFlag(c)} {c}: {n}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -293,6 +319,11 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground w-44">
                     {t('payroll.review.employee')}
                   </th>
+                  {isGlobal && (
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t('payroll.country')}
+                    </th>
+                  )}
                   <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('payroll.review.regularHours')}
                   </th>
@@ -322,7 +353,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
               <tbody className="divide-y divide-border">
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-5 py-8 text-center text-sm text-muted-foreground">
+                    <td colSpan={colCount} className="px-5 py-8 text-center text-sm text-muted-foreground">
                       {t('payroll.review.noHours')}
                     </td>
                   </tr>
@@ -388,6 +419,12 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                             </div>
                           </div>
                         </td>
+                        {isGlobal && (
+                          <td className="whitespace-nowrap px-3 py-3 text-xs text-muted-foreground">
+                            <span className="mr-1">{countryFlag(emp.country?.trim() || 'Unknown')}</span>
+                            {emp.country?.trim() || 'Unknown'}
+                          </td>
+                        )}
                         <td className="px-3 py-3">
                           <HoursInput
                             value={h.regularHours}
@@ -427,7 +464,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                               onChange={(e) => updatePayRate(h.employeeId, e.target.value)}
                             />
                           ) : (
-                            formatCurrency(emp.payRate)
+                            formatCurrency(emp.payRate, emp.country)
                           )}
                         </td>
                         <td className="px-3 py-3">

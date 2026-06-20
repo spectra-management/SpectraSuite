@@ -22,7 +22,8 @@ import { useSettingsStore } from '@/store/settingsStore'
 import { usePaymentMethodsStore } from '@/store/paymentMethodsStore'
 import { useBankAccountsStore, RD_BANKS } from '@/store/bankAccountsStore'
 import { toast } from '@/hooks/useToast'
-import { formatCurrency, formatDate, getInitials } from '@/lib/utils'
+import { formatDate, getInitials } from '@/lib/utils'
+import { formatCurrency, currencySymbol } from '@/lib/utils/currency'
 import { PAYMENT_METHOD_LABELS } from '@/lib/pdf/paystubLabels'
 import { VacationInfoSection } from './VacationInfoSection'
 import type { CustomDeduction, PaymentMethod } from '@/types'
@@ -190,7 +191,7 @@ export default function EmployeeProfile() {
             <div>
               <dt className="text-xs text-muted-foreground">{t('employees.profile.payRate')}</dt>
               <dd className="mt-0.5 text-sm font-semibold text-foreground">
-                {formatCurrency(employee.payRate)}/hr
+                {formatCurrency(employee.payRate, employee.country)}/hr
               </dd>
             </div>
             <div>
@@ -333,7 +334,7 @@ export default function EmployeeProfile() {
                         </Badge>
                       </td>
                       <td className="px-6 py-3 text-right font-medium text-foreground">
-                        {d.type === 'fixed' ? formatCurrency(d.amount) : `${d.amount}%`}
+                        {d.type === 'fixed' ? formatCurrency(d.amount, employee.country) : `${d.amount}%`}
                       </td>
                       <td className="px-6 py-3">
                         <Badge variant={d.recurring ? 'default' : 'secondary'}>
@@ -412,7 +413,7 @@ export default function EmployeeProfile() {
               <div className="space-y-1.5">
                 <Label>
                   {t('employees.deductions.amount')}
-                  {form.type === 'percentage' ? ' (%)' : ' (RD$)'}
+                  {form.type === 'percentage' ? ' (%)' : ` (${currencySymbol(employee.country)})`}
                 </Label>
                 <Input
                   type="number"
