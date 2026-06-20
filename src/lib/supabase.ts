@@ -67,17 +67,27 @@ export const GOOGLE_OAUTH_SCOPES =
   'openid email profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks https://www.googleapis.com/auth/gmail.readonly'
 
 /**
- * Start Google OAuth. `access_type: offline` + `prompt: consent` force Google to
- * return a provider_token (and a provider_refresh_token) every time, so the
- * dashboard always gets a usable token after sign-in / reconnect.
+ * Start Google OAuth.
+ *
+ * `prompt: 'select_account'` (not 'consent') means Google only asks which account
+ * to use, NOT to re-grant permissions on every login — the consent screen appears
+ * once (first login, or if the user revoked access). `incremental_auth` lets Google
+ * add scopes without re-prompting for ones already granted. `access_type: offline`
+ * still yields a refresh token.
+ *
+ * To FORCE the consent screen (e.g. the "Reconnect Google" button after scopes
+ * changed), pass forceConsent = true.
  */
-export function signInWithGoogle() {
+export function signInWithGoogle(forceConsent = false) {
+  const queryParams: Record<string, string> = forceConsent
+    ? { access_type: 'offline', prompt: 'consent' }
+    : { access_type: 'offline', prompt: 'select_account', incremental_auth: 'true' }
   return supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: authRedirectTo('/suite'),
       scopes: GOOGLE_OAUTH_SCOPES,
-      queryParams: { access_type: 'offline', prompt: 'consent' },
+      queryParams,
     },
   })
 }

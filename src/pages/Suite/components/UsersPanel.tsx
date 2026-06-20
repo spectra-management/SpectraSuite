@@ -14,6 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { supabase, authRedirectTo } from '@/lib/supabase'
+import { logAuditEvent } from '@/lib/audit'
 import { toast } from '@/hooks/useToast'
 import type { ProfileRow, ModulePermissionRow, UserRole, ModuleId } from '@/types/supabase'
 
@@ -61,6 +62,14 @@ export function UsersPanel() {
     if (error) {
       toast({ variant: 'destructive', title: t('common.error') })
       void load()
+    } else {
+      void logAuditEvent({
+        action: next ? 'user_activated' : 'user_deactivated',
+        category: 'user_management',
+        resource_type: 'user',
+        resource_id: u.id,
+        details: { email: u.email },
+      })
     }
   }
 
@@ -80,6 +89,13 @@ export function UsersPanel() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Invite failed')
+      void logAuditEvent({
+        action: 'user_invited',
+        category: 'user_management',
+        resource_type: 'user',
+        resource_id: json.userId ?? undefined,
+        details: { email },
+      })
       toast({ variant: 'success', title: t('users.inviteSent') })
       setInviteEmail('')
     } catch (e) {
@@ -197,6 +213,15 @@ function EditUserDialog({
         .update({ role, updated_at: new Date().toISOString() })
         .eq('id', user.id)
       if (roleErr) throw roleErr
+      if (role !== user.role) {
+        void logAuditEvent({
+          action: 'role_changed',
+          category: 'user_management',
+          resource_type: 'user',
+          resource_id: user.id,
+          details: { email: user.email, oldRole: user.role, newRole: role },
+        })
+      }
 
       // Replace this user's module permission rows. Only persist rows for the
       // 'custom' role; other roles derive access from the role itself.
@@ -209,6 +234,13 @@ function EditUserDialog({
           const { error: insErr } = await supabase.from('user_module_permissions').insert(rows)
           if (insErr) throw insErr
         }
+        void logAuditEvent({
+          action: 'permissions_changed',
+          category: 'user_management',
+          resource_type: 'user',
+          resource_id: user.id,
+          details: { email: user.email, permissions: draft },
+        })
       }
       toast({ variant: 'success', title: t('common.success') })
       onSaved()

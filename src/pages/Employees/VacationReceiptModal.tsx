@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button'
 import { useSettingsStore } from '@/store/settingsStore'
 import { formatCurrencyWithSymbol } from '@/lib/payroll/calculations'
+import { logAuditEvent } from '@/lib/audit'
 import { getCurrencySymbol } from '@/lib/payroll/rules'
 import { getPaystubLang } from '@/lib/pdf/paystubLabels'
 import { calculateVacationPayForDays } from '@/lib/vacations'
@@ -65,6 +66,22 @@ export function VacationReceiptModal({ employee, country, payRate, entitledDays,
 
   const confirm = () => {
     if (!result || !onConfirm) return
+    void logAuditEvent({
+      action: 'vacation_approved',
+      category: 'vacation',
+      resource_type: 'vacation',
+      resource_id: employee.id,
+      details: { employee: `${employee.firstName} ${employee.lastName}`, days: entitledDays, amount: result.net, periodLabel },
+    })
+    if (result.isrApplies && result.isrAmount > 0) {
+      void logAuditEvent({
+        action: 'vacation_isr_collected',
+        category: 'vacation',
+        resource_type: 'vacation',
+        resource_id: employee.id,
+        details: { employeeId: employee.id, amount: result.isrAmount, period: periodLabel },
+      })
+    }
     onConfirm({
       date: new Date().toISOString(),
       amount: result.net,

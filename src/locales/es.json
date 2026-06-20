@@ -649,6 +649,16 @@
       "payStubLanguageHelp": "Idioma de los comprobantes en PDF (los empleados pueden preferir español aunque la UI esté en inglés)",
       "english": "Inglés",
       "spanish": "Español"
+    },
+    "security": {
+      "title": "Seguridad",
+      "subtitle": "Controles de sesión y acceso",
+      "sessionTimeout": "Tiempo de sesión",
+      "minutes": "minutos",
+      "helper": "Duración de inactividad antes del cierre automático",
+      "current": "Tiempo actual: {{minutes}} minutos ({{hours}}h)",
+      "shortWarning": "Un tiempo muy corto puede causar cierres frecuentes",
+      "updated": "Tiempo de sesión actualizado a {{minutes}} minutos"
     }
   },
   "payStub": {
@@ -722,6 +732,12 @@
       "yourModules": "Módulos a los que puedes acceder",
       "noModules": "Aún no tienes acceso a ningún módulo.",
       "back": "Volver a Spectra Suite"
+    },
+    "sessionWarning": {
+      "title": "Tu sesión vencerá pronto",
+      "message": "Se cerrará tu sesión en {{time}} por inactividad. Haz clic en 'Mantener sesión' para continuar.",
+      "stay": "Mantener sesión",
+      "logout": "Cerrar sesión ahora"
     }
   },
   "userMenu": {
@@ -797,6 +813,34 @@
       "minutes": "hace {{n}} min",
       "hours": "hace {{n}} h",
       "yesterday": "Ayer"
+    }
+  },
+  "audit": {
+    "title": "Registro de Auditoría",
+    "subtitle": "Historial de seguridad y actividad",
+    "exportCsv": "Exportar CSV",
+    "search": "Buscar usuario, acción, recurso…",
+    "allCategories": "Todas las categorías",
+    "allStatuses": "Todos los estados",
+    "success": "Éxito",
+    "failure": "Fallo",
+    "empty": "Sin registros de auditoría.",
+    "loadError": "No se pudo cargar el registro",
+    "category": {
+      "auth": "Auth",
+      "user_management": "Usuarios",
+      "payroll": "Nómina",
+      "vacation": "Vacaciones",
+      "settings": "Ajustes",
+      "connector": "Conector"
+    },
+    "col": {
+      "time": "Fecha",
+      "user": "Usuario",
+      "action": "Acción",
+      "category": "Categoría",
+      "resource": "Recurso",
+      "status": "Estado"
     }
   }
 }

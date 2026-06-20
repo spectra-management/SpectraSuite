@@ -649,6 +649,16 @@
       "payStubLanguageHelp": "Language for PDF pay stubs (employees may prefer Spanish even if UI is in English)",
       "english": "English",
       "spanish": "Spanish"
+    },
+    "security": {
+      "title": "Security",
+      "subtitle": "Session and access controls",
+      "sessionTimeout": "Session timeout",
+      "minutes": "minutes",
+      "helper": "Inactivity duration before automatic logout",
+      "current": "Current timeout: {{minutes}} minutes ({{hours}}h)",
+      "shortWarning": "Very short timeout may cause frequent logouts",
+      "updated": "Session timeout updated to {{minutes}} minutes"
     }
   },
   "payStub": {
@@ -722,6 +732,12 @@
       "yourModules": "Modules you can access",
       "noModules": "You don't have access to any modules yet.",
       "back": "Back to Spectra Suite"
+    },
+    "sessionWarning": {
+      "title": "Session Expiring Soon",
+      "message": "You'll be logged out in {{time}} due to inactivity. Click 'Stay Logged In' to continue.",
+      "stay": "Stay Logged In",
+      "logout": "Logout Now"
     }
   },
   "userMenu": {
@@ -797,6 +813,34 @@
       "minutes": "{{n}}m ago",
       "hours": "{{n}}h ago",
       "yesterday": "Yesterday"
+    }
+  },
+  "audit": {
+    "title": "Audit Log",
+    "subtitle": "Security and activity trail",
+    "exportCsv": "Export CSV",
+    "search": "Search user, action, resource…",
+    "allCategories": "All categories",
+    "allStatuses": "All statuses",
+    "success": "Success",
+    "failure": "Failure",
+    "empty": "No audit entries.",
+    "loadError": "Could not load audit log",
+    "category": {
+      "auth": "Auth",
+      "user_management": "Users",
+      "payroll": "Payroll",
+      "vacation": "Vacation",
+      "settings": "Settings",
+      "connector": "Connector"
+    },
+    "col": {
+      "time": "Time",
+      "user": "User",
+      "action": "Action",
+      "category": "Category",
+      "resource": "Resource",
+      "status": "Status"
     }
   }
 }

@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useEmployeesStore } from '@/store/employeesStore'
 import { toast } from '@/hooks/useToast'
+import { logAuditEvent } from '@/lib/audit'
 import { testHubstaffToken, fetchHubstaffMembers, fetchUserProfiles, normalizeEmail } from '@/lib/connectors/hubstaff'
 import type { HubstaffOrganization } from '@/lib/connectors/hubstaff'
 import type { HubstaffMember } from '@/lib/connectors/types'
@@ -61,6 +62,7 @@ function BambooHRConnector() {
       )
       if (!res.ok) throw new Error(await res.text())
       updateBambooHR({ connected: true })
+      void logAuditEvent({ action: 'connector_configured', category: 'connector', details: { connector: 'bamboohr', subdomain: bamboohr.subdomain } })
       toast({ variant: 'success', title: t('connectors.status.connected'), description: t('connectors.bamboohr.connected') })
     } catch (err) {
       updateBambooHR({ connected: false })
@@ -584,6 +586,7 @@ function HubstaffConnector() {
         ...(tokenUpdate.newAccessTokenExpiry ? { cachedAccessTokenExpiry: tokenUpdate.newAccessTokenExpiry } : {}),
       })
 
+      void logAuditEvent({ action: 'connector_configured', category: 'connector', details: { connector: 'hubstaff', orgCount: organizations.length } })
       setAvailableOrgs(organizations)
       const orgHint = organizations.length > 0
         ? `${t('connectors.hubstaff.foundOrgs')}: ${organizations.map((o) => `${o.name} (ID: ${o.id})`).join(', ')}`

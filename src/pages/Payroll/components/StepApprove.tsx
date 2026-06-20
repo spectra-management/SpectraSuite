@@ -9,6 +9,7 @@ import { usePayrollStore } from '@/store/payrollStore'
 import { useSettingsStore } from '@/store/settingsStore'
 import { usePendingVacationIsrStore } from '@/store/pendingVacationIsrStore'
 import { toast } from '@/hooks/useToast'
+import { logAuditEvent } from '@/lib/audit'
 import { formatCurrency } from '@/lib/utils/currency'
 import { generatePdfBlob, downloadBlob } from '@/lib/pdf/generatePdf'
 import { generatePayrollCSV, downloadCSV } from '@/lib/pdf/generateCsv'
@@ -55,6 +56,19 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
         markVacationIsrApplied(e.employee.id, `${startDate}/${endDate}`)
       }
     }
+    void logAuditEvent({
+      action: 'payroll_approved',
+      category: 'payroll',
+      resource_type: 'payroll_run',
+      details: {
+        period: `${startDate}/${endDate}`,
+        country,
+        frequency,
+        employeeCount: totals.employeeCount,
+        totalGross: totals.totalGross,
+        totalNet: totals.totalNet,
+      },
+    })
     setApproved(true)
     setApproving(false)
     toast({ variant: 'success', title: t('payroll.approve.approved') })

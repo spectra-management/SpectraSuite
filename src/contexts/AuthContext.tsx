@@ -1,8 +1,15 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
-import type { Session, User } from '@supabase/supabase-js'
+import { createContext, useContext, useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
+import type { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/lib/supabase'
 import { useSettingsStore } from '@/store/settingsStore'
+import { logAuditEvent } from '@/lib/audit'
+import { SessionTimeoutModal } from '@/components/SessionTimeoutModal'
 import type { ProfileRow, ModulePermissionRow, ModuleId } from '@/types/supabase'
+
+const DEFAULT_TIMEOUT_MIN = 480
+const MIN_TIMEOUT_MIN = 5
+const MAX_TIMEOUT_MIN = 1440
+const clampTimeout = (m: number) => Math.min(MAX_TIMEOUT_MIN, Math.max(MIN_TIMEOUT_MIN, Math.round(m)))
 
 // Supabase only returns the Google provider_token on the INITIAL sign-in event,
 // not from getSession() after a reload. So we cache it (and the refresh token) in
@@ -25,6 +32,10 @@ interface AuthContextValue {
   refreshProfile: () => Promise<void>
   /** Re-run Google OAuth (with Calendar/Tasks scopes) to obtain a fresh provider_token. */
   reconnectGoogle: () => Promise<void>
+  /** Inactivity timeout in minutes (super-admin configurable). */
+  sessionTimeoutMinutes: number
+  /** Apply a new timeout live (called by Suite Settings after saving). */
+  setSessionTimeoutMinutes: (m: number) => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -38,6 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [googleProviderToken, setGoogleProviderToken] = useState<string | null>(
     () => localStorage.getItem(GOOGLE_TOKEN_KEY),
   )
+  const [sessionTimeoutMinutes, setSessionTimeoutMinutesState] = useState(DEFAULT_TIMEOUT_MIN)
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false)
+  const [warningRemainingMs, setWarningRemainingMs] = useState(0)
 
   const loadProfile = useCallback(async (uid: string) => {
     const fetchRow = () =>
@@ -97,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let active = true
 
-    const applySession = async (s: Session | null) => {
+    const applySession = async (s: Session | null, event?: AuthChangeEvent) => {
       if (!active) return
       console.log('[auth] session →', {
         hasSession: !!s,
@@ -127,6 +141,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await loadProfile(s.user.id)
         // Cloud is authoritative for company settings once signed in.
         void useSettingsStore.getState().hydrateCompanyFromCloud()
+        // Load the configured inactivity timeout (company_settings is publicly readable).
+        void supabase
+          .from('company_settings')
+          .select('session_timeout_minutes')
+          .limit(1)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (active && data?.session_timeout_minutes) {
+              setSessionTimeoutMinutesState(clampTimeout(data.session_timeout_minutes))
+            }
+          })
+        // Audit the login (only on the actual sign-in event, not token refreshes).
+        if (event === 'SIGNED_IN') {
+          void logAuditEvent({ action: 'login', category: 'auth', details: { email: s.user.email } })
+        }
       } else {
         setProfile(null)
         setPermissions([])
@@ -136,8 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data }) => applySession(data.session))
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      void applySession(s)
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      void applySession(s, event)
     })
 
     return () => {
@@ -147,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadProfile])
 
   const signOut = useCallback(async () => {
+    await logAuditEvent({ action: 'logout', category: 'auth' })
     await supabase.auth.signOut()
     localStorage.removeItem(GOOGLE_TOKEN_KEY)
     localStorage.removeItem(GOOGLE_REFRESH_KEY)
@@ -158,10 +188,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.assign('/login')
   }, [])
 
+  // Auto-logout on inactivity timeout.
+  const handleSessionExpired = useCallback(async () => {
+    await logAuditEvent({ action: 'session_expired', category: 'auth', details: { reason: 'inactivity' } })
+    await supabase.auth.signOut()
+    localStorage.clear()
+    window.location.href = '/login'
+  }, [])
+
+  // "Stay Logged In": refresh the token and reset the inactivity clock.
+  const lastActivityRef = useRef(Date.now())
+  const warningShownRef = useRef(false)
+  const extendSession = useCallback(async () => {
+    try { await supabase.auth.refreshSession() } catch { /* ignore */ }
+    lastActivityRef.current = Date.now()
+    warningShownRef.current = false
+    setShowTimeoutWarning(false)
+  }, [])
+
+  const setSessionTimeoutMinutes = useCallback((m: number) => {
+    setSessionTimeoutMinutesState(clampTimeout(m))
+    lastActivityRef.current = Date.now()
+  }, [])
+
+  // Inactivity tracking: warn at 95% of the timeout, auto-logout at 100%.
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user) return
+    const timeoutMs = clampTimeout(sessionTimeoutMinutes) * 60_000
+    const warnAtMs = timeoutMs * 0.95
+    lastActivityRef.current = Date.now()
+    warningShownRef.current = false
+
+    // Activity resets the clock — but ignored while the warning is up (the user
+    // must explicitly choose Stay Logged In / Logout there).
+    const onActivity = () => { if (!warningShownRef.current) lastActivityRef.current = Date.now() }
+    const events: (keyof WindowEventMap)[] = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click']
+    events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }))
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - lastActivityRef.current
+      if (elapsed >= timeoutMs) {
+        clearInterval(interval)
+        void handleSessionExpired()
+      } else if (elapsed >= warnAtMs) {
+        warningShownRef.current = true
+        setShowTimeoutWarning(true)
+        setWarningRemainingMs(timeoutMs - elapsed)
+      } else if (warningShownRef.current) {
+        warningShownRef.current = false
+        setShowTimeoutWarning(false)
+      }
+    }, 1000)
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, onActivity))
+      clearInterval(interval)
+    }
+  }, [user, sessionTimeoutMinutes, handleSessionExpired])
+
   const reconnectGoogle = useCallback(async () => {
     // Force a fresh consent so Google returns a new provider_token with the
     // Calendar/Tasks scopes; the SIGNED_IN handler re-caches it on return.
-    await signInWithGoogle()
+    await signInWithGoogle(true)
   }, [])
 
   const isSuperAdmin = profile?.role === 'super_admin'
@@ -189,9 +277,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     refreshProfile,
     reconnectGoogle,
+    sessionTimeoutMinutes,
+    setSessionTimeoutMinutes,
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {user && (
+        <SessionTimeoutModal
+          open={showTimeoutWarning}
+          remainingMs={warningRemainingMs}
+          onStay={() => void extendSession()}
+          onLogout={() => void signOut()}
+        />
+      )}
+    </AuthContext.Provider>
+  )
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useSettingsStore } from '@/store/settingsStore'
+import { logAuditEvent } from '@/lib/audit'
 import { toast } from '@/hooks/useToast'
 import { Toaster } from '@/components/ui/toaster'
 import { UserMenu } from '@/components/layout/UserMenu'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { UsersPanel } from './components/UsersPanel'
+import { SecuritySettingsPanel } from './components/SecuritySettingsPanel'
+import { AuditLogPanel } from './components/AuditLogPanel'
 
 export default function SuiteSettings() {
   const { t, i18n } = useTranslation()
@@ -36,7 +39,9 @@ export default function SuiteSettings() {
   }
 
   const handleSave = () => {
+    const changedFields = (Object.keys(form) as (keyof typeof form)[]).filter((k) => form[k] !== company[k])
     updateCompany(form)
+    void logAuditEvent({ action: 'company_settings_updated', category: 'settings', details: { changedFields } })
     toast({ variant: 'success', title: t('common.success') })
   }
 
@@ -139,8 +144,10 @@ export default function SuiteSettings() {
           </CardContent>
         </Card>
 
-        {/* User management (super_admin only — route is already gated) */}
+        {/* Super-admin only (route is already gated to super_admin) */}
+        <SecuritySettingsPanel />
         <UsersPanel />
+        <AuditLogPanel />
       </main>
       <Toaster />
     </div>

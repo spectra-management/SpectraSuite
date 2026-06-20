@@ -36,8 +36,27 @@ export interface CompanySettingsRow {
   logo_url: string | null
   primary_color: string | null
   secondary_color: string | null
+  session_timeout_minutes: number | null
   created_at: string
   updated_at: string
+}
+
+export type AuditCategory = 'auth' | 'user_management' | 'payroll' | 'vacation' | 'settings' | 'connector'
+
+export interface AuditLogRow {
+  id: string
+  user_id: string | null
+  user_email: string | null
+  action: string
+  category: AuditCategory
+  resource_type: string | null
+  resource_id: string | null
+  details: Record<string, unknown> | null
+  ip_address: string | null
+  user_agent: string | null
+  status: 'success' | 'failure'
+  error_message: string | null
+  created_at: string
 }
 
 export interface IntegrationRow {
@@ -87,6 +106,7 @@ export interface Database {
       company_settings: Table<CompanySettingsRow>
       integrations: Table<IntegrationRow>
       vacation_payments: Table<VacationPaymentRow>
+      audit_log: Table<AuditLogRow>
     }
     Views: Record<string, never>
     Functions: Record<string, never>
