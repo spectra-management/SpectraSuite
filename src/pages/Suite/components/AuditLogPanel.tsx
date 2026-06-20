@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Loader2, ScrollText, Download, Search } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -8,75 +8,65 @@ import { Badge } from '@/components/ui/badge'
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select'
-import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/useToast'
-import type { AuditLogRow, AuditCategory } from '@/types/supabase'
+import { useAuditLog } from '@/hooks/useAuditLog'
+import type { AuditCategory, AuditLogRow } from '@/types/supabase'
 
 const CATEGORIES: AuditCategory[] = ['auth', 'user_management', 'payroll', 'vacation', 'settings', 'connector']
-const PAGE_SIZE = 20
-const FETCH_LIMIT = 500
+const PAGE_SIZE = 25
 
 export function AuditLogPanel() {
   const { t, i18n } = useTranslation()
   const locale = i18n.language.startsWith('es') ? 'es-DO' : 'en-US'
-  const [loading, setLoading] = useState(true)
-  const [rows, setRows] = useState<AuditLogRow[]>([])
-  const [category, setCategory] = useState<string>('all')
-  const [status, setStatus] = useState<string>('all')
+
+  // Filter UI state — combined into a single object passed to the hook, which
+  // re-queries the server (page 0) whenever it changes.
   const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('all')
+  const [status, setStatus] = useState('all')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
-  const [page, setPage] = useState(1)
+  const [exporting, setExporting] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('audit_log')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(FETCH_LIMIT)
-    if (error) toast({ variant: 'destructive', title: t('audit.loadError') })
-    setRows(data ?? [])
-    setLoading(false)
-  }, [t])
+  const filters = useMemo(
+    () => ({ search, category, status, startDate: fromDate, endDate: toDate }),
+    [search, category, status, fromDate, toDate],
+  )
 
-  useEffect(() => { void load() }, [load])
+  const {
+    logs, page, totalCount, totalPages, loading, error,
+    nextPage, prevPage, hasNextPage, hasPrevPage, fetchForExport,
+  } = useAuditLog({ pageSize: PAGE_SIZE, filters })
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return rows.filter((r) => {
-      if (category !== 'all' && r.category !== category) return false
-      if (status !== 'all' && r.status !== status) return false
-      if (fromDate && r.created_at < fromDate) return false
-      if (toDate && r.created_at > `${toDate}T23:59:59`) return false
-      if (q) {
-        const hay = `${r.user_email ?? ''} ${r.action} ${r.resource_type ?? ''} ${r.resource_id ?? ''}`.toLowerCase()
-        if (!hay.includes(q)) return false
-      }
-      return true
-    })
-  }, [rows, category, status, search, fromDate, toDate])
+  const exportCsv = async () => {
+    setExporting(true)
+    try {
+      const rows = await fetchForExport()
+      const headers = ['timestamp', 'user_email', 'action', 'category', 'resource_type', 'resource_id', 'status', 'error_message']
+      const escape = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`
+      const lines = [
+        headers.join(','),
+        ...rows.map((r: AuditLogRow) => [
+          r.created_at, r.user_email, r.action, r.category, r.resource_type, r.resource_id, r.status, r.error_message,
+        ].map(escape).join(',')),
+      ]
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `audit_log_${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      toast({ variant: 'destructive', title: t('audit.loadError'), description: (e as Error).message })
+    } finally {
+      setExporting(false)
+    }
+  }
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const safePage = Math.min(page, totalPages)
-  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
-
-  const exportCsv = () => {
-    const headers = ['timestamp', 'user_email', 'action', 'category', 'resource_type', 'resource_id', 'status', 'error_message']
-    const escape = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`
-    const lines = [
-      headers.join(','),
-      ...filtered.map((r) => [
-        r.created_at, r.user_email, r.action, r.category, r.resource_type, r.resource_id, r.status, r.error_message,
-      ].map(escape).join(',')),
-    ]
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `audit_log_${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+  if (error) {
+    // Surface load failures (e.g. RLS / not super_admin) without crashing the panel.
+    console.error('[audit] viewer error:', error)
   }
 
   return (
@@ -90,26 +80,26 @@ export function AuditLogPanel() {
             </CardTitle>
             <CardDescription>{t('audit.subtitle')}</CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0} className="gap-1.5">
-            <Download className="h-4 w-4" /> {t('audit.exportCsv')}
+          <Button variant="outline" size="sm" onClick={() => void exportCsv()} disabled={exporting || totalCount === 0} className="gap-1.5">
+            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {t('audit.exportCsv')}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Filters */}
+        {/* Filters (server-side) */}
         <div className="flex flex-wrap items-end gap-2">
           <div className="relative min-w-[180px] flex-1">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} placeholder={t('audit.search')} className="pl-8" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('audit.search')} className="pl-8" />
           </div>
-          <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1) }}>
+          <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('audit.allCategories')}</SelectItem>
               {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{t(`audit.category.${c}`)}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1) }}>
+          <Select value={status} onValueChange={setStatus}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('audit.allStatuses')}</SelectItem>
@@ -117,13 +107,13 @@ export function AuditLogPanel() {
               <SelectItem value="failure">{t('audit.failure')}</SelectItem>
             </SelectContent>
           </Select>
-          <Input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1) }} className="w-36" />
-          <Input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1) }} className="w-36" />
+          <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-36" />
+          <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-36" />
         </div>
 
         {loading ? (
           <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        ) : filtered.length === 0 ? (
+        ) : logs.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">{t('audit.empty')}</p>
         ) : (
           <>
@@ -140,7 +130,7 @@ export function AuditLogPanel() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {paginated.map((r) => (
+                  {logs.map((r) => (
                     <tr key={r.id} className="hover:bg-secondary">
                       <td className="whitespace-nowrap px-3 py-2 text-xs text-muted-foreground">
                         {new Date(r.created_at).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' })}
@@ -162,13 +152,13 @@ export function AuditLogPanel() {
               </table>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{t('common.showing', { count: paginated.length, total: filtered.length })}</span>
+              <span>{t('common.showing', { count: logs.length, total: totalCount })}</span>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setPage((p) => p - 1)}>
+                <Button variant="outline" size="sm" disabled={!hasPrevPage} onClick={prevPage}>
                   {t('common.back')}
                 </Button>
-                <span>{safePage} / {totalPages}</span>
-                <Button variant="outline" size="sm" disabled={safePage >= totalPages} onClick={() => setPage((p) => p + 1)}>
+                <span>{page + 1} / {totalPages}</span>
+                <Button variant="outline" size="sm" disabled={!hasNextPage} onClick={nextPage}>
                   {t('common.next')}
                 </Button>
               </div>
