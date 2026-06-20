@@ -92,7 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from('profiles').select('*').eq('id', uid).maybeSingle()
 
     const { data: firstFetch, error } = await fetchRow()
-    console.log('[auth] profile fetch →', { uid, profile: firstFetch, error: error?.message })
     if (error) {
       // A recursion error here ("infinite recursion detected in policy for
       // relation profiles") means the RLS policies need migration 003.
@@ -172,12 +171,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const applySession = async (s: Session | null, event?: AuthChangeEvent) => {
       if (!active) return
-      console.log('[auth] session →', {
-        hasSession: !!s,
-        userId: s?.user?.id,
-        email: s?.user?.email,
-        hasProviderToken: !!s?.provider_token,
-      })
       setSession(s)
       setUser(s?.user ?? null)
       // provider_token (+ refresh token) only arrive on fresh OAuth — persist them
@@ -192,10 +185,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (s?.provider_refresh_token) {
         localStorage.setItem(GOOGLE_REFRESH_KEY, s.provider_refresh_token)
       }
-      console.log('[auth] google provider_token →', {
-        fromSession: !!s?.provider_token,
-        fromCache: !s?.provider_token && !!localStorage.getItem(GOOGLE_TOKEN_KEY),
-      })
       if (s?.user) {
         await loadProfile(s.user.id)
         // Cloud is authoritative for company settings once signed in.

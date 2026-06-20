@@ -163,31 +163,14 @@ export async function fetchHubstaffMembers(
 
     const data = await res.json() as MembersRaw
 
-    if (pageCount === 0) {
-      console.log(
-        '[hubstaff] /members page 1 — members:', data.members?.length ?? 0,
-        '| root users key:', !!data.users, '| root users count:', data.users?.length ?? 0,
-        '| first member keys:', JSON.stringify(Object.keys(data.members?.[0] ?? {})),
-      )
-    }
-
     allRaw.push(...(data.members ?? []))
     const pageUsers = data.users ?? []
     for (const u of pageUsers) sideloadedUsers.set(u.id, { name: u.name, email: (u.email ?? '').trim() })
-
-    // Check #1: verify the Hubstaff members fetch is returning users WITH an email field.
-    if (pageCount === 0) {
-      console.log('[hubstaff members] RAW users (id / name / email):',
-        pageUsers.map((u) => ({ id: u.id, name: u.name, email: u.email ?? '(none)' })))
-    }
-
-    console.log(`[hubstaff members] page ${pageCount + 1} users:`, pageUsers.length, 'total so far:', sideloadedUsers.size)
 
     pageStartId = data.pagination?.next_page_start_id ?? null
     pageCount++
   } while (pageStartId && pageCount < MAX_MEMBER_PAGES)
 
-  console.log(`[hubstaff members] TOTAL users fetched: ${sideloadedUsers.size} across ${pageCount} page(s)`)
 
   // Shape A: inline member.user
   let members: HubstaffMember[] = allRaw
@@ -212,10 +195,6 @@ export async function fetchHubstaffMembers(
     members = allRaw.map((m) => ({ id: m.user_id, name: '', email: '', status: 'active' }))
   }
 
-  console.log('[hubstaff] fetchHubstaffMembers → total:', members.length,
-    'hasNames:', members.some(m => !!m.name), 'hasEmails:', members.some(m => !!m.email))
-  console.log('[hubstaff members] FINAL (id / name / email):',
-    members.map((m) => ({ id: m.id, name: m.name, email: m.email || '(none)' })))
   return { members, tokenUpdate: finalTokenUpdate }
 }
 
@@ -258,7 +237,6 @@ export async function fetchUserProfiles(
   const missing = userIds.filter((id) => !cache.has(id))
 
   if (missing.length > 0) {
-    console.log(`[hubstaff] fetchUserProfiles — fetching ${missing.length} profiles (${userIds.length - missing.length} cached)`)
     const BATCH = 10
     for (let i = 0; i < missing.length; i += BATCH) {
       const batch = missing.slice(i, i + BATCH)
@@ -276,7 +254,6 @@ export async function fetchUserProfiles(
       if (i + BATCH < missing.length) await new Promise<void>((r) => setTimeout(r, 300))
     }
     saveProfileCache(cache)
-    console.log(`[hubstaff] fetchUserProfiles — done, ${cache.size} profiles in cache`)
   }
 
   return new Map(
@@ -343,7 +320,6 @@ export async function fetchHoursForPeriod(
     }
     if (pageStartId) extraParams['page_start_id'] = String(pageStartId)
 
-    console.log(`[hubstaff] activities page ${pageCount + 1}:`, `organizations/${orgId}/activities/daily`, extraParams)
 
     const { res, tokenUpdate } = await fetchHubstaff(
       `organizations/${orgId}/activities/daily`,
@@ -380,7 +356,6 @@ export async function fetchHoursForPeriod(
     pageCount++
   } while (pageStartId && pageCount < MAX_PAGES)
 
-  console.log(`[hubstaff] total activities collected: ${allActivities.length} (${pageCount} page(s))`)
 
   const userDailyHours: Record<string, Record<string, number>> = {}
   for (const activity of allActivities) {

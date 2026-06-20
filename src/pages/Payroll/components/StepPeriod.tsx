@@ -38,7 +38,6 @@ function normalizeForMatch(s: string): string {
 function findHubstaffUserForEmployee(
   emp: Employee,
   hubUsers: HubstaffActivityUser[],
-  debug = false,
 ): HubstaffActivityUser | undefined {
   // a) exact email match (case-insensitive + whitespace-trimmed)
   const empEmail = normalizeEmail(emp.workEmail)
@@ -51,13 +50,6 @@ function findHubstaffUserForEmployee(
   const byName = hubUsers.find((u) => u.name && normalizeForMatch(u.name) === empName)
   if (byName) return byName
 
-  if (debug) {
-    console.log(`[match] FAILED for "${emp.firstName} ${emp.lastName}" (${emp.workEmail})`)
-    console.log(`  BambooHR normalized name: "${empName}"`)
-    console.log(`  Hubstaff users compared (${hubUsers.length} total):`,
-      hubUsers.map((u) => ({ id: u.id, name: u.name, normName: u.name ? normalizeForMatch(u.name) : '', email: u.email })),
-    )
-  }
   return undefined
 }
 
@@ -296,16 +288,9 @@ export function StepPeriod({ onNext }: Props) {
 
         if (hubUsers.length === 0 && Object.keys(hoursMap).length > 0) {
           const userIds = Object.keys(hoursMap).map(Number)
-          console.log(`[StepPeriod] activities users array empty — fetching ${userIds.length} profiles via /v2/users/{id}`)
           const profiles = await fetchUserProfiles(userIds, postFetchState)
           hubUsers = [...profiles.entries()].map(([id, p]) => ({ id, name: p.name, email: p.email }))
-          console.log(`[StepPeriod] profiles fetched: ${hubUsers.length}`, hubUsers.map(u => ({ id: u.id, name: u.name, email: u.email })))
         }
-
-        console.log('[StepPeriod] BambooHR active employees:', activeEmployees.map((e) => ({
-          name: `${e.firstName} ${e.lastName}`, email: e.workEmail,
-        })))
-        console.log('[StepPeriod] hoursMap user IDs:', Object.keys(hoursMap).length, 'hubUsers for matching:', hubUsers.length)
       } catch (err) {
         const msg = err instanceof Error ? err.message : t('errors.fetchFailed')
         toast({ variant: 'destructive', title: 'Hubstaff fetch failed', description: msg + ' — proceeding with manual entry.' })
@@ -318,16 +303,14 @@ export function StepPeriod({ onNext }: Props) {
       let hubstaffData = hubstaffUserId ? hoursMap[hubstaffUserId] : undefined
 
       if (!hubstaffUserId && hubUsers.length > 0) {
-        const matched = findHubstaffUserForEmployee(emp, hubUsers, true)
+        const matched = findHubstaffUserForEmployee(emp, hubUsers)
         if (matched) {
           hubstaffUserId = String(matched.id)
           hubstaffData = hoursMap[hubstaffUserId]
-          console.log(`[StepPeriod] on-the-fly match: ${emp.firstName} ${emp.lastName} → Hubstaff user ${matched.name} (${matched.id})`)
         }
       }
 
       if (!hubstaffUserId) {
-        console.log(`[StepPeriod] no match: ${emp.firstName} ${emp.lastName} (${emp.workEmail})`)
       }
 
       // Salary employees don't track hours in Hubstaff — pay is fixed. Auto-fill the

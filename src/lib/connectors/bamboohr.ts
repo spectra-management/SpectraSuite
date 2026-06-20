@@ -101,24 +101,6 @@ export async function fetchBambooDirectory(
 
   const data = await res.json() as BambooReportResponse
 
-  console.log('[bamboo] payType sample (first 5):',
-    (data.employees ?? []).slice(0, 5).map((e) => ({
-      name: `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim(),
-      payType: e.payType,
-      payPer: e.payPer,
-      payRate: e.payRate,
-    })),
-  )
-
-  // Check #2: verify BambooHR is returning workEmail for the auto-match.
-  const withEmail = (data.employees ?? []).filter((e) => !!e.workEmail).length
-  console.log(`[bamboo] workEmail present on ${withEmail}/${(data.employees ?? []).length} employees. Sample:`,
-    (data.employees ?? []).slice(0, 5).map((e) => ({
-      name: `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim(),
-      workEmail: e.workEmail ?? '(none)',
-    })),
-  )
-
   const employees = (data.employees ?? []).map((e): Employee => {
     const { rate, currency } = parsePayRate(e.payRate)
     return {
@@ -137,13 +119,6 @@ export async function fetchBambooDirectory(
       country: e.country ?? '',
     }
   })
-
-  console.log('[bamboo] payType distribution:',
-    employees.reduce<Record<string, number>>((acc, e) => {
-      acc[e.payType] = (acc[e.payType] ?? 0) + 1
-      return acc
-    }, {}),
-  )
 
   return employees
 }

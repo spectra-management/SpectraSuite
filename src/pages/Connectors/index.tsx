@@ -544,7 +544,6 @@ function HubstaffConnector() {
           // so the mapping panel shows real names instead of "User #ID"
           const noNames = !fetched.some((m) => !!m.name)
           if (noNames && fetched.length > 0) {
-            console.log(`[connectors] no names from /members — fetching ${fetched.length} profiles via /v2/users/{id}`)
             const memberIds = fetched.map((m) => m.id)
             const profiles = await fetchUserProfiles(memberIds, postMembersState)
             if (profiles.size > 0) {
@@ -553,7 +552,6 @@ function HubstaffConnector() {
                 return p ? { ...m, name: p.name, email: p.email } : m
               })
               setMembers(enriched)
-              console.log(`[connectors] enriched ${profiles.size} member(s) with profile data`)
               return
             }
           }
