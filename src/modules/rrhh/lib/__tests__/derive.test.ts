@@ -5,12 +5,11 @@ import type { RrhhEmployee, RrhhTimeOffRequest } from '@/modules/rrhh/types'
 
 function emp(over: Partial<RrhhEmployee> & { id: string }): RrhhEmployee {
   return {
-    id: over.id,
     employeeNumber: '',
-    firstName: over.firstName ?? 'First',
-    lastName: over.lastName ?? over.id,
+    firstName: 'First',
+    lastName: over.id,
     preferredName: '',
-    displayName: over.displayName ?? `First ${over.id}`,
+    displayName: `First ${over.id}`,
     jobTitle: '',
     department: '',
     division: '',
@@ -98,14 +97,12 @@ describe('buildOrgChart', () => {
 
 describe('buildTimeOffBalances', () => {
   const req = (over: Partial<RrhhTimeOffRequest> & { id: string; employeeId: string }): RrhhTimeOffRequest => ({
-    id: over.id,
-    employeeId: over.employeeId,
-    employeeName: over.employeeName ?? '',
+    employeeName: '',
     typeName: 'Vacation',
     typeId: '83',
-    start: over.start ?? '2026-01-01',
-    end: over.end ?? '2026-01-02',
-    days: over.days ?? 1,
+    start: '2026-01-01',
+    end: '2026-01-02',
+    days: 1,
     status: 'approved',
     ...over,
   })
