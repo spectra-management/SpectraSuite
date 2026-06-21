@@ -349,6 +349,127 @@ client `<img src="/api/bamboohr?path=/v1/employees/116/photo/large&subdomain=…
 
 ---
 
+## 6d. Photo UX + custom upload (branch `feature/rrhh-photo-upload`, off `main`)
+
+> Three improvements. **Local commits only; not pushed/merged.** BambooHR stays strictly
+> read-only — the custom upload is **app-local** (Supabase), it NEVER writes to BambooHR.
+
+### What changed
+1. **Bigger profile photo.** The header avatar is now a prominent `xl` size
+   (`h-24 w-24` → `sm:h-28 w-28`, ~96–112px, `rounded-2xl`), responsive on mobile. Only
+   the profile-header avatar changed.
+2. **Directory avatars.** Each directory row now shows the employee photo via the **same
+   `RrhhAvatar`** (no second component): custom Supabase photo → proxied BambooHR photo →
+   initials. Images are `loading="lazy"` + `decoding="async"` so a long list never blocks
+   render and failed photos silently fall back.
+3. **Admin-only custom photo upload (app-local, Supabase).** On the profile header, admins
+   get a camera button → "Upload / Replace / Remove". Uploads are validated client-side
+   (**image/\* only, ≤ 5 MB**), stored in Supabase Storage, and visible to everyone. The
+   new photo appears immediately (optimistic via the store). Remove reverts to the
+   BambooHR/initials photo.
+
+### Admin check used (Improvement 3 gate)
+- **`hasModuleAccess('rrhh', 'admin')`** — the strongest admin-level check available
+  without inventing a new permission. It is true only for users with RRHH `can_admin`, or
+  the bypassing `super_admin` / legacy `module_admin` roles. Exposed as
+  `useRrhhAccess().canManagePhotos`. Non-admins never see the edit control (it is not
+  rendered for them) and the upload/remove functions are only wired to that control.
+  - *To restrict further to super-admins only,* swap the gate to `isSuperAdmin` from
+    `useAuth()`.
+  - ⚠️ UI gating is not security on its own — the **Supabase RLS policies below enforce
+    admin-only writes server-side.**
+
+### Storage approach
+- **Bucket:** `employee-photos` (Supabase Storage), object path **`{bamboohr_id}.{ext}`**.
+- **Override registry table:** `rrhh_employee_photos` records which employee has a custom
+  photo and its public URL, so the app resolves overrides offline-first.
+- **Offline-first**, mirroring the module pattern: a Zustand store
+  (`store/rrhhPhotoStore.ts`) backed by `localStorage` (`spectra_rrhh_photo_overrides`) is
+  the offline cache; Supabase is the shared source of truth. On mount the hook
+  (`hooks/useRrhhPhotos.ts`) does one best-effort cloud fetch and merges it in (cloud
+  wins). Upload/remove write to Supabase **and** the local cache for instant feedback.
+- **Resolution priority in `RrhhAvatar`:** `customSrc` (Supabase) → `src` (proxied
+  BambooHR) → report `photoUrl` → initials. Both profile and directory pass `customSrc`,
+  so a custom photo overrides everywhere automatically.
+- **No BambooHR writes:** `lib/photoStorage.ts` only touches `supabase.storage` and the
+  `rrhh_employee_photos` table. Verified by grep — no `/api/bamboohr` / `fetch` in the
+  photo path.
+
+### ⚠️ MANUAL SUPABASE SETUP REQUIRED (do this in the dashboard — code does NOT create it)
+The code expects the following to exist. **I did not create the bucket, policies, or table**
+(per the guardrails). Please set these up in Supabase:
+
+**1) Storage bucket**
+- Name: **`employee-photos`**
+- **Public: YES (public read).** Rationale: the app is already gated behind corporate
+  Google SSO, and a public bucket lets `<img>` use a stable public URL directly — simplest
+  and fastest for the directory (no per-image signed-URL round-trips). Object names use the
+  BambooHR id, so they are not random but the bucket only exposes employee headshots.
+  - *If you prefer stricter privacy:* make the bucket **private** and add a SELECT policy
+    for authenticated users; the read path would then need `createSignedUrl` instead of
+    `getPublicUrl`. (Tell me and I'll switch the read path — it's a one-function change.)
+
+**2) Storage RLS policies** (Storage → Policies, on `storage.objects` for this bucket)
+- **Read:** public read is automatic for a public bucket. (If you go private instead:
+  allow `SELECT` when `auth.role() = 'authenticated'`.)
+- **Write (upload/update/delete): admins only.** Example policy expression (adjust the
+  admin definition to your `profiles` schema):
+
+```sql
+-- INSERT / UPDATE / DELETE on storage.objects for the employee-photos bucket:
+bucket_id = 'employee-photos'
+AND EXISTS (
+  SELECT 1 FROM public.profiles p
+  WHERE p.id = auth.uid()
+    AND p.role IN ('super_admin', 'module_admin')
+)
+```
+
+(Create three policies — one each for INSERT, UPDATE, DELETE — with the
+`WITH CHECK` / `USING` expression above. If you use the RRHH `can_admin` flag rather than a
+role, point the subquery at your `role_permissions` / `user_module_permissions` instead.)
+
+**3) Override registry table + RLS** — run this SQL manually (I did **not** run it):
+
+```sql
+create table if not exists public.rrhh_employee_photos (
+  employee_id text primary key,            -- BambooHR employee id
+  storage_path text not null,              -- object path in the employee-photos bucket
+  public_url   text not null,              -- cached public URL
+  updated_at   timestamptz not null default now(),
+  updated_by   uuid references auth.users(id)
+);
+
+alter table public.rrhh_employee_photos enable row level security;
+
+-- Read: any signed-in user (so everyone sees custom photos).
+create policy "rrhh_photos_read"
+  on public.rrhh_employee_photos for select
+  to authenticated using (true);
+
+-- Write: admins only (mirror the storage policy's admin definition).
+create policy "rrhh_photos_write"
+  on public.rrhh_employee_photos for all
+  to authenticated
+  using (
+    exists (select 1 from public.profiles p
+            where p.id = auth.uid() and p.role in ('super_admin','module_admin'))
+  )
+  with check (
+    exists (select 1 from public.profiles p
+            where p.id = auth.uid() and p.role in ('super_admin','module_admin'))
+  );
+```
+
+Until the bucket/table exist, the feature degrades gracefully: reads return nothing
+(avatars fall back to BambooHR/initials) and an upload surfaces a clear error toast — no
+crash.
+
+### Gates
+`npm run build` ✅ · `npm run check:imports` ✅ · `npm run test:run` ✅ (89).
+
+---
+
 ## 7. How to Review
 
 ```bash

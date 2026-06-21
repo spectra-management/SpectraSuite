@@ -924,6 +924,18 @@
       "readOnly": "Solo lectura",
       "showing": "Mostrando {{count}} de {{total}}"
     },
+    "photo": {
+      "edit": "Editar foto",
+      "upload": "Subir foto",
+      "replace": "Reemplazar foto",
+      "remove": "Quitar foto personalizada",
+      "uploaded": "Foto actualizada",
+      "removed": "Foto personalizada eliminada",
+      "uploadFailed": "No se pudo subir la foto",
+      "removeFailed": "No se pudo quitar la foto",
+      "invalidType": "Por favor elige un archivo de imagen.",
+      "tooLarge": "La imagen es demasiado grande (máx. 5 MB)."
+    },
     "directory": {
       "title": "Directorio de Empleados",
       "subtitle": "Todos los empleados sincronizados desde BambooHR (solo lectura).",
