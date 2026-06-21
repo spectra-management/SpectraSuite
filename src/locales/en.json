@@ -985,7 +985,53 @@
       "years_one": "{{count}} yr",
       "years_other": "{{count}} yrs",
       "months_one": "{{count}} mo",
-      "months_other": "{{count}} mo"
+      "months_other": "{{count}} mo",
+      "addressInfo": "Address",
+      "personalEmail": "Personal Email",
+      "homePhone": "Home Phone",
+      "address2": "Address Line 2",
+      "zipcode": "ZIP / Postal Code",
+      "nationalId": "National ID / SSN",
+      "idMaskedHint": "The full national ID is hidden. It is only visible to users with elevated HR access.",
+      "payPer": "Pay Frequency",
+      "paySchedule": "Pay Schedule",
+      "payGroup": "Pay Group",
+      "exempt": "FLSA Status",
+      "effectiveDate": "Effective Date",
+      "payHistory": "Pay History",
+      "payReason": "Reason",
+      "compHistoryUnavailable": "Compensation history is not available for this employee; showing the current rate from the directory.",
+      "tabLoading": "Loading…",
+      "tabError": "Could not load this section",
+      "restrictedTitle": "Restricted",
+      "restrictedDesc": "You don't have permission to view this section.",
+      "tabs": {
+        "personal": "Personal",
+        "job": "Job",
+        "compensation": "Compensation",
+        "timeOff": "Time Off",
+        "emergency": "Emergency",
+        "notes": "Notes",
+        "documents": "Documents"
+      },
+      "emergency": {
+        "title": "Emergency Contacts",
+        "primary": "Primary",
+        "email": "Email",
+        "none": "No emergency contacts on record for this employee."
+      },
+      "notes": {
+        "title": "Notes",
+        "notExposed": "BambooHR does not expose employee notes through its read-only API, so none can be shown here."
+      },
+      "documents": {
+        "title": "Documents",
+        "name": "Name",
+        "category": "Category",
+        "date": "Date",
+        "size": "Size",
+        "none": "No documents on record for this employee."
+      }
     },
     "org": {
       "title": "Org Chart",

@@ -56,6 +56,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(response.status).json({ error: text || 'BambooHR API error' })
     }
 
+    // Employee photo endpoint (GET /v1/employees/{id}/photo/{size}) returns binary image
+    // data, not JSON. Stream it through verbatim with its content-type so an <img> can
+    // render it. This branch is ADDITIVE and isolated — no other module requests a
+    // `/photo/` path, so existing JSON behaviour (incl. Nómina's) is unchanged.
+    if (path.includes('/photo/')) {
+      const contentType = response.headers.get('content-type') ?? 'image/jpeg'
+      const buffer = Buffer.from(await response.arrayBuffer())
+      res.setHeader('Content-Type', contentType)
+      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
+      return res.status(200).send(buffer)
+    }
+
     const data: unknown = await response.json()
 
     // Vacation proxy: GET /v1/time_off/requests returns ALL approved time-off types.

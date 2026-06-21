@@ -985,7 +985,53 @@
       "years_one": "{{count}} año",
       "years_other": "{{count}} años",
       "months_one": "{{count}} mes",
-      "months_other": "{{count}} meses"
+      "months_other": "{{count}} meses",
+      "addressInfo": "Dirección",
+      "personalEmail": "Correo Personal",
+      "homePhone": "Teléfono de Casa",
+      "address2": "Dirección Línea 2",
+      "zipcode": "Código Postal",
+      "nationalId": "Cédula / SSN",
+      "idMaskedHint": "La cédula completa está oculta. Solo es visible para usuarios con acceso elevado de RRHH.",
+      "payPer": "Frecuencia de Pago",
+      "paySchedule": "Calendario de Pago",
+      "payGroup": "Grupo de Pago",
+      "exempt": "Estado FLSA",
+      "effectiveDate": "Fecha Efectiva",
+      "payHistory": "Historial de Pago",
+      "payReason": "Motivo",
+      "compHistoryUnavailable": "El historial de compensación no está disponible para este empleado; se muestra la tarifa actual del directorio.",
+      "tabLoading": "Cargando…",
+      "tabError": "No se pudo cargar esta sección",
+      "restrictedTitle": "Restringido",
+      "restrictedDesc": "No tienes permiso para ver esta sección.",
+      "tabs": {
+        "personal": "Personal",
+        "job": "Empleo",
+        "compensation": "Compensación",
+        "timeOff": "Ausencias",
+        "emergency": "Emergencia",
+        "notes": "Notas",
+        "documents": "Documentos"
+      },
+      "emergency": {
+        "title": "Contactos de Emergencia",
+        "primary": "Principal",
+        "email": "Correo",
+        "none": "No hay contactos de emergencia registrados para este empleado."
+      },
+      "notes": {
+        "title": "Notas",
+        "notExposed": "BambooHR no expone las notas del empleado a través de su API de solo lectura, por lo que no se pueden mostrar aquí."
+      },
+      "documents": {
+        "title": "Documentos",
+        "name": "Nombre",
+        "category": "Categoría",
+        "date": "Fecha",
+        "size": "Tamaño",
+        "none": "No hay documentos registrados para este empleado."
+      }
     },
     "org": {
       "title": "Organigrama",

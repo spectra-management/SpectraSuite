@@ -16,6 +16,9 @@ import type {
   RrhhEmployee,
   RrhhEmployeeStatus,
   RrhhTimeOffRequest,
+  RrhhEmergencyContact,
+  RrhhCompensationEntry,
+  RrhhDocument,
 } from '@/modules/rrhh/types'
 
 interface BambooReportEmployee {
@@ -34,8 +37,10 @@ interface BambooReportEmployee {
   supervisor?: string
   supervisorEId?: string | number
   workEmail?: string
+  homeEmail?: string
   mobilePhone?: string
   workPhone?: string
+  homePhone?: string
   gender?: string
   dateOfBirth?: string
   maritalStatus?: string
@@ -44,9 +49,15 @@ interface BambooReportEmployee {
   city?: string
   state?: string
   address1?: string
+  address2?: string
+  zipcode?: string
+  ssn?: string
   payRate?: string
   payType?: string
   payPer?: string
+  paySchedule?: string
+  payGroup?: string
+  exempt?: string
   photoUrl?: string
 }
 
@@ -71,8 +82,10 @@ const REPORT_FIELDS = [
   'supervisor',
   'supervisorEId',
   'workEmail',
+  'homeEmail',
   'mobilePhone',
   'workPhone',
+  'homePhone',
   'gender',
   'dateOfBirth',
   'maritalStatus',
@@ -81,9 +94,15 @@ const REPORT_FIELDS = [
   'city',
   'state',
   'address1',
+  'address2',
+  'zipcode',
+  'ssn',
   'payRate',
   'payType',
   'payPer',
+  'paySchedule',
+  'payGroup',
+  'exempt',
   'photoUrl',
 ] as const
 
@@ -168,8 +187,10 @@ export async function fetchRrhhDirectory(
       supervisor: e.supervisor ?? '',
       supervisorId: e.supervisorEId != null ? String(e.supervisorEId) : '',
       workEmail: e.workEmail ?? '',
+      personalEmail: e.homeEmail ?? '',
       mobilePhone: e.mobilePhone ?? '',
       workPhone: e.workPhone ?? '',
+      homePhone: e.homePhone ?? '',
       gender: e.gender ?? '',
       dateOfBirth: e.dateOfBirth ?? '',
       maritalStatus: e.maritalStatus ?? '',
@@ -178,12 +199,188 @@ export async function fetchRrhhDirectory(
       city: e.city ?? '',
       state: e.state ?? '',
       address: e.address1 ?? '',
+      address2: e.address2 ?? '',
+      zipcode: e.zipcode ?? '',
+      ssn: e.ssn ?? '',
       payRate: rate,
       payRateCurrency: currency,
       payType: mapPayType(e.payType, e.payPer),
+      payPer: e.payPer ?? '',
+      paySchedule: e.paySchedule ?? '',
+      payGroup: e.payGroup ?? '',
+      exempt: e.exempt ?? '',
       photoUrl: e.photoUrl ?? '',
     }
   })
+}
+
+/**
+ * Build a read-only URL to an employee's BambooHR photo, routed through the shared
+ * proxy (GET /v1/employees/{id}/photo/{size}). The proxy streams the binary so an
+ * <img> can render it. Returns '' when credentials/id are missing.
+ *
+ * NOTE: this is a *read* — it only fetches the existing photo. `size` is one of
+ * BambooHR's named sizes: original | large | medium | small | xs | tiny.
+ */
+export function buildPhotoProxyUrl(
+  subdomain: string,
+  apiKey: string,
+  employeeId: string,
+  size: 'large' | 'medium' | 'small' = 'small',
+): string {
+  if (!subdomain || !apiKey || !employeeId) return ''
+  const qs = new URLSearchParams({
+    path: `/v1/employees/${employeeId}/photo/${size}`,
+    subdomain,
+    apiKey,
+  })
+  return `/api/bamboohr?${qs.toString()}`
+}
+
+interface RawTableRow {
+  id?: string | number
+  employeeId?: string | number
+  // values live under a nested object keyed by column alias
+  [key: string]: unknown
+}
+
+function rowStr(row: RawTableRow, ...keys: string[]): string {
+  for (const k of keys) {
+    const v = row[k]
+    if (v != null && String(v).trim() !== '') return String(v).trim()
+  }
+  return ''
+}
+
+/**
+ * Fetch an employee's emergency contacts (read-only) from the BambooHR
+ * `emergencyContacts` table. Returns [] when the account exposes none.
+ * @throws Error with a human-readable message on a hard failure.
+ */
+export async function fetchRrhhEmergencyContacts(
+  subdomain: string,
+  apiKey: string,
+  employeeId: string,
+): Promise<RrhhEmergencyContact[]> {
+  const qs = new URLSearchParams({
+    path: `/v1/employees/${employeeId}/tables/emergencyContacts`,
+    subdomain,
+    apiKey,
+  })
+
+  const res = await fetch(`/api/bamboohr?${qs.toString()}`)
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string }
+    throw new Error(err.error ?? `BambooHR error ${res.status}`)
+  }
+
+  const data = (await res.json()) as RawTableRow[]
+  return (Array.isArray(data) ? data : []).map((r): RrhhEmergencyContact => ({
+    id: String(r.id ?? ''),
+    name: rowStr(r, 'name'),
+    relationship: rowStr(r, 'relationship'),
+    mobilePhone: rowStr(r, 'mobilePhone', 'phone'),
+    homePhone: rowStr(r, 'homePhone'),
+    workPhone: rowStr(r, 'workPhone'),
+    email: rowStr(r, 'email'),
+    isPrimary: rowStr(r, 'primaryContact').toLowerCase() === 'yes',
+  }))
+}
+
+/**
+ * Fetch an employee's compensation history (read-only, SENSITIVE) from the BambooHR
+ * `compensation` table. The latest row is the current pay; earlier rows give effective
+ * dates. Returns [] when the account exposes none.
+ * @throws Error with a human-readable message on a hard failure.
+ */
+export async function fetchRrhhCompensation(
+  subdomain: string,
+  apiKey: string,
+  employeeId: string,
+): Promise<RrhhCompensationEntry[]> {
+  const qs = new URLSearchParams({
+    path: `/v1/employees/${employeeId}/tables/compensation`,
+    subdomain,
+    apiKey,
+  })
+
+  const res = await fetch(`/api/bamboohr?${qs.toString()}`)
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string }
+    throw new Error(err.error ?? `BambooHR error ${res.status}`)
+  }
+
+  const data = (await res.json()) as RawTableRow[]
+  const entries = (Array.isArray(data) ? data : []).map((r): RrhhCompensationEntry => {
+    const { rate, currency } = parsePayRate(rowStr(r, 'rate'))
+    return {
+      id: String(r.id ?? ''),
+      startDate: rowStr(r, 'startDate'),
+      rate,
+      currency,
+      paidPer: rowStr(r, 'paidPer', 'paidPer'),
+      type: rowStr(r, 'type'),
+      reason: rowStr(r, 'reason'),
+    }
+  })
+  // Newest first (most recent effective date is the current compensation).
+  return entries.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''))
+}
+
+interface BambooFile {
+  id?: string | number
+  name?: string
+  originalFileName?: string
+  dateCreated?: string
+  size?: string | number
+  shareWithEmployee?: string | boolean
+}
+interface BambooFileCategory {
+  name?: string
+  files?: BambooFile[]
+}
+interface BambooFilesResponse {
+  categories?: BambooFileCategory[]
+}
+
+/**
+ * Fetch an employee's document metadata (read-only, SENSITIVE) from BambooHR
+ * (GET /v1/employees/{id}/files/view). Only names/categories/dates are read — no file
+ * contents are downloaded. Returns [] when the account exposes none.
+ * @throws Error with a human-readable message on a hard failure.
+ */
+export async function fetchRrhhDocuments(
+  subdomain: string,
+  apiKey: string,
+  employeeId: string,
+): Promise<RrhhDocument[]> {
+  const qs = new URLSearchParams({
+    path: `/v1/employees/${employeeId}/files/view`,
+    subdomain,
+    apiKey,
+  })
+
+  const res = await fetch(`/api/bamboohr?${qs.toString()}`)
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string }
+    throw new Error(err.error ?? `BambooHR error ${res.status}`)
+  }
+
+  const data = (await res.json()) as BambooFilesResponse
+  const out: RrhhDocument[] = []
+  for (const cat of data.categories ?? []) {
+    for (const f of cat.files ?? []) {
+      out.push({
+        id: String(f.id ?? ''),
+        name: f.name ?? f.originalFileName ?? '—',
+        category: cat.name ?? '—',
+        dateCreated: f.dateCreated ?? '',
+        size: f.size != null ? String(f.size) : '',
+        shareWithEmployee: f.shareWithEmployee === true || f.shareWithEmployee === 'yes',
+      })
+    }
+  }
+  return out
 }
 
 interface RawTimeOff {
