@@ -69,6 +69,9 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
     for (const h of employeeHours) {
       const emp = employees.find((e) => e.id === h.employeeId)
       if (!emp) continue
+      // Inactive employees are excluded from the entire run: calculation, totals,
+      // paystubs and reports/exports all derive from `entries` built here.
+      if (emp.payroll_active === false) continue
 
       const empCountry = emp.country?.trim() || (isGlobal ? 'Unknown' : country)
       const empRules = isGlobal ? rulesFor(empCountry) : rules

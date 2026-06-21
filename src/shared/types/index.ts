@@ -20,6 +20,14 @@ export interface Employee {
   hubstaffUserId?: string
   customDeductions?: CustomDeduction[]
   country?: string
+  /**
+   * Spectra-local payroll inclusion flag (NOT the BambooHR `status` above).
+   * Permanent across payroll runs. `false` = excluded from payroll calculation,
+   * Review Hours totals, paystubs and reports (employee still appears in the
+   * employee list). Defaults to active; treat a missing value as active
+   * (compare with `=== false`). Preserved across BambooHR re-sync.
+   */
+  payroll_active: boolean
 }
 
 export interface CustomDeduction {

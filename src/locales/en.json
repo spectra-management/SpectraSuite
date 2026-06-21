@@ -153,6 +153,16 @@
       "inactive": "Inactive",
       "terminated": "Terminated"
     },
+    "payrollStatus": {
+      "activeBadge": "Active in payroll",
+      "inactiveBadge": "Excluded from payroll",
+      "listInactiveBadge": "Inactive in payroll",
+      "activate": "Activate in payroll",
+      "deactivate": "Exclude from payroll",
+      "activatedToast": "Employee activated in payroll",
+      "deactivatedToast": "Employee excluded from payroll",
+      "noPermission": "You don't have permission to change payroll status"
+    },
     "payRateLabel": "{{rate}}/hr",
     "payRateNotSet": "Not set",
     "noEmployees": "No employees found. Sync from BambooHR to get started.",
@@ -169,7 +179,8 @@
       "clearFilters": "Clear Filters",
       "activeFilters": "{{count}} filter active",
       "activeFilters_plural": "{{count}} filters active",
-      "inactiveTerminated": "Inactive / Terminated"
+      "inactiveTerminated": "Inactive / Terminated",
+      "allPayroll": "All (payroll)"
     },
     "reports": {
       "title": "Employee Reports",
@@ -320,7 +331,10 @@
       "unmappedBanner": "{{count}} employee(s) have no Hubstaff mapping — their hours will be 0.",
       "configureMapping": "Configure Mapping →",
       "calculateSolo": "Calculate",
-      "soloPaystub": "Preview Stub"
+      "soloPaystub": "Preview Stub",
+      "include": "Include",
+      "includeTooltip": "Unchecking marks the employee inactive for all future payroll until reactivated",
+      "excludedFromPayroll": "Excluded from payroll"
     },
     "calculate": {
       "title": "Payroll Calculation",

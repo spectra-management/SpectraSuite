@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Badge } from '@/shared/components/ui/badge'
+import { Checkbox } from '@/shared/components/ui/checkbox'
 import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { usePaymentMethodsStore } from '@/shared/store/paymentMethodsStore'
 import { useBankAccountsStore } from '@/shared/store/bankAccountsStore'
@@ -20,6 +21,9 @@ import { calculateVacationPay, yearsOfService } from '@/modules/nomina/lib/vacat
 import { fetchVacations, getVacationsForEmployee, getVacationsOverlappingPeriod, type VacationRequest } from '@/modules/nomina/lib/connectors/bamboohr-vacations'
 import { PAYMENT_METHOD_LABELS } from '@/modules/nomina/lib/pdf/paystubLabels'
 import { SinglePaystubModal } from './SinglePaystubModal'
+import { useAuth } from '@/shared/context/AuthContext'
+import { isPayrollActive, setEmployeePayrollActive } from '@/modules/nomina/lib/employeePayrollStatus'
+import { toast } from '@/shared/hooks/useToast'
 import type { EmployeeHoursEntry, Employee, PaymentMethod } from '@/shared/types'
 
 const PAYMENT_ICON: Record<PaymentMethod, typeof Banknote> = {
@@ -76,6 +80,20 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
   const bamboo = useSettingsStore((s) => s.bamboohr)
   const pendingVacationIsr = usePendingVacationIsrStore((s) => s.pending)
   const uiLang = i18n.language?.startsWith('es') ? 'es' : 'en'
+  const { hasModuleAccess } = useAuth()
+  const canEditPayroll = hasModuleAccess('nomina', 'edit')
+
+  const togglePayrollActive = (emp: Employee, include: boolean) => {
+    if (!canEditPayroll) return
+    setEmployeePayrollActive(emp, include, 'review_hours')
+    toast({
+      variant: include ? 'success' : 'default',
+      title: include
+        ? t('employees.payrollStatus.activatedToast')
+        : t('employees.payrollStatus.deactivatedToast'),
+    })
+  }
+
   // Pending vacation ISR is collected on the 2nd fortnight (period start day ≥ 16).
   const isSecondFortnight = frequency === 'biweekly' && new Date(startDate + 'T00:00:00').getDate() > 15
 
@@ -183,7 +201,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
     }
     return Object.entries(acc).sort((a, b) => b[1] - a[1])
   }, [hours, employees])
-  const colCount = isGlobal ? 10 : 9
+  const colCount = isGlobal ? 11 : 10
 
   return (
     <div className="space-y-4">
@@ -316,6 +334,12 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-secondary">
+                  <th
+                    className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12"
+                    title={t('payroll.review.includeTooltip')}
+                  >
+                    {t('payroll.review.include')}
+                  </th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground w-44">
                     {t('payroll.review.employee')}
                   </th>
@@ -362,9 +386,19 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                     const emp = employees.find((e) => e.id === h.employeeId)
                     if (!emp) return null
                     const total = totalHours(h)
+                    const active = isPayrollActive(emp)
                     return (
-                      <tr key={h.employeeId} className="hover:bg-secondary">
-                        <td className="px-5 py-3">
+                      <tr key={h.employeeId} className={`hover:bg-secondary ${active ? '' : 'opacity-50'}`}>
+                        <td className="px-3 py-3 text-center">
+                          <Checkbox
+                            checked={active}
+                            disabled={!canEditPayroll}
+                            onCheckedChange={(v) => togglePayrollActive(emp, v === true)}
+                            aria-label={t('payroll.review.include')}
+                            title={t('payroll.review.includeTooltip')}
+                          />
+                        </td>
+                        <td className={`px-5 py-3 ${active ? '' : 'line-through'}`}>
                           <div className="flex items-center gap-2">
                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
                               {getInitials(emp.firstName, emp.lastName)}
@@ -488,9 +522,10 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
                         <td className="px-3 py-3 text-center">
                           <button
                             type="button"
-                            title={t('payroll.review.soloPaystub')}
+                            title={active ? t('payroll.review.soloPaystub') : t('payroll.review.excludedFromPayroll')}
+                            disabled={!active}
                             onClick={() => setSoloTarget({ employee: emp, hoursEntry: h })}
-                            className="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
+                            className="inline-flex items-center justify-center h-7 w-7 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300 transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-emerald-50 disabled:hover:border-emerald-200"
                           >
                             <Calculator className="h-3.5 w-3.5" />
                           </button>

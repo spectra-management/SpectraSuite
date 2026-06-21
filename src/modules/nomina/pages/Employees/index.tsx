@@ -14,6 +14,7 @@ import { fetchBambooDirectory } from '@/modules/nomina/lib/connectors/bamboohr'
 import { toast } from '@/shared/hooks/useToast'
 import { formatPayRate, formatDate, getInitials, normalize } from '@/shared/lib/utils'
 import { EmployeeReports } from './EmployeeReports'
+import { isPayrollActive } from '@/modules/nomina/lib/employeePayrollStatus'
 import type { Employee } from '@/shared/types'
 
 const PAGE_SIZE = 25
@@ -67,6 +68,9 @@ export default function Employees() {
   const [statusFilter, setStatusFilter] = useState<string>(
     () => localStorage.getItem('spectra_employees_status_filter') ?? 'Active',
   )
+  // Payroll inclusion filter (separate from BambooHR status). Default 'all' so the
+  // list shows everyone, including payroll-inactive employees.
+  const [payrollFilter, setPayrollFilter] = useState<string>('all')
   const [sortCol, setSortCol] = useState<SortCol | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [page, setPage] = useState(1)
@@ -98,6 +102,7 @@ export default function Employees() {
     payTypeFilter !== 'all',
     countryFilter !== 'all',
     statusFilter !== 'Active',   // 'Active' is the default, not a filter override
+    payrollFilter !== 'all',
     !!search,
   ].filter(Boolean).length
 
@@ -110,6 +115,7 @@ export default function Employees() {
     const defaultStatus = 'Active'
     setStatusFilter(defaultStatus)
     localStorage.setItem('spectra_employees_status_filter', defaultStatus)
+    setPayrollFilter('all')
     setPage(1)
   }
 
@@ -137,6 +143,8 @@ export default function Employees() {
         }
         if (statusFilter === 'Active' && e.status !== 'Active') return false
         if (statusFilter === 'not-active' && e.status === 'Active') return false
+        if (payrollFilter === 'active' && !isPayrollActive(e)) return false
+        if (payrollFilter === 'inactive' && isPayrollActive(e)) return false
         return true
       })
       .sort((a, b) => {
@@ -147,7 +155,7 @@ export default function Employees() {
         if (sortCol === 'hireDate') cmp = (a.hireDate || '').localeCompare(b.hireDate || '')
         return sortDir === 'asc' ? cmp : -cmp
       })
-  }, [employees, search, deptFilter, titleFilter, payTypeFilter, countryFilter, statusFilter, sortCol, sortDir])
+  }, [employees, search, deptFilter, titleFilter, payTypeFilter, countryFilter, statusFilter, payrollFilter, sortCol, sortDir])
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -173,7 +181,13 @@ export default function Employees() {
       const merged = synced.map((fresh) => {
         const existing = employees.find((e) => e.id === fresh.id)
         return existing
-          ? { ...fresh, customDeductions: existing.customDeductions, hubstaffUserId: existing.hubstaffUserId }
+          ? {
+              ...fresh,
+              customDeductions: existing.customDeductions,
+              hubstaffUserId: existing.hubstaffUserId,
+              // Preserve the Spectra-local payroll override across BambooHR re-sync.
+              payroll_active: existing.payroll_active,
+            }
           : fresh
       })
       setEmployees(merged)
@@ -284,6 +298,18 @@ export default function Employees() {
               </SelectContent>
             </Select>
 
+            {/* Payroll inclusion filter */}
+            <Select value={payrollFilter} onValueChange={handleFilterChange(setPayrollFilter)}>
+              <SelectTrigger className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('employees.filters.allPayroll')}</SelectItem>
+                <SelectItem value="active">{t('employees.payrollStatus.activeBadge')}</SelectItem>
+                <SelectItem value="inactive">{t('employees.payrollStatus.listInactiveBadge')}</SelectItem>
+              </SelectContent>
+            </Select>
+
             {/* Clear filters */}
             {activeFilterCount > 0 && (
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
@@ -351,7 +377,7 @@ export default function Employees() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {paginated.map((emp) => (
-                      <tr key={emp.id} className="hover:bg-secondary transition-colors">
+                      <tr key={emp.id} className={`hover:bg-secondary transition-colors ${isPayrollActive(emp) ? '' : 'opacity-60'}`}>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <span className="text-base leading-none shrink-0" title={emp.country || 'Unknown'}>
@@ -387,6 +413,11 @@ export default function Employees() {
                             <Badge variant={emp.payType === 'Hourly' ? 'info' : 'secondary'} className="text-[10px]">
                               {emp.payType}
                             </Badge>
+                            {!isPayrollActive(emp) && (
+                              <Badge variant="secondary" className="text-[10px] border-amber-200 bg-amber-50 text-amber-700">
+                                {t('employees.payrollStatus.listInactiveBadge')}
+                              </Badge>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4">

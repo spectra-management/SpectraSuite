@@ -153,6 +153,16 @@
       "inactive": "Inactivo",
       "terminated": "Terminado"
     },
+    "payrollStatus": {
+      "activeBadge": "Activo en nómina",
+      "inactiveBadge": "Excluido de nómina",
+      "listInactiveBadge": "Inactivo en nómina",
+      "activate": "Activar en nómina",
+      "deactivate": "Excluir de nómina",
+      "activatedToast": "Empleado activado en nómina",
+      "deactivatedToast": "Empleado excluido de nómina",
+      "noPermission": "No tienes permiso para cambiar el estado de nómina"
+    },
     "payRateLabel": "{{rate}}/hr",
     "payRateNotSet": "Sin configurar",
     "noEmployees": "No se encontraron empleados. Sincroniza desde BambooHR para comenzar.",
@@ -169,7 +179,8 @@
       "clearFilters": "Limpiar Filtros",
       "activeFilters": "{{count}} filtro activo",
       "activeFilters_plural": "{{count}} filtros activos",
-      "inactiveTerminated": "Inactivo / Terminado"
+      "inactiveTerminated": "Inactivo / Terminado",
+      "allPayroll": "Todos (nómina)"
     },
     "reports": {
       "title": "Reportes de Empleados",
@@ -320,7 +331,10 @@
       "unmappedBanner": "{{count}} empleado(s) no tienen mapeo de Hubstaff — sus horas serán 0.",
       "configureMapping": "Configurar mapeo →",
       "calculateSolo": "Calcular",
-      "soloPaystub": "Ver comprobante"
+      "soloPaystub": "Ver comprobante",
+      "include": "Incluir",
+      "includeTooltip": "Desmarcar marca al empleado como inactivo para toda la nómina futura hasta reactivarlo",
+      "excludedFromPayroll": "Excluido de nómina"
     },
     "calculate": {
       "title": "Cálculo de Nómina",

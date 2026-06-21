@@ -117,6 +117,9 @@ export async function fetchBambooDirectory(
       status: mapStatus(e.employmentHistoryStatus),
       customDeductions: [],
       country: e.country ?? '',
+      // New employees default to active in payroll. On re-sync, the caller
+      // (Employees handleSync) preserves the existing override for known employees.
+      payroll_active: true,
     }
   })
 

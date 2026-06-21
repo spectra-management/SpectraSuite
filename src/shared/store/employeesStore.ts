@@ -15,7 +15,12 @@ interface EmployeesState {
 }
 
 export const useEmployeesStore = create<EmployeesState>((set, get) => ({
-  employees: storage.get<Employee[]>(STORAGE_KEYS.EMPLOYEES) ?? [],
+  // Normalize legacy records persisted before payroll_active existed: a missing
+  // value means "active in payroll" (the default).
+  employees: (storage.get<Employee[]>(STORAGE_KEYS.EMPLOYEES) ?? []).map((e) => ({
+    ...e,
+    payroll_active: e.payroll_active !== false,
+  })),
   lastSync: null,
 
   setEmployees: (employees) => {

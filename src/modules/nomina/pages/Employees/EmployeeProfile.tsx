@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Plus, Trash2, Pencil, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Pencil, CheckCircle2, Power, PowerOff } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -26,6 +26,8 @@ import { formatDate, getInitials } from '@/shared/lib/utils'
 import { formatCurrency, currencySymbol } from '@/shared/lib/utils/currency'
 import { PAYMENT_METHOD_LABELS } from '@/modules/nomina/lib/pdf/paystubLabels'
 import { VacationInfoSection } from './VacationInfoSection'
+import { useAuth } from '@/shared/context/AuthContext'
+import { isPayrollActive, setEmployeePayrollActive } from '@/modules/nomina/lib/employeePayrollStatus'
 import type { CustomDeduction, PaymentMethod } from '@/shared/types'
 
 const BANK_FIELD_LABELS = {
@@ -70,6 +72,8 @@ export default function EmployeeProfile() {
   const bankAccounts = useBankAccountsStore((s) => s.accounts)
   const setBankAccount = useBankAccountsStore((s) => s.setAccount)
   const uiLang = i18n.language?.startsWith('es') ? 'es' : 'en'
+  const { hasModuleAccess } = useAuth()
+  const canEditPayroll = hasModuleAccess('nomina', 'edit')
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -146,6 +150,18 @@ export default function EmployeeProfile() {
 
   const statusVariant = employee.status === 'Active' ? 'default' : employee.status === 'Inactive' ? 'secondary' : 'destructive'
 
+  const payrollActive = isPayrollActive(employee)
+
+  const handleTogglePayrollActive = () => {
+    if (!canEditPayroll) return
+    const next = !payrollActive
+    setEmployeePayrollActive(employee, next, 'profile')
+    toast({
+      variant: next ? 'success' : 'default',
+      title: next ? t('employees.payrollStatus.activatedToast') : t('employees.payrollStatus.deactivatedToast'),
+    })
+  }
+
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
@@ -166,17 +182,34 @@ export default function EmployeeProfile() {
               {getInitials(employee.firstName, employee.lastName)}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-xl font-bold text-foreground">
                   {employee.firstName} {employee.lastName}
                 </h1>
                 <Badge variant={statusVariant}>
                   {t(`employees.status.${employee.status.toLowerCase()}`)}
                 </Badge>
+                <Badge variant={payrollActive ? 'default' : 'secondary'}>
+                  {payrollActive
+                    ? t('employees.payrollStatus.activeBadge')
+                    : t('employees.payrollStatus.inactiveBadge')}
+                </Badge>
               </div>
               <p className="text-sm text-muted-foreground">{employee.jobTitle} {employee.department ? `· ${employee.department}` : ''}</p>
               <p className="text-sm text-muted-foreground">{employee.workEmail}</p>
             </div>
+            <Button
+              variant={payrollActive ? 'outline' : 'default'}
+              size="sm"
+              onClick={handleTogglePayrollActive}
+              disabled={!canEditPayroll}
+              title={!canEditPayroll ? t('employees.payrollStatus.noPermission') : undefined}
+              className="shrink-0 gap-1.5"
+            >
+              {payrollActive
+                ? <><PowerOff className="h-3.5 w-3.5" />{t('employees.payrollStatus.deactivate')}</>
+                : <><Power className="h-3.5 w-3.5" />{t('employees.payrollStatus.activate')}</>}
+            </Button>
           </div>
         </CardContent>
       </Card>
