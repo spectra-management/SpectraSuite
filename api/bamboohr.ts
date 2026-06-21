@@ -5,19 +5,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { path, subdomain, apiKey, ...extraQuery } = req.query
+  const { path, subdomain: qSubdomain, apiKey: qApiKey, ...extraQuery } = req.query
 
   if (!path || typeof path !== 'string') {
     return res.status(400).json({ error: 'path parameter is required' })
   }
-  if (!subdomain || typeof subdomain !== 'string') {
+
+  // Credential resolution. A client-provided value takes precedence (this preserves the
+  // existing Nómina behaviour exactly — those callers still pass their key), otherwise we
+  // fall back to the server-side environment. The photo path intentionally omits apiKey
+  // from the client URL so the secret never appears in browser history / logs / the
+  // Network tab — it is supplied HERE, server-side, from BAMBOOHR_API_KEY.
+  const subdomain =
+    (typeof qSubdomain === 'string' && qSubdomain) || process.env.BAMBOOHR_SUBDOMAIN || ''
+  const apiKey =
+    (typeof qApiKey === 'string' && qApiKey) || process.env.BAMBOOHR_API_KEY || ''
+
+  if (!subdomain) {
     return res.status(400).json({ error: 'subdomain parameter is required' })
   }
-  if (!apiKey || typeof apiKey !== 'string') {
+  if (!apiKey) {
     return res.status(400).json({ error: 'apiKey parameter is required' })
   }
 
   const credentials = Buffer.from(`${apiKey}:x`).toString('base64')
+  const isPhoto = path.includes('/photo/')
 
   // Forward extra query params (e.g., format=JSON for custom reports)
   const qs = new URLSearchParams()
@@ -30,7 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const headers: Record<string, string> = {
       Authorization: `Basic ${credentials}`,
-      Accept: 'application/json',
+      // Photo requests must NOT ask for JSON — BambooHR returns the raw image binary.
+      Accept: isPhoto ? 'image/*' : 'application/json',
     }
 
     const fetchOptions: RequestInit = {
@@ -57,15 +70,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Employee photo endpoint (GET /v1/employees/{id}/photo/{size}) returns binary image
-    // data, not JSON. Stream it through verbatim with its content-type so an <img> can
-    // render it. This branch is ADDITIVE and isolated — no other module requests a
-    // `/photo/` path, so existing JSON behaviour (incl. Nómina's) is unchanged.
-    if (path.includes('/photo/')) {
-      const contentType = response.headers.get('content-type') ?? 'image/jpeg'
+    // data, not JSON. Read it as an arraybuffer (NOT .json()) and write the RAW bytes
+    // with an image/* Content-Type so the browser <img> can render it.
+    //
+    // We use res.end(buffer) — not res.send()/res.json() — to write the bytes verbatim:
+    // res.send() can re-infer / mislabel the Content-Type (the previous bug surfaced the
+    // photo as Type "json"), whereas res.end() honours the header we set and never
+    // JSON-serialises. The upstream Content-Type is trusted only when it is actually an
+    // image/* type; otherwise we default to image/jpeg.
+    //
+    // This branch is ADDITIVE and isolated — no other module requests a `/photo/` path,
+    // so existing JSON behaviour (incl. Nómina's) below is unchanged.
+    if (isPhoto) {
+      const upstreamType = response.headers.get('content-type') ?? ''
+      const contentType = upstreamType.toLowerCase().startsWith('image/')
+        ? upstreamType
+        : 'image/jpeg'
       const buffer = Buffer.from(await response.arrayBuffer())
       res.setHeader('Content-Type', contentType)
+      res.setHeader('Content-Length', String(buffer.length))
       res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
-      return res.status(200).send(buffer)
+      res.status(200)
+      return res.end(buffer)
     }
 
     const data: unknown = await response.json()

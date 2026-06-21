@@ -100,7 +100,9 @@ export default function Profile() {
   }
 
   const requests = timeOff.filter((r) => r.employeeId === id)
-  const photoSrc = buildPhotoProxyUrl(bamboohr.subdomain, bamboohr.apiKey, employee.id, 'large')
+  // No apiKey here on purpose — the proxy adds the credential server-side (see
+  // buildPhotoProxyUrl / api/bamboohr.ts). The key must never reach a client URL.
+  const photoSrc = buildPhotoProxyUrl(bamboohr.subdomain, employee.id, 'large')
 
   // Tab set — sensitive tabs (Compensation, Documents) are hidden entirely without access.
   const tabs: RrhhTab[] = [

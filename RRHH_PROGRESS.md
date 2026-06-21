@@ -289,6 +289,66 @@ existing shared `settingsStore.bamboohr` config.
 
 ---
 
+## 6c. Photo endpoint fixes (branch `feature/fix-rrhh-photo`, off `main`)
+
+> Fixes two bugs in the employee-photo flow that shipped with §6b. **Local commits only;
+> not pushed/merged.** BambooHR access stays **read-only (GET)**.
+
+### Bug 1 — proxy returned JSON instead of image bytes ✅ FIXED
+- **Symptom:** the photo request returned `200`, ~45 kB, but `Type = json`, so the
+  `<img>` couldn't render it and the avatar fell back to initials.
+- **Cause:** the `/photo/` branch used `res.send(buffer)` and trusted the upstream
+  Content-Type while the request asked for `Accept: application/json`. `res.send()` can
+  re-infer / mislabel the response as JSON.
+- **Fix (`api/bamboohr.ts`):**
+  - Photo requests now send `Accept: image/*` (not `application/json`).
+  - The branch reads `response.arrayBuffer()` (never `.json()`), sets `Content-Type` to
+    the upstream type **only when it is actually `image/*`** (else defaults to
+    `image/jpeg`), sets `Content-Length`, and writes the **raw bytes with
+    `res.end(buffer)`** — not `res.send()`/`res.json()` — so the bytes go out verbatim
+    with the header we set.
+  - Branch is still isolated to `/photo/` paths; **non-photo JSON behaviour (incl.
+    Nómina) is unchanged.**
+
+### Bug 2 — apiKey exposed in the client URL ✅ FIXED
+- **Symptom:** the photo request URL ended with `&apiKey=33d42…`, leaking the BambooHR
+  key into browser history, server logs, and the Network tab.
+- **Fix:**
+  - `buildPhotoProxyUrl()` (RRHH connector) **no longer accepts or appends `apiKey`** —
+    it now builds `/api/bamboohr?path=/v1/employees/{id}/photo/{size}&subdomain=…` only.
+    The caller in `pages/Profile/index.tsx` was updated to match.
+  - The proxy resolves the credential as **client-query value → else
+    `process.env.BAMBOOHR_API_KEY`** (and subdomain → else `BAMBOOHR_SUBDOMAIN`). Because
+    a client-provided key still takes precedence, **Nómina's existing calls are byte-for-
+    byte unchanged**; the photo path simply omits the key and the proxy supplies it
+    server-side.
+  - **Confirmed:** no `apiKey` appears in any client-side photo URL
+    (`grep photo … | grep apiKey` → none).
+
+### Pre-existing note (flagged, NOT changed)
+- Nómina's non-photo connectors (`fetchBambooDirectory`, etc.) **still pass `apiKey` in
+  the query string** — this is the original app pattern and out of scope for this fix.
+  The env fallback added above is **additive** and does not alter their behaviour. If you
+  want to harden those too, move them to the same env-credential pattern in a follow-up
+  (would touch shared Nómina behaviour, so flagging rather than doing it here).
+
+### ⚠️ Deployment requirement
+- Because the photo URL no longer carries the key, the photo only renders when
+  **`BAMBOOHR_API_KEY`** (and **`BAMBOOHR_SUBDOMAIN`**, unless the client passes it) are
+  set in the Vercel environment. Both are already documented in `.env.example`. If they
+  are unset in prod, the photo fetch fails **gracefully → initials avatar** (no error
+  surfaced to the user).
+
+### Flow (verified by reasoning)
+client `<img src="/api/bamboohr?path=/v1/employees/116/photo/large&subdomain=…">` (no key)
+→ proxy adds `Authorization: Basic base64(BAMBOOHR_API_KEY:x)` server-side
+→ `GET` BambooHR photo with `Accept: image/*`
+→ proxy returns **raw bytes** with `Content-Type: image/*`
+→ `<img>` renders it. Gates: `npm run build` ✅ · `npm run check:imports` ✅ ·
+`npm run test:run` ✅ (89).
+
+---
+
 ## 7. How to Review
 
 ```bash
