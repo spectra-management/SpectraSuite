@@ -9,10 +9,13 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
 import { Pagination } from '@/shared/components/ui/pagination'
 import { formatDate, normalize } from '@/shared/lib/utils'
+import { useSettingsStore } from '@/shared/store/settingsStore'
 import { useRrhhDirectory } from '@/modules/rrhh/hooks/useRrhhDirectory'
+import { useRrhhPhotos } from '@/modules/rrhh/hooks/useRrhhPhotos'
 import { RrhhPageHeader } from '@/modules/rrhh/components/RrhhPageHeader'
 import { RrhhAvatar } from '@/modules/rrhh/components/RrhhAvatar'
 import { NotConnectedCard, LoadErrorCard, EmptyStateCard } from '@/modules/rrhh/components/RrhhStates'
+import { buildPhotoProxyUrl } from '@/modules/rrhh/lib/connectors/bamboohr'
 import { countryFlag } from '@/modules/rrhh/lib/format'
 import type { RrhhEmployeeStatus } from '@/modules/rrhh/types'
 
@@ -36,6 +39,8 @@ function SortIcon({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol | 
 export default function Directory() {
   const { t } = useTranslation()
   const { employees, syncing, error, connected, sync, lastSync } = useRrhhDirectory()
+  const { signedUrlFor } = useRrhhPhotos()
+  const subdomain = useSettingsStore((s) => s.bamboohr.subdomain)
 
   const [search, setSearch] = useState('')
   const [deptFilter, setDeptFilter] = useState('all')
@@ -241,7 +246,12 @@ export default function Directory() {
                             <span className="text-base leading-none shrink-0" title={emp.country || 'Unknown'}>
                               {countryFlag(emp.country)}
                             </span>
-                            <RrhhAvatar employee={emp} size="sm" />
+                            <RrhhAvatar
+                              employee={emp}
+                              customSrc={signedUrlFor(emp.id)}
+                              src={buildPhotoProxyUrl(subdomain, emp.id, 'small')}
+                              size="sm"
+                            />
                             <div className="min-w-0">
                               <p className="font-medium text-foreground">{emp.displayName}</p>
                               <p className="text-xs text-muted-foreground">{emp.workEmail || '—'}</p>

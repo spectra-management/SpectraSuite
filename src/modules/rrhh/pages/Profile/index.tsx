@@ -18,7 +18,7 @@ import { useSettingsStore } from '@/shared/store/settingsStore'
 import { useRrhhDirectory } from '@/modules/rrhh/hooks/useRrhhDirectory'
 import { useRrhhTimeOff } from '@/modules/rrhh/hooks/useRrhhTimeOff'
 import { useRrhhAccess } from '@/modules/rrhh/lib/permissions'
-import { RrhhAvatar } from '@/modules/rrhh/components/RrhhAvatar'
+import { RrhhPhotoEditor } from '@/modules/rrhh/components/RrhhPhotoEditor'
 import { RrhhTabBar, type RrhhTab } from '@/modules/rrhh/components/RrhhTabs'
 import { NotConnectedCard } from '@/modules/rrhh/components/RrhhStates'
 import { buildPhotoProxyUrl } from '@/modules/rrhh/lib/connectors/bamboohr'
@@ -55,7 +55,7 @@ export default function Profile() {
   const { t } = useTranslation()
   const { employees, connected } = useRrhhDirectory()
   const { timeOff } = useRrhhTimeOff()
-  const { canViewSensitive } = useRrhhAccess()
+  const { canViewSensitive, canManagePhotos } = useRrhhAccess()
   const bamboohr = useSettingsStore((s) => s.bamboohr)
 
   const [activeTab, setActiveTab] = useState<TabId>('personal')
@@ -130,7 +130,11 @@ export default function Profile() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start gap-5">
-            <RrhhAvatar employee={employee} src={photoSrc} size="lg" />
+            <RrhhPhotoEditor
+              employee={employee}
+              proxiedSrc={photoSrc}
+              canEdit={canManagePhotos}
+            />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-xl font-bold text-foreground">{employee.displayName}</h1>

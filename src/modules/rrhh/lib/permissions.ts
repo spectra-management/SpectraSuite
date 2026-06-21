@@ -16,17 +16,27 @@
  *     elsewhere in the app.
  *
  * If you'd rather restrict sensitive HR data even further (to `'admin'` only), change
- * the single `action` argument below. Documented in RRHH_PROGRESS.md for confirmation.
+ * the `'edit'` argument below. Documented in RRHH_PROGRESS.md for confirmation.
+ *
+ * ADMIN-ONLY actions (custom photo upload/remove) use the STRONGER `'admin'` gate:
+ * `hasModuleAccess('rrhh', 'admin')` → true only for `can_admin` on RRHH, or the
+ * bypassing `super_admin` / legacy `module_admin` roles. This is the strongest
+ * admin-level check available without inventing a new permission.
  */
 
 import { useAuth } from '@/shared/context/AuthContext'
 
 export interface RrhhAccess {
-  /** May the viewer see Compensation, Documents, and the unmasked national ID? */
+  /** May the viewer see Compensation, Documents, and the unmasked national ID? (edit-level) */
   canViewSensitive: boolean
+  /** May the viewer upload/remove a custom employee photo? (admin-level) */
+  canManagePhotos: boolean
 }
 
 export function useRrhhAccess(): RrhhAccess {
   const { hasModuleAccess } = useAuth()
-  return { canViewSensitive: hasModuleAccess('rrhh', 'edit') }
+  return {
+    canViewSensitive: hasModuleAccess('rrhh', 'edit'),
+    canManagePhotos: hasModuleAccess('rrhh', 'admin'),
+  }
 }
