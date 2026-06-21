@@ -39,7 +39,7 @@ function SortIcon({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol | 
 export default function Directory() {
   const { t } = useTranslation()
   const { employees, syncing, error, connected, sync, lastSync } = useRrhhDirectory()
-  const { customUrlFor } = useRrhhPhotos()
+  const { signedUrlFor } = useRrhhPhotos()
   const subdomain = useSettingsStore((s) => s.bamboohr.subdomain)
 
   const [search, setSearch] = useState('')
@@ -248,7 +248,7 @@ export default function Directory() {
                             </span>
                             <RrhhAvatar
                               employee={emp}
-                              customSrc={customUrlFor(emp.id)}
+                              customSrc={signedUrlFor(emp.id)}
                               src={buildPhotoProxyUrl(subdomain, emp.id, 'small')}
                               size="sm"
                             />

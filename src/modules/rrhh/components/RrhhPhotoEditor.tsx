@@ -24,20 +24,20 @@ import type { RrhhEmployee } from '@/modules/rrhh/types'
 export function RrhhPhotoEditor({
   employee,
   proxiedSrc,
-  customSrc,
   canEdit,
 }: {
   employee: RrhhEmployee
   /** Proxied BambooHR photo URL. */
   proxiedSrc?: string
-  /** Current custom (Supabase) photo URL, if any. */
-  customSrc?: string
   /** Whether the current user may edit the photo (RBAC admin check). */
   canEdit: boolean
 }) {
   const { t } = useTranslation()
-  const { upload, remove, busy } = useRrhhPhotos()
+  const { signedUrlFor, upload, remove, busy } = useRrhhPhotos()
   const inputRef = useRef<HTMLInputElement>(null)
+  // Custom photo is a short-lived signed URL from the private bucket (undefined → falls
+  // back to the BambooHR photo / initials). Drives both the avatar and the menu options.
+  const customSrc = signedUrlFor(employee.id)
 
   const openPicker = () => inputRef.current?.click()
 

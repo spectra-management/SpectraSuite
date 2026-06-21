@@ -18,7 +18,6 @@ import { useSettingsStore } from '@/shared/store/settingsStore'
 import { useRrhhDirectory } from '@/modules/rrhh/hooks/useRrhhDirectory'
 import { useRrhhTimeOff } from '@/modules/rrhh/hooks/useRrhhTimeOff'
 import { useRrhhAccess } from '@/modules/rrhh/lib/permissions'
-import { useRrhhPhotos } from '@/modules/rrhh/hooks/useRrhhPhotos'
 import { RrhhPhotoEditor } from '@/modules/rrhh/components/RrhhPhotoEditor'
 import { RrhhTabBar, type RrhhTab } from '@/modules/rrhh/components/RrhhTabs'
 import { NotConnectedCard } from '@/modules/rrhh/components/RrhhStates'
@@ -57,7 +56,6 @@ export default function Profile() {
   const { employees, connected } = useRrhhDirectory()
   const { timeOff } = useRrhhTimeOff()
   const { canViewSensitive, canManagePhotos } = useRrhhAccess()
-  const { customUrlFor } = useRrhhPhotos()
   const bamboohr = useSettingsStore((s) => s.bamboohr)
 
   const [activeTab, setActiveTab] = useState<TabId>('personal')
@@ -135,7 +133,6 @@ export default function Profile() {
             <RrhhPhotoEditor
               employee={employee}
               proxiedSrc={photoSrc}
-              customSrc={customUrlFor(employee.id)}
               canEdit={canManagePhotos}
             />
             <div className="min-w-0 flex-1">
