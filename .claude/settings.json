@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Read",
+      "WebFetch",
+      "Bash(npm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git rebase:*)",
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Bash(npx supabase:*)",
+      "Bash(vercel:*)",
+      "Bash(*--force*)"
+    ]
+  }
+}
