@@ -31,8 +31,10 @@ export interface RrhhEmployee {
 
   // Contact
   workEmail: string
+  personalEmail: string
   mobilePhone: string
   workPhone: string
+  homePhone: string
 
   // Personal
   gender: string
@@ -43,14 +45,74 @@ export interface RrhhEmployee {
   city: string
   state: string
   address: string
+  address2: string
+  zipcode: string
+  /** National ID / SSN (sensitive — masked unless the viewer has elevated access). */
+  ssn: string
 
-  // Compensation (read-only display)
+  // Compensation (read-only display — sensitive)
   payRate: number
   payRateCurrency: string
   payType: 'Hourly' | 'Salary' | ''
+  /** Pay frequency, e.g. "Hour", "Year", "Month" (BambooHR `payPer`). */
+  payPer: string
+  /** Pay schedule name, e.g. "Bi-weekly". */
+  paySchedule: string
+  payGroup: string
+  /** FLSA exemption status, e.g. "Exempt" / "Non-exempt". */
+  exempt: string
 
   /** BambooHR-hosted avatar URL, when available. */
   photoUrl: string
+}
+
+/**
+ * A single emergency contact (read-only) from BambooHR
+ * (GET /v1/employees/{id}/tables/emergencyContacts).
+ */
+export interface RrhhEmergencyContact {
+  id: string
+  name: string
+  relationship: string
+  mobilePhone: string
+  homePhone: string
+  workPhone: string
+  email: string
+  /** Whether BambooHR flags this as the primary contact. */
+  isPrimary: boolean
+}
+
+/**
+ * A compensation history row (read-only, sensitive) from BambooHR
+ * (GET /v1/employees/{id}/tables/compensation).
+ */
+export interface RrhhCompensationEntry {
+  id: string
+  /** Effective date (YYYY-MM-DD). */
+  startDate: string
+  rate: number
+  currency: string
+  /** Pay frequency, e.g. "Hour", "Year". */
+  paidPer: string
+  type: string
+  reason: string
+}
+
+/**
+ * An employee document (read-only metadata, sensitive) from BambooHR
+ * (GET /v1/employees/{id}/files/view). No file contents are downloaded.
+ */
+export interface RrhhDocument {
+  id: string
+  name: string
+  /** Category/folder name the file lives under in BambooHR. */
+  category: string
+  /** ISO date the file was created/uploaded, if provided. */
+  dateCreated: string
+  /** File size as reported by BambooHR (already human-formatted, e.g. "12 KB"). */
+  size: string
+  /** True if BambooHR shares this file with the employee. */
+  shareWithEmployee: boolean
 }
 
 /** A department with its members, derived from the employee directory. */

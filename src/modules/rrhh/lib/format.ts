@@ -1,7 +1,32 @@
 /** Small presentation helpers for the RRHH module. */
 
 import { formatPayRate } from '@/shared/lib/utils'
-import type { RrhhEmployee } from '@/modules/rrhh/types'
+import type { RrhhEmployee, RrhhCompensationEntry } from '@/modules/rrhh/types'
+
+/**
+ * Mask a national ID / SSN, revealing only the last 4 characters: "•••• •••• 1234".
+ * Returns '—' for an empty value. Used whenever the viewer lacks sensitive access (and
+ * even then we never show the full value in the read-only profile).
+ */
+export function maskNationalId(value: string | undefined): string {
+  // Strip separators (spaces, dashes, dots) so we reveal the last 4 significant chars.
+  const v = (value ?? '').replace(/[^a-zA-Z0-9]/g, '')
+  if (!v) return '—'
+  const last4 = v.slice(-4)
+  return `•••• •••• ${last4}`
+}
+
+/** Compensation-entry display, e.g. "RD$ 150.00/hr" or "RD$ 80,000.00/yr". */
+export function compRateDisplay(entry: RrhhCompensationEntry): string {
+  const base = formatPayRate(entry.rate, entry.currency)
+  if (base === 'Not set') return '—'
+  const per = (entry.paidPer ?? '').toLowerCase()
+  if (per === 'hour') return `${base}/hr`
+  if (per === 'year') return `${base}/yr`
+  if (per === 'month') return `${base}/mo`
+  if (per === 'week') return `${base}/wk`
+  return base
+}
 
 export function countryFlag(country: string | undefined): string {
   const c = (country ?? '').toLowerCase().trim()

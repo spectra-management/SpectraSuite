@@ -9,20 +9,29 @@ const SIZES = {
 } as const
 
 /**
- * Employee avatar: BambooHR photo when present and loadable, otherwise initials on the
- * emerald chip used across Spectra Suite. Falls back gracefully if the image 404s.
+ * Employee avatar: a BambooHR photo when present and loadable, otherwise initials on the
+ * emerald chip used across Spectra Suite. Falls back gracefully if the image fails.
+ *
+ * Photo source priority: explicit `src` (e.g. the proxied photo endpoint) → the
+ * employee's report `photoUrl` → initials. The photo never blocks the rest of the
+ * profile: it loads independently and silently degrades to initials on error.
  */
 export function RrhhAvatar({
   employee,
+  src,
   size = 'md',
   className,
 }: {
   employee: Pick<RrhhEmployee, 'firstName' | 'lastName' | 'photoUrl'>
+  /** Preferred photo URL (e.g. the proxied BambooHR photo endpoint). */
+  src?: string
   size?: keyof typeof SIZES
   className?: string
 }) {
-  const [errored, setErrored] = useState(false)
-  const showPhoto = !!employee.photoUrl && !errored
+  // Candidate URLs, in order; advance to the next on load error, then initials.
+  const candidates = [src, employee.photoUrl].filter((u): u is string => !!u)
+  const [idx, setIdx] = useState(0)
+  const current = candidates[idx]
 
   return (
     <div
@@ -33,12 +42,13 @@ export function RrhhAvatar({
         className,
       )}
     >
-      {showPhoto ? (
+      {current ? (
         <img
-          src={employee.photoUrl}
+          key={current}
+          src={current}
           alt=""
           className="h-full w-full object-cover"
-          onError={() => setErrored(true)}
+          onError={() => setIdx((i) => i + 1)}
         />
       ) : (
         getInitials(employee.firstName, employee.lastName)
