@@ -721,6 +721,7 @@
       "subtitle": "Sign in to access your workspace",
       "notConfigured": "Authentication is not configured in this environment.",
       "googleButton": "Sign in with Google",
+      "domainRejected": "Only @spectramanagement.net accounts can sign in. Please use your corporate Google account.",
       "brandTagline": "One platform. Every team. Anywhere.",
       "brandSub": "Streamline HR, payroll, billing, and operations — all in one place, built for global teams.",
       "ledgerLabel": "Net pay · last run",

@@ -15,6 +15,7 @@ import { usePaymentMethodsStore } from '@/shared/store/paymentMethodsStore'
 import { useBankAccountsStore } from '@/shared/store/bankAccountsStore'
 import { maskAccount } from '@/shared/lib/utils'
 import { toast } from '@/shared/hooks/useToast'
+import { logAuditEvent } from '@/shared/lib/audit'
 import type { Employee, EmployeeHoursEntry } from '@/shared/types'
 
 interface Props {
@@ -192,6 +193,19 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
       })
       if (!res.ok) throw new Error(await res.text())
       toast({ variant: 'success', title: t('common.success'), description: `Sent to ${employee.workEmail}` })
+      void logAuditEvent({
+        action: 'paystub_sent',
+        category: 'payroll',
+        resource_type: 'paystub',
+        resource_id: employee.id,
+        details: {
+          employee_id: employee.id,
+          email: employee.workEmail,
+          period,
+          gross_amount: calculation.grossPay,
+          method: 'email',
+        },
+      })
     } catch (err) {
       const msg = err instanceof Error ? err.message : t('errors.sendFailed')
       toast({ variant: 'destructive', title: t('errors.sendFailed'), description: msg })

@@ -36,6 +36,15 @@ export default function Login() {
 
   useEffect(() => { document.title = `${t('auth.login.title')} | Spectra Suite` }, [t])
 
+  // A non-corporate account was rejected at the auth boundary (AuthContext) and
+  // bounced here — show why, then clear the flag so it doesn't persist on reload.
+  useEffect(() => {
+    if (sessionStorage.getItem('auth_domain_rejected')) {
+      setError(t('auth.login.domainRejected'))
+      sessionStorage.removeItem('auth_domain_rejected')
+    }
+  }, [t])
+
   useEffect(() => {
     if (!isSupabaseConfigured) return
     let active = true

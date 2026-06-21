@@ -721,6 +721,7 @@
       "subtitle": "Inicia sesión para acceder a tu espacio de trabajo",
       "notConfigured": "La autenticación no está configurada en este entorno.",
       "googleButton": "Iniciar sesión con Google",
+      "domainRejected": "Solo las cuentas @spectramanagement.net pueden iniciar sesión. Usa tu cuenta de Google corporativa.",
       "brandTagline": "Una plataforma. Todos los equipos. En cualquier lugar.",
       "brandSub": "Optimiza RRHH, nómina, facturación y operaciones — todo en un solo lugar, hecho para equipos globales.",
       "ledgerLabel": "Pago neto · último período",

@@ -12,6 +12,7 @@ import { useSettingsStore } from '@/shared/store/settingsStore'
 import { usePaymentMethodsStore } from '@/shared/store/paymentMethodsStore'
 import { useBankAccountsStore } from '@/shared/store/bankAccountsStore'
 import { toast } from '@/shared/hooks/useToast'
+import { logAuditEvent } from '@/shared/lib/audit'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
 import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/modules/nomina/lib/pdf/generatePdf'
 import { generatePayrollCSV, downloadCSV } from '@/modules/nomina/lib/pdf/generateCsv'
@@ -130,6 +131,19 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
       })
       if (!res.ok) throw new Error(await res.text())
       toast({ variant: 'success', title: t('common.success'), description: `Sent to ${entry.employee.workEmail}` })
+      void logAuditEvent({
+        action: 'paystub_sent',
+        category: 'payroll',
+        resource_type: 'paystub',
+        resource_id: entry.employee.id,
+        details: {
+          employee_id: entry.employee.id,
+          email: entry.employee.workEmail,
+          period: `${payroll.startDate} – ${payroll.endDate}`,
+          gross_amount: entry.calculation.grossPay,
+          method: 'email',
+        },
+      })
     } catch (err) {
       const msg = err instanceof Error ? err.message : t('errors.sendFailed')
       toast({ variant: 'destructive', title: t('errors.sendFailed'), description: msg })
@@ -185,6 +199,19 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
         })
         if (!res.ok) throw new Error(await res.text())
         results.push({ employeeId: entry.employee.id, success: true })
+        void logAuditEvent({
+          action: 'paystub_sent',
+          category: 'payroll',
+          resource_type: 'paystub',
+          resource_id: entry.employee.id,
+          details: {
+            employee_id: entry.employee.id,
+            email: entry.employee.workEmail,
+            period: `${payroll.startDate} – ${payroll.endDate}`,
+            gross_amount: entry.calculation.grossPay,
+            method: 'bulk',
+          },
+        })
       } catch (err) {
         results.push({ employeeId: entry.employee.id, success: false, error: err instanceof Error ? err.message : 'Unknown' })
       }

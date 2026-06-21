@@ -8,6 +8,12 @@ import type { ProfileRow, ModulePermissionRow, ModuleId, ModulePerm, PermAction 
 
 const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'gastos', 'it']
 
+// Only corporate Google accounts may sign in. Any other domain is rejected at the
+// auth boundary (signed out immediately + bounced to /login). The Login page reads
+// the sessionStorage flag below to show the user why.
+const ALLOWED_EMAIL_DOMAIN = 'spectramanagement.net'
+export const DOMAIN_REJECTED_KEY = 'auth_domain_rejected'
+
 interface AssignedRole { id: string; name: string; description: string | null }
 
 function emptyPerms(): Record<ModuleId, ModulePerm> {
@@ -171,6 +177,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const applySession = async (s: Session | null, event?: AuthChangeEvent) => {
       if (!active) return
+
+      // Corporate-domain gate: reject any non-@spectramanagement.net account.
+      if (s?.user) {
+        const email = s.user.email?.toLowerCase() ?? ''
+        if (!email.endsWith(`@${ALLOWED_EMAIL_DOMAIN}`)) {
+          console.warn('[auth] login rejected: non-corporate email', s.user.email)
+          try { sessionStorage.setItem(DOMAIN_REJECTED_KEY, '1') } catch { /* ignore */ }
+          await supabase.auth.signOut()
+          localStorage.removeItem(GOOGLE_TOKEN_KEY)
+          localStorage.removeItem(GOOGLE_REFRESH_KEY)
+          setSession(null)
+          setUser(null)
+          setProfile(null)
+          setPermissions([])
+          setLoading(false)
+          if (!window.location.pathname.startsWith('/login')) window.location.assign('/login')
+          return
+        }
+      }
+
       setSession(s)
       setUser(s?.user ?? null)
       // provider_token (+ refresh token) only arrive on fresh OAuth — persist them

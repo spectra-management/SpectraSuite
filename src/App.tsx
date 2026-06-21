@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
 import { AuthProvider } from '@/shared/context/AuthContext'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
 import { Layout } from '@/shared/components/layout/Layout'
@@ -17,9 +18,10 @@ import Settings from '@/modules/nomina/pages/Settings'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
+    <ErrorBoundary fullScreen>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
           {/* Public */}
           <Route path="/login" element={<Login />} />
           <Route path="/access-denied" element={<AccessDenied />} />
@@ -106,7 +108,8 @@ export default function App() {
           {/* Unknown → Suite home */}
           <Route path="*" element={<Navigate to="/suite" replace />} />
         </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }

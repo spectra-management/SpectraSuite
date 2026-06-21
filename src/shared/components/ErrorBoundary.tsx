@@ -6,6 +6,8 @@ import { Button } from '@/shared/components/ui/button'
 interface Props {
   children: ReactNode
   fallbackTitle?: string
+  /** Center the fallback over the full viewport — used when mounted at the app root. */
+  fullScreen?: boolean
 }
 
 interface State {
@@ -25,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.error) {
-      return (
+      const card = (
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-red-200 bg-red-50 p-10 text-center">
           <AlertTriangle className="h-8 w-8 text-red-400" />
           <div>
@@ -43,6 +45,14 @@ export class ErrorBoundary extends Component<Props, State> {
           </Button>
         </div>
       )
+      if (this.props.fullScreen) {
+        return (
+          <div className="flex min-h-screen items-center justify-center bg-canvas p-6">
+            <div className="w-full max-w-md">{card}</div>
+          </div>
+        )
+      }
+      return card
     }
     return this.props.children
   }
