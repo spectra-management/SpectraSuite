@@ -200,11 +200,92 @@ Every BambooHR network touch in this module (verified by grep over
 |---|---|---|---|
 | `fetchRrhhDirectory` (`lib/connectors/bamboohr.ts`) | `POST` | `/v1/reports/custom` (`format=JSON`, body = field list) | **Read.** Generates a custom report from existing data; does not mutate. Same pattern Nómina already uses. |
 | `fetchRrhhTimeOff` (`lib/connectors/bamboohr.ts`) | `GET` | `/v1/time_off/requests` (`status=approved`, date range) | **Read.** Lists approved time-off. |
+| `fetchRrhhEmergencyContacts` (`lib/connectors/bamboohr.ts`) | `GET` | `/v1/employees/{id}/tables/emergencyContacts` | **Read.** Lists an employee's emergency contacts. |
+| `fetchRrhhCompensation` (`lib/connectors/bamboohr.ts`) | `GET` | `/v1/employees/{id}/tables/compensation` | **Read.** Lists pay history (gated). |
+| `fetchRrhhDocuments` (`lib/connectors/bamboohr.ts`) | `GET` | `/v1/employees/{id}/files/view` | **Read.** Lists document *metadata* only — no contents downloaded (gated). |
+| `buildPhotoProxyUrl` → `<img>` (`lib/connectors/bamboohr.ts`) | `GET` | `/v1/employees/{id}/photo/{size}` | **Read.** Fetches the existing employee photo (binary, streamed by the proxy). |
+
+The `api/bamboohr.ts` proxy gained **one additive branch**: a `/photo/`-path check that
+streams binary image bytes instead of parsing JSON. It is read-only, isolated to the
+photo path, and changes nothing any other module (incl. Nómina) relies on.
 
 ✅ **Confirmed: every BambooHR touch in the RRHH module is read-only.** No
 employee-mutating verb (PUT/PATCH/DELETE) is issued anywhere; the only `POST` is the
 report-generation read. No BambooHR credentials are stored by RRHH — it reads the
 existing shared `settingsStore.bamboohr` config.
+
+---
+
+## 6b. Tabbed Employee Profile (branch `feature/rrhh-employee-profile-tabs`)
+
+> Second iteration, built on a **new branch off the merged `main`**. Rebuilds the
+> employee profile (`pages/Profile/`) as a BambooHR-style **tabbed** interface with real
+> employee photos. **Still 100% READ-ONLY** — no edits, no writes to BambooHR. Local
+> commits only; nothing pushed/merged.
+
+### Tabs — status
+
+| Tab | Status | Source | Notes |
+|---|---|---|---|
+| **Personal** | ✅ | custom report | name, preferred name, birthday, gender, marital status, nationality, **national ID (masked)**, full address block, work/personal email, mobile/home/work phone |
+| **Job** | ✅ | custom report + derived | title, department, division, location, hire date, **length of service**, reports-to, **direct-reports count**, status, employee #, employee id |
+| **Compensation** 🔒 | ✅ / 🟡 | comp table + report | per-employee `tables/compensation` (effective date + pay history); falls back to the report pay-rate if the table is empty/unavailable. **Gated** (see §Permissions). |
+| **Time-off** | 🟡 | `/v1/time_off/requests` | Vacation-only (proxy type-83 filter — unchanged, see §4). Note shown on the tab. |
+| **Emergency** | ✅ | `tables/emergencyContacts` | name, relationship, mobile/home/work phone, email, primary flag. Empty-state if the account has none. |
+| **Notes** | 🟡 stub | — | **BambooHR has no read API for free-text employee notes**, so this tab shows an explanatory message. Documented as a hard API limitation, not a bug. |
+| **Documents** 🔒 | ✅ | `files/view` | read-only metadata only (name, category, date, size). No file **contents** are downloaded. **Gated** (see §Permissions). |
+
+🔒 = sensitive tab, hidden entirely for basic-view users.
+
+### Employee photos
+- Real photos fetched from the BambooHR photo endpoint
+  `GET /v1/employees/{id}/photo/{size}` via the shared proxy (read-only). Profile header
+  uses the `large` size.
+- **One additive proxy change** (`api/bamboohr.ts`): when `path` contains `/photo/`, the
+  proxy streams the **binary** image through with its content-type instead of
+  `response.json()`. This branch is **additive and isolated** — no other module (incl.
+  Nómina) ever requests a `/photo/` path, so existing JSON behaviour is unchanged. This
+  is the *only* shared-infra touch in this iteration; unlike the type-83 time-off filter
+  (which Nómina depends on), the photo branch changes nothing Nómina relies on.
+- `RrhhAvatar` tries, in order: proxied photo → report `photoUrl` → **initials** chip.
+  The photo loads independently and silently degrades, so it never blocks the profile.
+- Directory rows keep the lightweight report `photoUrl`/initials (avoids 25 authenticated
+  image requests per page); the proxied endpoint is used on the profile header.
+
+### Permissions (sensitive tabs) — **flag chosen: `hasModuleAccess('rrhh', 'edit')`**
+- Reuses the **existing Suite RBAC** (`useAuth().hasModuleAccess`) — no parallel system.
+  Helper: `src/modules/rrhh/lib/permissions.ts` → `useRrhhAccess()`.
+- `PermAction` is `view | edit | approve | admin`; there is **no dedicated
+  "sensitive HR data" permission** in the schema. Per the brief I picked the most
+  restrictive sensible option above plain view: **`edit`**.
+  - A user with only `can_view` (basic read-only directory access) **does not** pass →
+    Compensation and Documents tabs are **hidden entirely**, and the national ID is
+    **masked** (last 4 only).
+  - `super_admin` / legacy `module_admin` bypass (pass every action), as elsewhere.
+- **If you want it stricter**, change the single `action` arg in `useRrhhAccess()` from
+  `'edit'` to `'admin'`. ⬅ *please confirm `edit` is the intended gate.*
+- The national ID is **never shown in full** in this read-only profile — even sensitive
+  users see the masked value (display-only module; no reason to expose the raw ID).
+
+### Fields BambooHR does not expose (documented, not bugs)
+- **Employee notes** — no read API → Notes tab is a labelled stub.
+- **Compensation effective date** is only available via the comp **table** (used here);
+  it is not a top-level custom-report field.
+- Standard report aliases are requested (`ssn`, `homePhone`, `homeEmail`, `address2`,
+  `zipcode`, `paySchedule`, `payGroup`, `exempt`, …). Any the account doesn't populate
+  simply render as `—`. DR "cédula" is read from the `ssn` alias (shown as
+  *National ID / SSN*, masked).
+
+### Data layer / pattern
+- Directory stays **offline-first** via the module store (unchanged). The three new
+  per-employee resources (emergency contacts, compensation, documents) fetch **on tab
+  open** (read-only) via `hooks/useRrhhEmployeeDetail.ts`, each with its **own
+  loading/error state** so one failing tab never breaks the profile. Sensitive tabs only
+  fetch once the permission check passes *and* the tab is active.
+
+### Gates (this branch)
+`npm run build` ✅ · `npm run check:imports` ✅ (no cross-module imports / cycles) ·
+`npm run test:run` ✅ **89 tests** (5 new: national-ID masking + comp-rate display).
 
 ---
 
