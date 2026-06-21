@@ -217,22 +217,26 @@ export async function fetchRrhhDirectory(
 /**
  * Build a read-only URL to an employee's BambooHR photo, routed through the shared
  * proxy (GET /v1/employees/{id}/photo/{size}). The proxy streams the binary so an
- * <img> can render it. Returns '' when credentials/id are missing.
+ * <img> can render it. Returns '' when the subdomain/id are missing.
+ *
+ * SECURITY: the BambooHR apiKey is deliberately NOT included here. Sending it as a URL
+ * query param would leak the secret into browser history, server access logs, and the
+ * Network tab. The proxy attaches the credential server-side from `BAMBOOHR_API_KEY`
+ * instead (see `api/bamboohr.ts`). The client only ever passes the path, the (non-secret)
+ * subdomain, and the size.
  *
  * NOTE: this is a *read* — it only fetches the existing photo. `size` is one of
  * BambooHR's named sizes: original | large | medium | small | xs | tiny.
  */
 export function buildPhotoProxyUrl(
   subdomain: string,
-  apiKey: string,
   employeeId: string,
   size: 'large' | 'medium' | 'small' = 'small',
 ): string {
-  if (!subdomain || !apiKey || !employeeId) return ''
+  if (!subdomain || !employeeId) return ''
   const qs = new URLSearchParams({
     path: `/v1/employees/${employeeId}/photo/${size}`,
     subdomain,
-    apiKey,
   })
   return `/api/bamboohr?${qs.toString()}`
 }
