@@ -172,6 +172,29 @@ Created and evolved by idempotent migrations `001`–`007` in
 - **No secrets in the bundle** — Supabase service role and connector keys live in
   serverless env / per-tenant settings, never in client code.
 
+### Connector Token Storage (Offline-First Design Decision)
+
+Spectra Suite is offline-first: localStorage is the source of truth and Supabase is a best-effort mirror (see cloudSync.ts). This affects how third-party connector tokens (Hubstaff, BambooHR) are handled.
+
+**Decision:** Connector refresh tokens are stored in localStorage on the client, NOT kept server-only.
+
+**Why:** A pure server-authoritative model (refresh token never leaves the server, client receives only short-lived access tokens) would break connectors for any user not actively authenticated to Supabase. Since the app must work offline with localStorage as source of truth, the refresh token must be available client-side.
+
+**How it works:**
+- The server (/api/hubstaff.ts) performs the token exchange and persists the rotated refresh token to the DB (durable layer).
+- The server also returns the rotated token to the client, which stores it in localStorage (offline path).
+- A client-side single-flight guard ensures concurrent callers share one in-flight exchange, eliminating the token-rotation race.
+
+**Trade-off accepted:** The refresh token has a larger exposure surface (lives in localStorage) than a server-only model.
+
+**Mitigations:**
+- Access restricted to corporate Google accounts (@spectramanagement.net only).
+- Hubstaff rotates refresh tokens on every exchange.
+- Failed token exchanges never overwrite a good stored token (in either localStorage or DB).
+- Tokens are scoped to the third-party connector, not to Spectra Suite's own auth.
+
+**Future hardening (roadmap):** If offline support for connectors is dropped, move to a server-only model where the client never sees the refresh token. Alternatively, add a DB-level lock (e.g. refresh_locked_at column or SELECT ... FOR UPDATE on the integrations row) to close the race across concurrent serverless invocations.
+
 ---
 
 ## 6. Cross-cutting flows
