@@ -20,7 +20,7 @@ export interface SuiteModule {
 // Order matches the 2×2 suite grid: RRHH | Nómina / Facturación | Gastos.
 export const SUITE_MODULES: SuiteModule[] = [
   {
-    id: 'rrhh', icon: '🏢', path: '/rrhh', active: false,
+    id: 'rrhh', icon: '🏢', path: '/rrhh', active: true,
     navItems: [
       { icon: '👥', labelKey: 'suite.nav.employees' },
       { icon: '🗂️', labelKey: 'suite.nav.departments' },

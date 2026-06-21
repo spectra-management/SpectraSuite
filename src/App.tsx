@@ -15,6 +15,7 @@ import Payroll from '@/modules/nomina/pages/Payroll'
 import History from '@/modules/nomina/pages/History'
 import Connectors from '@/modules/nomina/pages/Connectors'
 import Settings from '@/modules/nomina/pages/Settings'
+import { RrhhLayout, Directory, Profile, OrgChart, TimeOff, Departments } from '@/modules/rrhh'
 
 export default function App() {
   return (
@@ -71,15 +72,24 @@ export default function App() {
             <Route path="settings" element={<Settings />} />
           </Route>
 
-          {/* Placeholder modules — Coming Soon */}
+          {/* RRHH module (Human Resources — read-only BambooHR data) */}
           <Route
             path="/rrhh"
             element={
               <ProtectedRoute module="rrhh">
-                <ModuleShell moduleId="rrhh" />
+                <RrhhLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Navigate to="directory" replace />} />
+            <Route path="directory" element={<Directory />} />
+            <Route path="directory/:id" element={<Profile />} />
+            <Route path="org" element={<OrgChart />} />
+            <Route path="time-off" element={<TimeOff />} />
+            <Route path="departments" element={<Departments />} />
+          </Route>
+
+          {/* Placeholder modules — Coming Soon */}
           <Route
             path="/facturacion"
             element={
