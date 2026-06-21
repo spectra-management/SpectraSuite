@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
 
 interface TokenResponse {
   access_token: string
@@ -7,9 +8,18 @@ interface TokenResponse {
   expires_in: number
 }
 
-async function exchangeRefreshToken(
-  refreshToken: string,
-): Promise<{ accessToken: string; newRefreshToken: string; expiresIn: number }> {
+interface ExchangeResult {
+  accessToken: string
+  newRefreshToken: string
+  expiresIn: number
+}
+
+// Sentinel endpoint: a refresh-ONLY request. The client calls this (single-flighted)
+// to obtain a fresh access token without also fetching data, so the rotation-sensitive
+// refresh token is exchanged exactly once per cold cache.
+const REFRESH_ENDPOINT = '__token_refresh__'
+
+async function exchangeRefreshToken(refreshToken: string): Promise<ExchangeResult> {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
@@ -39,6 +49,79 @@ async function exchangeRefreshToken(
     newRefreshToken: data.refresh_token,
     expiresIn: data.expires_in ?? 86399,
   }
+}
+
+/**
+ * Persist the rotated refresh token to the Supabase `integrations` row (server-side,
+ * service-role). Hubstaff ROTATES refresh tokens — each exchange invalidates the old
+ * one — so the durable copy must be updated the moment a NEW token is minted.
+ *
+ * Invariants:
+ *  - Called ONLY after a successful exchange (a failed exchange never reaches here),
+ *    so a stale/failed value can never overwrite a good stored token.
+ *  - Awaited by the caller before the single-flight lock releases (see refreshAccessToken).
+ *  - Best-effort: if Supabase env vars are absent (offline/local build) it no-ops; the
+ *    client still mirrors the rotated token into its own storage from the response.
+ */
+async function persistRotatedTokenToDb(newRefreshToken: string): Promise<void> {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !serviceRoleKey || !newRefreshToken) return
+
+  try {
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+    const { data: existing } = await admin
+      .from('integrations')
+      .select('id, credentials')
+      .eq('name', 'hubstaff')
+      .limit(1)
+      .maybeSingle()
+
+    // Merge so orgId and other credential fields are preserved.
+    const credentials = {
+      ...((existing?.credentials as Record<string, unknown> | null) ?? {}),
+      refreshToken: newRefreshToken,
+    }
+    const updatedAt = new Date().toISOString()
+
+    if (existing?.id) {
+      await admin.from('integrations').update({ credentials, updated_at: updatedAt }).eq('id', existing.id)
+    } else {
+      await admin.from('integrations').insert({ name: 'hubstaff', credentials, is_active: true, updated_at: updatedAt })
+    }
+  } catch (e) {
+    // Durable mirror failed — the client's own copy is still updated from the response,
+    // so the refresh itself is not lost. Log and move on.
+    console.warn('[hubstaff proxy] DB token persist failed:', e)
+  }
+}
+
+// ─── Single-flight refresh ───────────────────────────────────────────────────
+// Within a warm serverless instance, concurrent callers share ONE in-flight
+// exchange instead of each POSTing the same (rotating) refresh token. The real
+// cross-tab/cross-call dedup happens client-side (see connectors/hubstaff.ts);
+// this is the server-side belt-and-suspenders for requests that land together on
+// one instance.
+let inFlightRefresh: Promise<ExchangeResult> | null = null
+
+async function refreshAccessToken(refreshToken: string): Promise<ExchangeResult> {
+  if (inFlightRefresh) return inFlightRefresh
+
+  inFlightRefresh = (async () => {
+    try {
+      const result = await exchangeRefreshToken(refreshToken)
+      // Persist the rotated token BEFORE releasing the lock so no later caller can
+      // read/exchange the now-invalidated one. Only reached on a successful exchange.
+      await persistRotatedTokenToDb(result.newRefreshToken)
+      return result
+    } finally {
+      inFlightRefresh = null
+    }
+  })()
+
+  return inFlightRefresh
 }
 
 /**
@@ -78,6 +161,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!endpoint || typeof endpoint !== 'string') {
     return res.status(400).json({ error: 'endpoint parameter is required' })
   }
+
+  // ── Refresh-only path ──────────────────────────────────────────────────────
+  // Returns a fresh access token (and the rotated refresh token) without a data
+  // fetch. Single-flighted + DB-persisted via refreshAccessToken.
+  if (endpoint === REFRESH_ENDPOINT) {
+    if (!refreshToken || typeof refreshToken !== 'string') {
+      return res.status(400).json({ error: 'x-hubstaff-refresh-token header is required to refresh' })
+    }
+    try {
+      const exchanged = await refreshAccessToken(refreshToken)
+      const expiry = Date.now() + exchanged.expiresIn * 1000
+      res.setHeader('x-new-refresh-token', exchanged.newRefreshToken)
+      res.setHeader('x-new-access-token', exchanged.accessToken)
+      res.setHeader('x-access-token-expiry', String(expiry))
+      return res.status(200).json({
+        accessToken: exchanged.accessToken,
+        refreshToken: exchanged.newRefreshToken,
+        expiry,
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Token exchange failed'
+      return res.status(401).json({ error: message })
+    }
+  }
+
   if (!directAccessToken && !refreshToken) {
     return res.status(400).json({ error: 'Either x-hubstaff-access-token or x-hubstaff-refresh-token header is required' })
   }
@@ -87,11 +195,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (directAccessToken && typeof directAccessToken === 'string') {
     accessToken = directAccessToken
   } else {
+    // Backward-compatible fallback: a data call that arrives with only a refresh
+    // token. Route through the same single-flight + DB-persist path.
     if (typeof refreshToken !== 'string') {
       return res.status(400).json({ error: 'x-hubstaff-refresh-token must be a string' })
     }
     try {
-      const exchanged = await exchangeRefreshToken(refreshToken)
+      const exchanged = await refreshAccessToken(refreshToken)
       accessToken = exchanged.accessToken
       res.setHeader('x-new-refresh-token', exchanged.newRefreshToken)
       res.setHeader('x-new-access-token', exchanged.accessToken)

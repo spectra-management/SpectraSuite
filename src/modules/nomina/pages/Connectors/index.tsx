@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CheckCircle2, XCircle, Loader2, Plug, Link2, Mail, Wand2, Info, ChevronDown, Search } from 'lucide-react'
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
@@ -516,9 +516,18 @@ function HubstaffConnector() {
   const [members, setMembers] = useState<HubstaffMember[]>([])
   const [loadingMembers, setLoadingMembers] = useState(false)
   const [availableOrgs, setAvailableOrgs] = useState<HubstaffOrganization[]>([])
+  // Guards against React 18 StrictMode's double-invoke (and redundant re-runs)
+  // firing two member loads — and thus two token refreshes — for the same
+  // token+org. Keyed so a genuine reconnect (new token/org) still re-fetches.
+  // Belt-and-suspenders: ensureAccessToken already single-flights the refresh.
+  const lastFetchKey = useRef<string | null>(null)
 
   useEffect(() => {
     if (hubstaff.connected && hubstaff.refreshToken && hubstaff.organizationId) {
+      const fetchKey = `${hubstaff.refreshToken}:${hubstaff.organizationId}`
+      if (lastFetchKey.current === fetchKey) return
+      lastFetchKey.current = fetchKey
+
       setLoadingMembers(true)
       fetchHubstaffMembers(hubstaff.organizationId, {
         refreshToken: hubstaff.refreshToken,

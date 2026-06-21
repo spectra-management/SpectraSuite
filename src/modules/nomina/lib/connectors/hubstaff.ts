@@ -1,6 +1,7 @@
 import type { HubstaffMember, HubstaffActivityUser, WeeklyHours } from './types'
 export type { HubstaffActivityUser }
 import { roundHalfUp } from '@/modules/nomina/lib/payroll/calculations'
+import { useSettingsStore } from '@/shared/store/settingsStore'
 
 const ACCESS_TOKEN_MARGIN_MS = 5 * 60 * 1000  // skip exchange if token expires within 5 min
 
@@ -33,6 +34,105 @@ function buildUrl(endpoint: string, extra?: Record<string, string>): string {
   return parts.length > 0 ? `${base}&${parts.join('&')}` : base
 }
 
+// ─── Single-flight token refresh ─────────────────────────────────────────────
+// Hubstaff ROTATES refresh tokens: every successful exchange invalidates the old
+// one. If two callers (e.g. the Connectors members effect and a Payroll hours
+// fetch, or 10 parallel profile lookups) exchange the same token concurrently, the
+// second exchange fails with {"error":"rate_limit", ...} and — via a write race —
+// can permanently stale the stored token.
+//
+// To make this safe:
+//   1. All concurrent callers share ONE in-flight exchange (a module-level promise
+//      shared across the whole tab — NOT component state).
+//   2. The rotated token is persisted to the store SYNCHRONOUSLY inside the lock,
+//      before any other caller can read the old one.
+// The server (/api/hubstaff) additionally persists the rotated token to the DB so
+// the durable copy never goes stale.
+let inFlightRefresh: Promise<HubstaffTokenState> | null = null
+
+function storeTokenState(): HubstaffTokenState {
+  const h = useSettingsStore.getState().hubstaff
+  return {
+    refreshToken: h.refreshToken,
+    cachedAccessToken: h.cachedAccessToken,
+    cachedAccessTokenExpiry: h.cachedAccessTokenExpiry,
+  }
+}
+
+function isAccessTokenValid(s: HubstaffTokenState): boolean {
+  return (
+    !!s.cachedAccessToken &&
+    !!s.cachedAccessTokenExpiry &&
+    Date.now() < s.cachedAccessTokenExpiry - ACCESS_TOKEN_MARGIN_MS
+  )
+}
+
+// Whichever of the two states has a usable (later-expiring) cached access token.
+// Lets a refresh performed by one call be reused by later pages/calls that were
+// handed a now-stale tokenState.
+function freshest(a: HubstaffTokenState, b: HubstaffTokenState): HubstaffTokenState {
+  const aExp = isAccessTokenValid(a) ? a.cachedAccessTokenExpiry! : 0
+  const bExp = isAccessTokenValid(b) ? b.cachedAccessTokenExpiry! : 0
+  return bExp > aExp ? b : a
+}
+
+function persistRotatedToken(next: HubstaffTokenState): void {
+  useSettingsStore.getState().updateHubstaff({
+    refreshToken: next.refreshToken,
+    cachedAccessToken: next.cachedAccessToken,
+    cachedAccessTokenExpiry: next.cachedAccessTokenExpiry,
+  })
+}
+
+interface TokenRefreshResponse {
+  accessToken: string
+  refreshToken: string
+  expiry: number
+}
+
+async function requestTokenRefresh(refreshToken: string): Promise<HubstaffTokenState> {
+  const res = await fetch('/api/hubstaff?endpoint=__token_refresh__', {
+    method: 'GET',
+    headers: { 'Accept': 'application/json', 'x-hubstaff-refresh-token': refreshToken },
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Token refresh failed' })) as { error?: string }
+    throw new Error(err.error ?? `Hubstaff token refresh failed (${res.status})`)
+  }
+  const data = await res.json() as TokenRefreshResponse
+  return {
+    refreshToken: data.refreshToken || refreshToken,
+    cachedAccessToken: data.accessToken,
+    cachedAccessTokenExpiry: data.expiry,
+  }
+}
+
+/**
+ * Returns a token state holding a VALID access token, exchanging the refresh token
+ * at most once even under heavy concurrency (single-flight). The rotated token is
+ * persisted to the store atomically before the lock releases, so concurrent callers
+ * never read or re-exchange the invalidated refresh token.
+ */
+export async function ensureAccessToken(tokenState: HubstaffTokenState): Promise<HubstaffTokenState> {
+  const best = freshest(tokenState, storeTokenState())
+  if (isAccessTokenValid(best)) return best
+
+  if (inFlightRefresh) return inFlightRefresh
+  inFlightRefresh = (async () => {
+    try {
+      // Re-read the store so we exchange the freshest refresh token available.
+      const refreshToken = storeTokenState().refreshToken || tokenState.refreshToken
+      if (!refreshToken) throw new Error('No Hubstaff refresh token configured')
+      const next = await requestTokenRefresh(refreshToken)
+      persistRotatedToken(next)   // ATOMIC persist before releasing the lock
+      return next
+    } finally {
+      inFlightRefresh = null
+    }
+  })()
+  return inFlightRefresh
+}
+
 async function fetchHubstaff(
   endpoint: string,
   tokenState: HubstaffTokenState,
@@ -40,26 +140,22 @@ async function fetchHubstaff(
 ): Promise<{ res: Response; tokenUpdate: HubstaffTokenUpdate }> {
   const url = buildUrl(endpoint, extra)
 
-  const now = Date.now()
-  const useCached =
-    !!tokenState.cachedAccessToken &&
-    !!tokenState.cachedAccessTokenExpiry &&
-    now < tokenState.cachedAccessTokenExpiry - ACCESS_TOKEN_MARGIN_MS
+  // Prime a valid access token (single-flighted) BEFORE the data call, then send
+  // only the access token — data calls never carry the rotation-sensitive refresh
+  // token, so they can never trigger a competing exchange.
+  const fresh = await ensureAccessToken(tokenState)
 
-  const headers: Record<string, string> = { 'Accept': 'application/json' }
-  if (useCached) {
-    headers['x-hubstaff-access-token'] = tokenState.cachedAccessToken!
-  } else {
-    headers['x-hubstaff-refresh-token'] = tokenState.refreshToken
-  }
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json', 'x-hubstaff-access-token': fresh.cachedAccessToken! },
+  })
 
-  const res = await fetch(url, { method: 'GET', headers })
-
-  const expiryHeader = res.headers.get('x-access-token-expiry')
+  // Report the (already-persisted) fresh token so callers threading state across
+  // pagination keep reusing the same access token. Persisting it again is idempotent.
   const tokenUpdate: HubstaffTokenUpdate = {
-    newRefreshToken: res.headers.get('x-new-refresh-token'),
-    newAccessToken: res.headers.get('x-new-access-token'),
-    newAccessTokenExpiry: expiryHeader ? Number(expiryHeader) : null,
+    newRefreshToken: fresh.refreshToken ?? null,
+    newAccessToken: fresh.cachedAccessToken ?? null,
+    newAccessTokenExpiry: fresh.cachedAccessTokenExpiry ?? null,
   }
 
   return { res, tokenUpdate }
@@ -237,12 +333,19 @@ export async function fetchUserProfiles(
   const missing = userIds.filter((id) => !cache.has(id))
 
   if (missing.length > 0) {
+    // Prime ONE valid access token before fanning out. Without this, a cold cache
+    // would let all parallel /users/{id} calls trigger independent refreshes of the
+    // same (rotating) token — a guaranteed rate_limit burst. ensureAccessToken is
+    // single-flighted, so this collapses to a single exchange and every batch
+    // request below reuses the resulting cached access token.
+    const primed = await ensureAccessToken(tokenState)
+
     const BATCH = 10
     for (let i = 0; i < missing.length; i += BATCH) {
       const batch = missing.slice(i, i + BATCH)
       await Promise.all(batch.map(async (id) => {
         try {
-          const { res } = await fetchHubstaff(`users/${id}`, tokenState)
+          const { res } = await fetchHubstaff(`users/${id}`, primed)
           if (!res.ok) return
           const data = await res.json() as { user?: { id?: number; name?: string; email?: string } }
           if (data.user?.id) {
