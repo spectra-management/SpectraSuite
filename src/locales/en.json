@@ -1015,7 +1015,8 @@
       "note": "Showing BambooHR Vacation requests (the shared proxy filters time-off to the Vacation policy).",
       "days_one": "{{count}} day",
       "days_other": "{{count}} days",
-      "employeesWithTimeOff": "Employees with time off"
+      "employeesWithTimeOff": "Employees with time off",
+      "daysLabel": "Days"
     },
     "departments": {
       "title": "Departments",

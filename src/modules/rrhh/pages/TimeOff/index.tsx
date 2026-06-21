@@ -205,7 +205,7 @@ export default function TimeOff() {
                     {t('rrhh.timeOff.dates')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t('rrhh.timeOff.days', { count: 2 })}
+                    {t('rrhh.timeOff.daysLabel')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('rrhh.timeOff.status')}

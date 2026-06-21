@@ -1015,7 +1015,8 @@
       "note": "Mostrando solicitudes de Vacaciones de BambooHR (el proxy compartido filtra las ausencias a la política de Vacaciones).",
       "days_one": "{{count}} día",
       "days_other": "{{count}} días",
-      "employeesWithTimeOff": "Empleados con ausencias"
+      "employeesWithTimeOff": "Empleados con ausencias",
+      "daysLabel": "Días"
     },
     "departments": {
       "title": "Departamentos",
