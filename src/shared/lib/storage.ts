@@ -55,4 +55,10 @@ export const STORAGE_KEYS = {
   PENDING_VACATION_ISR: 'pending_vacation_isr',
   PAYROLL_HISTORY: 'payroll_history',
   LANGUAGE: 'language',
+  // Billing (facturación) module
+  BILLING_CLIENTS: 'billing_clients',
+  BILLING_TITLE_RATES: 'billing_title_rates',
+  BILLING_CLIENT_EMPLOYEES: 'billing_client_employees',
+  BILLING_INVOICES: 'billing_invoices',
+  BILLING_META: 'billing_meta',
 } as const
