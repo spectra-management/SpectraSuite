@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { storage, STORAGE_KEYS } from '@/shared/lib/storage'
+import { saveAppState, fetchAppState } from '@/shared/lib/cloudSync'
+import { mergeNestedByLeaf } from '@/shared/lib/cloudMerge'
 
 /**
  * Tracks the once-per-year vacation payment per employee. DR pays ALL entitled
@@ -21,6 +23,8 @@ interface VacationPaymentsState {
   payments: PaymentsStore
   getPayment: (employeeId: string, year: number) => VacationPayment | null
   markPaid: (employeeId: string, year: number, payment: VacationPayment) => void
+  /** Read vacation payments back from Supabase (cloud-authoritative) and merge. */
+  hydrateFromCloud: () => Promise<void>
 }
 
 export const useVacationPaymentsStore = create<VacationPaymentsState>((set, get) => ({
@@ -35,5 +39,21 @@ export const useVacationPaymentsStore = create<VacationPaymentsState>((set, get)
     }
     storage.set(STORAGE_KEYS.VACATION_PAYMENTS, payments)
     set({ payments })
+    void saveAppState(STORAGE_KEYS.VACATION_PAYMENTS, payments)  // best-effort cloud mirror
+  },
+
+  // Cloud-authoritative read-back: pull the cloud blob, merge cloud-wins per
+  // (employee, year) leaf, keep local-only leaves, and push the union back up if local
+  // had anything the cloud lacked. Offline-safe (null cloud → local kept).
+  hydrateFromCloud: async () => {
+    const cloud = await fetchAppState<PaymentsStore>(STORAGE_KEYS.VACATION_PAYMENTS)
+    if (!cloud) {
+      if (Object.keys(get().payments).length > 0) void saveAppState(STORAGE_KEYS.VACATION_PAYMENTS, get().payments)
+      return
+    }
+    const { merged, hasLocalOnly } = mergeNestedByLeaf(get().payments, cloud)
+    storage.set(STORAGE_KEYS.VACATION_PAYMENTS, merged)
+    set({ payments: merged })
+    if (hasLocalOnly) void saveAppState(STORAGE_KEYS.VACATION_PAYMENTS, merged)
   },
 }))
