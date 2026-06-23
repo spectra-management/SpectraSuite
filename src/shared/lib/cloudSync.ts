@@ -7,7 +7,7 @@
 // localStorage so existing Nómina flows keep working unchanged.
 // ============================================================================
 import { supabase, isSupabaseConfigured } from '@/shared/lib/supabase'
-import type { CompanySettings, BambooHRConfig, HubstaffConfig } from '@/shared/types'
+import type { CompanySettings, BambooHRConfig, HubstaffConfig, PayrollPeriod } from '@/shared/types'
 
 async function isAuthenticated(): Promise<boolean> {
   if (!isSupabaseConfigured) return false
@@ -129,6 +129,108 @@ export async function fetchIntegration(
     return { ...(data.credentials ?? {}), is_active: data.is_active }
   } catch (e) {
     console.warn(`[cloudSync] fetchIntegration(${name}) failed:`, e)
+    return null
+  }
+}
+
+/**
+ * Read back BOTH connector credential rows in one shot (used to hydrate the settings
+ * store on login so connections survive deploys/new devices). Either may be null.
+ */
+export async function fetchConnectorConfigs(): Promise<{
+  bamboohr: Record<string, unknown> | null
+  hubstaff: Record<string, unknown> | null
+}> {
+  const [bamboohr, hubstaff] = await Promise.all([
+    fetchIntegration('bamboohr'),
+    fetchIntegration('hubstaff'),
+  ])
+  return { bamboohr, hubstaff }
+}
+
+// ─── Payroll runs (cloud-authoritative; data JSONB column, see migration 010) ────
+
+/**
+ * Upsert one payroll run to `payroll_runs`. The canonical run object is stored in the
+ * `data` JSONB column (full fidelity — entries/totals round-trip); the structured
+ * summary columns are mirrored for queryability. Conflict target is `local_id` (the
+ * app's non-UUID id). Best-effort: writes require nomina/super admin RLS and no-op
+ * otherwise; a missing `data`/`local_id` column (migration 010 not yet run) is caught.
+ */
+export async function savePayrollRunCloud(run: PayrollPeriod): Promise<void> {
+  if (!(await isAuthenticated())) return
+  try {
+    const row = {
+      local_id: run.id,
+      period_start: run.startDate,
+      period_end: run.endDate,
+      pay_date: run.processedDate ?? null,
+      country: run.country ?? 'Dominican Republic',
+      frequency: run.frequency,
+      status: run.status,
+      total_gross: run.totals?.totalGross ?? null,
+      total_deductions: run.totals?.totalDeductions ?? null,
+      total_net: run.totals?.totalNet ?? null,
+      employee_count: run.totals?.employeeCount ?? null,
+      data: run,
+      updated_at: new Date().toISOString(),
+    }
+    await supabase.from('payroll_runs').upsert(row, { onConflict: 'local_id' })
+  } catch (e) {
+    console.warn('[cloudSync] savePayrollRunCloud failed:', e)
+  }
+}
+
+/** Fetch all payroll runs from the cloud (reconstructed from the `data` column). */
+export async function fetchPayrollRunsCloud(): Promise<PayrollPeriod[]> {
+  if (!(await isAuthenticated())) return []
+  try {
+    const { data, error } = await supabase
+      .from('payroll_runs')
+      .select('data')
+      .not('data', 'is', null)
+    if (error || !data) return []
+    return (data as Array<{ data: PayrollPeriod | null }>)
+      .map((r) => r.data)
+      .filter((d): d is PayrollPeriod => !!d && !!d.id)
+  } catch (e) {
+    console.warn('[cloudSync] fetchPayrollRunsCloud failed:', e)
+    return []
+  }
+}
+
+// ─── Generic app_state KV (durable mirror for store blobs; see migration 010) ────
+//
+// Used for store shapes that have no faithful relational home (the nested vacation
+// maps). The localStorage blob is mirrored verbatim to a single JSONB row keyed by
+// the store's localStorage key, so it round-trips losslessly.
+
+/** Upsert a JSON blob into `app_state` under `key`. Best-effort. */
+export async function saveAppState(key: string, value: unknown): Promise<void> {
+  if (!(await isAuthenticated())) return
+  try {
+    await supabase
+      .from('app_state')
+      .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+  } catch (e) {
+    console.warn(`[cloudSync] saveAppState(${key}) failed:`, e)
+  }
+}
+
+/** Read a JSON blob from `app_state`, or null if absent/unavailable. */
+export async function fetchAppState<T>(key: string): Promise<T | null> {
+  if (!(await isAuthenticated())) return null
+  try {
+    const { data, error } = await supabase
+      .from('app_state')
+      .select('value')
+      .eq('key', key)
+      .limit(1)
+      .maybeSingle()
+    if (error || !data) return null
+    return (data.value ?? null) as T | null
+  } catch (e) {
+    console.warn(`[cloudSync] fetchAppState(${key}) failed:`, e)
     return null
   }
 }

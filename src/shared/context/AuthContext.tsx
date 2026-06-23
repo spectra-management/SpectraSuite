@@ -2,7 +2,11 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback, ty
 import type { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/shared/lib/supabase'
 import { useSettingsStore } from '@/shared/store/settingsStore'
+import { usePayrollStore } from '@/shared/store/payrollStore'
+import { useVacationPaymentsStore } from '@/shared/store/vacationPaymentsStore'
+import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrStore'
 import { logAuditEvent } from '@/shared/lib/audit'
+import { clearAuthSessionKeys } from '@/shared/lib/sessionReset'
 import { SessionTimeoutModal } from '@/shared/components/SessionTimeoutModal'
 import type { ProfileRow, ModulePermissionRow, ModuleId, ModulePerm, PermAction } from '@/shared/types/supabase'
 
@@ -213,8 +217,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (s?.user) {
         await loadProfile(s.user.id)
-        // Cloud is authoritative for company settings once signed in.
+        // Cloud is authoritative once signed in: read business data back from Supabase
+        // so connectors, payroll history and vacation state survive deploys, domain
+        // changes, new devices, and localStorage clears. All best-effort + offline-safe:
+        // each hydrate falls back to the localStorage cache if the cloud is unreachable.
         void useSettingsStore.getState().hydrateCompanyFromCloud()
+        void useSettingsStore.getState().hydrateConnectorsFromCloud()
+        void usePayrollStore.getState().hydrateFromCloud()
+        void useVacationPaymentsStore.getState().hydrateFromCloud()
+        void usePendingVacationIsrStore.getState().hydrateFromCloud()
         // Load the configured inactivity timeout (company_settings is publicly readable).
         void supabase
           .from('company_settings')
@@ -262,11 +273,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.assign('/login')
   }, [])
 
-  // Auto-logout on inactivity timeout.
+  // Auto-logout on inactivity timeout. Clears ONLY auth/session keys — NOT the
+  // business-data caches (employees, payroll history, settings, connectors). Those are
+  // now cloud-authoritative and re-hydrated on the next login, so there is no reason to
+  // wipe them here (the old `localStorage.clear()` destroyed real data on every timeout).
   const handleSessionExpired = useCallback(async () => {
     await logAuditEvent({ action: 'session_expired', category: 'auth', details: { reason: 'inactivity' } })
     await supabase.auth.signOut()
-    localStorage.clear()
+    clearAuthSessionKeys()
     window.location.href = '/login'
   }, [])
 
