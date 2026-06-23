@@ -41,7 +41,7 @@ export interface CompanySettingsRow {
   updated_at: string
 }
 
-export type AuditCategory = 'auth' | 'user_management' | 'payroll' | 'vacation' | 'settings' | 'connector'
+export type AuditCategory = 'auth' | 'user_management' | 'payroll' | 'vacation' | 'settings' | 'connector' | 'facturacion'
 
 export interface AuditLogRow {
   id: string

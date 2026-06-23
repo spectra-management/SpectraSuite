@@ -32,14 +32,12 @@ export const SUITE_MODULES: SuiteModule[] = [
   },
   { id: 'nomina', icon: '💵', path: '/nomina', active: true, navItems: [] },
   {
-    id: 'facturacion', icon: '🧾', path: '/facturacion', active: false,
+    id: 'facturacion', icon: '🧾', path: '/facturacion', active: true,
     navItems: [
-      { icon: '🧾', labelKey: 'suite.nav.invoices' },
+      { icon: '📊', labelKey: 'suite.nav.dashboard' },
       { icon: '👤', labelKey: 'suite.nav.clients' },
-      { icon: '📦', labelKey: 'suite.nav.products' },
-      { icon: '💳', labelKey: 'suite.nav.payments' },
+      { icon: '🧾', labelKey: 'suite.nav.invoices' },
       { icon: '📊', labelKey: 'suite.nav.reports' },
-      { icon: '⚙️', labelKey: 'suite.nav.settings' },
     ],
   },
   {

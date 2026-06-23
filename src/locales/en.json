@@ -37,7 +37,8 @@
       "mobileDevices": "Mobile Devices",
       "licenses": "Licenses",
       "maintenance": "Maintenance",
-      "assignments": "Assignments"
+      "assignments": "Assignments",
+      "dashboard": "Dashboard"
     },
     "settings": {
       "title": "Suite Settings",
@@ -1086,6 +1087,190 @@
       "empty": "No departments yet",
       "emptyHint": "Sync the directory to group employees into departments.",
       "viewMembers": "View members"
+    }
+  },
+  "facturacion": {
+    "brand": "BILLING",
+    "nav": {
+      "dashboard": "Dashboard",
+      "clients": "Clients",
+      "invoices": "Invoices",
+      "reports": "Reports"
+    },
+    "method": {
+      "hour": "Per hour",
+      "fixed": "Fixed amount",
+      "percentage": "Percentage of pay"
+    },
+    "clients": {
+      "title": "Clients",
+      "subtitle": "Companies you invoice for staffing services.",
+      "newClient": "New client",
+      "editClient": "Edit client",
+      "name": "Client name",
+      "contactName": "Contact name",
+      "contactEmail": "Contact email",
+      "contactPhone": "Contact phone",
+      "invoicePrefix": "Invoice prefix",
+      "billingAddress": "Billing address",
+      "defaultMethod": "Default billing method",
+      "currency": "Currency",
+      "remitTo": "Remit to",
+      "remitToName": "Remit-to name",
+      "remitToAddress": "Remit-to address",
+      "remitToDetails": "Payment details",
+      "remitToDetailsHint": "Bank, account number, payment instructions…",
+      "notes": "Notes",
+      "emptyTitle": "No clients yet",
+      "emptyHint": "Create your first client to start assigning employees and billing.",
+      "inactive": "Inactive",
+      "assignedShort": "assigned",
+      "assigned": "Assigned employees",
+      "notFound": "Client not found",
+      "deleteConfirm": "Delete client \"{{name}}\"? This also removes its rates and assignments. Invoices are kept."
+    },
+    "titleRates": {
+      "title": "Title rates (base)",
+      "desc": "Base and overtime rate per job title. A per-employee override always wins over these.",
+      "jobTitle": "Job title",
+      "baseRate": "Base rate",
+      "otRate": "Overtime rate",
+      "jobTitlePlaceholder": "e.g. Security Officer"
+    },
+    "assign": {
+      "title": "Assigned employees",
+      "addEmployee": "Add employee",
+      "selectEmployee": "Select an employee…",
+      "allAssigned": "All employees are already assigned.",
+      "assign": "Assign",
+      "empty": "No employees assigned to this client yet.",
+      "jobTitle": "Title",
+      "method": "Method",
+      "effectiveRate": "Effective rate",
+      "override": "Override",
+      "noRateSet": "No rate set",
+      "noTitle": "No job title",
+      "inheritMethod": "Client default ({{method}})",
+      "baseRateOverride": "Base rate override",
+      "otRateOverride": "Overtime rate override",
+      "noTitleRate": "No title rate",
+      "titleRateIs": "Title rate: {{rate}}",
+      "fixedAmount": "Fixed amount",
+      "percentageRate": "Percentage",
+      "percentageHint": "Percent of the employee’s finalized pay, e.g. 15 for 15%."
+    },
+    "invoices": {
+      "title": "Invoices",
+      "subtitle": "Generate and finalize client invoices from finalized payroll.",
+      "newInvoice": "New invoice",
+      "newSubtitle": "Bill a client from finalized payroll runs.",
+      "step1": "1. Choose a client",
+      "step2": "2. Select finalized payroll runs",
+      "selectClient": "Select a client…",
+      "noAssignments": "This client has no assigned employees. Assign employees first.",
+      "noRuns": "No finalized payroll runs",
+      "noRunsHint": "Only approved or paid payroll runs can be billed. Finalize a run in Payroll first.",
+      "preview": "3. Preview",
+      "noLines": "No billable lines for this selection.",
+      "createDraft": "Create draft invoice",
+      "generateForClient": "Generate invoice",
+      "missingRates": "No rate set for: {{names}}. They are billed at 0 until a title rate or override is set.",
+      "noHoursFor": "No finalized hours in this period for: {{names}}.",
+      "draft": "Draft",
+      "finalize": "Finalize",
+      "finalizeConfirm": "Finalize this invoice? It will be assigned a number and can no longer be edited.",
+      "finalized": "Invoice {{number}} finalized",
+      "deleteConfirm": "Delete this invoice?",
+      "notFound": "Invoice not found",
+      "lineItems": "Line items",
+      "details": "Invoice details",
+      "sourceRuns": "From {{count}} finalized payroll run(s)",
+      "number": "Number",
+      "allStatuses": "All statuses",
+      "allClients": "All clients",
+      "emptyTitle": "No invoices yet",
+      "emptyHint": "Generate an invoice from a finalized payroll run.",
+      "pdfFailed": "Could not generate the invoice PDF."
+    },
+    "lines": {
+      "basePay": "Base Pay",
+      "overtime": "Overtime Differential",
+      "fixed": "Fixed Fee",
+      "percentage": "Service Fee",
+      "employee": "Employee",
+      "description": "Description",
+      "qty": "Qty / Hrs",
+      "rate": "Rate"
+    },
+    "lineType": {
+      "base": "Base Pay",
+      "overtime": "Overtime",
+      "fixed": "Fixed Fee",
+      "percentage": "Service Fee",
+      "bonus": "Bonus / Incentive"
+    },
+    "runStatus": {
+      "approved": "Approved",
+      "sent": "Paid"
+    },
+    "invoiceStatus": {
+      "draft": "Draft",
+      "finalized": "Finalized"
+    },
+    "bonus": {
+      "add": "Add bonus",
+      "label": "Label",
+      "labelPlaceholder": "e.g. KPI Bonus, Team Contest",
+      "quantity": "Quantity",
+      "amount": "Amount",
+      "amountHint": "Amount is the total for this line (quantity is informational).",
+      "tag": "Bonus"
+    },
+    "pdf": {
+      "invoice": "Invoice",
+      "number": "Invoice #",
+      "issueDate": "Issue date",
+      "period": "Period",
+      "billTo": "Bill to",
+      "remitTo": "Remit to",
+      "subtotal": "Subtotal",
+      "generatedBy": "Generated by Spectra Suite"
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Revenue, pipeline and billed hours.",
+      "finalizedRevenue": "Finalized revenue",
+      "draftPipeline": "Draft pipeline",
+      "finalizedCount": "Finalized invoices",
+      "draftCount": "Draft invoices",
+      "revenueByMonth": "Revenue by month",
+      "revenueByClient": "Revenue by client",
+      "revenueByType": "Revenue by line type",
+      "billedHours": "Billed hours by employee",
+      "noFinalized": "No finalized invoices yet.",
+      "noHours": "No billed hours yet.",
+      "empty": "No data to report",
+      "emptyHint": "Generate and finalize invoices to see reports."
+    },
+    "restricted": {
+      "editTitle": "Editing not allowed",
+      "editHint": "You need Billing edit permission to create or change invoices.",
+      "financialsTitle": "Financial access required",
+      "financialsHint": "The percentage method reads employee pay. You need Billing admin permission to view it.",
+      "reportsHint": "Financial reports expose revenue and pay. You need Billing admin permission to view them."
+    },
+    "dashboard": {
+      "title": "Billing dashboard",
+      "subtitle": "Clients, invoices and payroll ready to bill.",
+      "activeClients": "Active clients",
+      "assignedEmployees": "Assigned employees",
+      "draftInvoices": "Draft invoices",
+      "finalizedInvoices": "Finalized invoices",
+      "recentInvoices": "Recent invoices",
+      "runsToBill": "Payroll ready to bill",
+      "bill": "Bill",
+      "emptyTitle": "Welcome to Billing",
+      "emptyHint": "Create a client and assign employees to start invoicing."
     }
   }
 }

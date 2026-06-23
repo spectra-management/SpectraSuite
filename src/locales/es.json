@@ -37,7 +37,8 @@
       "mobileDevices": "Dispositivos Móviles",
       "licenses": "Licencias",
       "maintenance": "Mantenimiento",
-      "assignments": "Asignaciones"
+      "assignments": "Asignaciones",
+      "dashboard": "Panel"
     },
     "settings": {
       "title": "Ajustes de la Suite",
@@ -1086,6 +1087,190 @@
       "empty": "Aún no hay departamentos",
       "emptyHint": "Sincroniza el directorio para agrupar empleados en departamentos.",
       "viewMembers": "Ver miembros"
+    }
+  },
+  "facturacion": {
+    "brand": "FACTURACIÓN",
+    "nav": {
+      "dashboard": "Panel",
+      "clients": "Clientes",
+      "invoices": "Facturas",
+      "reports": "Reportes"
+    },
+    "method": {
+      "hour": "Por hora",
+      "fixed": "Monto fijo",
+      "percentage": "Porcentaje del pago"
+    },
+    "clients": {
+      "title": "Clientes",
+      "subtitle": "Empresas a las que facturas por servicios de personal.",
+      "newClient": "Nuevo cliente",
+      "editClient": "Editar cliente",
+      "name": "Nombre del cliente",
+      "contactName": "Nombre de contacto",
+      "contactEmail": "Correo de contacto",
+      "contactPhone": "Teléfono de contacto",
+      "invoicePrefix": "Prefijo de factura",
+      "billingAddress": "Dirección de facturación",
+      "defaultMethod": "Método de facturación por defecto",
+      "currency": "Moneda",
+      "remitTo": "Enviar pago a",
+      "remitToName": "Nombre (enviar pago a)",
+      "remitToAddress": "Dirección (enviar pago a)",
+      "remitToDetails": "Detalles de pago",
+      "remitToDetailsHint": "Banco, número de cuenta, instrucciones de pago…",
+      "notes": "Notas",
+      "emptyTitle": "Aún no hay clientes",
+      "emptyHint": "Crea tu primer cliente para asignar empleados y facturar.",
+      "inactive": "Inactivo",
+      "assignedShort": "asignados",
+      "assigned": "Empleados asignados",
+      "notFound": "Cliente no encontrado",
+      "deleteConfirm": "¿Eliminar el cliente \"{{name}}\"? También se eliminan sus tarifas y asignaciones. Las facturas se conservan."
+    },
+    "titleRates": {
+      "title": "Tarifas por puesto (base)",
+      "desc": "Tarifa base y de horas extra por puesto. Una excepción por empleado siempre prevalece sobre estas.",
+      "jobTitle": "Puesto",
+      "baseRate": "Tarifa base",
+      "otRate": "Tarifa horas extra",
+      "jobTitlePlaceholder": "ej. Oficial de Seguridad"
+    },
+    "assign": {
+      "title": "Empleados asignados",
+      "addEmployee": "Agregar empleado",
+      "selectEmployee": "Selecciona un empleado…",
+      "allAssigned": "Todos los empleados ya están asignados.",
+      "assign": "Asignar",
+      "empty": "Aún no hay empleados asignados a este cliente.",
+      "jobTitle": "Puesto",
+      "method": "Método",
+      "effectiveRate": "Tarifa efectiva",
+      "override": "Excepción",
+      "noRateSet": "Sin tarifa",
+      "noTitle": "Sin puesto",
+      "inheritMethod": "Predeterminado del cliente ({{method}})",
+      "baseRateOverride": "Excepción de tarifa base",
+      "otRateOverride": "Excepción de tarifa extra",
+      "noTitleRate": "Sin tarifa de puesto",
+      "titleRateIs": "Tarifa del puesto: {{rate}}",
+      "fixedAmount": "Monto fijo",
+      "percentageRate": "Porcentaje",
+      "percentageHint": "Porcentaje del pago finalizado del empleado, ej. 15 para 15%."
+    },
+    "invoices": {
+      "title": "Facturas",
+      "subtitle": "Genera y finaliza facturas de clientes desde nómina finalizada.",
+      "newInvoice": "Nueva factura",
+      "newSubtitle": "Factura a un cliente desde corridas de nómina finalizadas.",
+      "step1": "1. Elige un cliente",
+      "step2": "2. Selecciona corridas de nómina finalizadas",
+      "selectClient": "Selecciona un cliente…",
+      "noAssignments": "Este cliente no tiene empleados asignados. Asigna empleados primero.",
+      "noRuns": "No hay corridas de nómina finalizadas",
+      "noRunsHint": "Solo se pueden facturar corridas aprobadas o pagadas. Finaliza una corrida en Nómina primero.",
+      "preview": "3. Vista previa",
+      "noLines": "No hay líneas facturables para esta selección.",
+      "createDraft": "Crear borrador de factura",
+      "generateForClient": "Generar factura",
+      "missingRates": "Sin tarifa para: {{names}}. Se facturan en 0 hasta definir una tarifa de puesto o excepción.",
+      "noHoursFor": "Sin horas finalizadas en este período para: {{names}}.",
+      "draft": "Borrador",
+      "finalize": "Finalizar",
+      "finalizeConfirm": "¿Finalizar esta factura? Se le asignará un número y ya no podrá editarse.",
+      "finalized": "Factura {{number}} finalizada",
+      "deleteConfirm": "¿Eliminar esta factura?",
+      "notFound": "Factura no encontrada",
+      "lineItems": "Líneas de factura",
+      "details": "Detalles de la factura",
+      "sourceRuns": "De {{count}} corrida(s) de nómina finalizada(s)",
+      "number": "Número",
+      "allStatuses": "Todos los estados",
+      "allClients": "Todos los clientes",
+      "emptyTitle": "Aún no hay facturas",
+      "emptyHint": "Genera una factura desde una corrida de nómina finalizada.",
+      "pdfFailed": "No se pudo generar el PDF de la factura."
+    },
+    "lines": {
+      "basePay": "Pago Base",
+      "overtime": "Diferencial de Horas Extra",
+      "fixed": "Tarifa Fija",
+      "percentage": "Tarifa de Servicio",
+      "employee": "Empleado",
+      "description": "Descripción",
+      "qty": "Cant. / Hrs",
+      "rate": "Tarifa"
+    },
+    "lineType": {
+      "base": "Pago Base",
+      "overtime": "Horas Extra",
+      "fixed": "Tarifa Fija",
+      "percentage": "Tarifa de Servicio",
+      "bonus": "Bono / Incentivo"
+    },
+    "runStatus": {
+      "approved": "Aprobada",
+      "sent": "Pagada"
+    },
+    "invoiceStatus": {
+      "draft": "Borrador",
+      "finalized": "Finalizada"
+    },
+    "bonus": {
+      "add": "Agregar bono",
+      "label": "Etiqueta",
+      "labelPlaceholder": "ej. Bono KPI, Concurso de Equipo",
+      "quantity": "Cantidad",
+      "amount": "Monto",
+      "amountHint": "El monto es el total de esta línea (la cantidad es informativa).",
+      "tag": "Bono"
+    },
+    "pdf": {
+      "invoice": "Factura",
+      "number": "Factura #",
+      "issueDate": "Fecha de emisión",
+      "period": "Período",
+      "billTo": "Facturar a",
+      "remitTo": "Enviar pago a",
+      "subtotal": "Subtotal",
+      "generatedBy": "Generado por Spectra Suite"
+    },
+    "reports": {
+      "title": "Reportes",
+      "subtitle": "Ingresos, cartera y horas facturadas.",
+      "finalizedRevenue": "Ingresos finalizados",
+      "draftPipeline": "Cartera en borrador",
+      "finalizedCount": "Facturas finalizadas",
+      "draftCount": "Facturas en borrador",
+      "revenueByMonth": "Ingresos por mes",
+      "revenueByClient": "Ingresos por cliente",
+      "revenueByType": "Ingresos por tipo de línea",
+      "billedHours": "Horas facturadas por empleado",
+      "noFinalized": "Aún no hay facturas finalizadas.",
+      "noHours": "Aún no hay horas facturadas.",
+      "empty": "Sin datos para reportar",
+      "emptyHint": "Genera y finaliza facturas para ver reportes."
+    },
+    "restricted": {
+      "editTitle": "Edición no permitida",
+      "editHint": "Necesitas permiso de edición en Facturación para crear o cambiar facturas.",
+      "financialsTitle": "Acceso financiero requerido",
+      "financialsHint": "El método de porcentaje lee el pago del empleado. Necesitas permiso de administrador en Facturación para verlo.",
+      "reportsHint": "Los reportes financieros muestran ingresos y pagos. Necesitas permiso de administrador en Facturación para verlos."
+    },
+    "dashboard": {
+      "title": "Panel de Facturación",
+      "subtitle": "Clientes, facturas y nómina lista para facturar.",
+      "activeClients": "Clientes activos",
+      "assignedEmployees": "Empleados asignados",
+      "draftInvoices": "Facturas en borrador",
+      "finalizedInvoices": "Facturas finalizadas",
+      "recentInvoices": "Facturas recientes",
+      "runsToBill": "Nómina lista para facturar",
+      "bill": "Facturar",
+      "emptyTitle": "Bienvenido a Facturación",
+      "emptyHint": "Crea un cliente y asigna empleados para empezar a facturar."
     }
   }
 }

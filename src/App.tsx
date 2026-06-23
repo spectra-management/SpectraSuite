@@ -16,6 +16,16 @@ import History from '@/modules/nomina/pages/History'
 import Connectors from '@/modules/nomina/pages/Connectors'
 import Settings from '@/modules/nomina/pages/Settings'
 import { RrhhLayout, Directory, Profile, OrgChart, TimeOff, Departments } from '@/modules/rrhh'
+import {
+  BillingLayout,
+  BillingDashboard,
+  Clients,
+  ClientDetail,
+  Invoices,
+  NewInvoice,
+  InvoiceDetail,
+  BillingReports,
+} from '@/modules/facturacion'
 
 export default function App() {
   return (
@@ -89,15 +99,33 @@ export default function App() {
             <Route path="departments" element={<Departments />} />
           </Route>
 
-          {/* Placeholder modules — Coming Soon */}
+          {/* Facturación module (Billing/Invoicing — reads finalized Payroll data) */}
           <Route
             path="/facturacion"
             element={
               <ProtectedRoute module="facturacion">
-                <ModuleShell moduleId="facturacion" />
+                <BillingLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<BillingDashboard />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="clients/:id" element={<ClientDetail />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route
+              path="invoices/new"
+              element={
+                <ProtectedRoute module="facturacion" action="edit">
+                  <NewInvoice />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="invoices/:id" element={<InvoiceDetail />} />
+            <Route path="reports" element={<BillingReports />} />
+          </Route>
+
+          {/* Placeholder modules — Coming Soon */}
           <Route
             path="/gastos"
             element={
