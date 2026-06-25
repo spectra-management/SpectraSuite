@@ -15,7 +15,7 @@ import { logAuditEvent } from '@/shared/lib/audit'
 import { toast } from '@/shared/hooks/useToast'
 import type { ProfileRow, UserRole, ModuleId, RoleRow, RolePermissionRow, ModulePerm } from '@/shared/types/supabase'
 
-const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'gastos', 'it']
+const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'documentos', 'gastos', 'it']
 
 const ROLE_BADGE: Record<UserRole, string> = {
   super_admin: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',

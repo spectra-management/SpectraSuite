@@ -10,7 +10,7 @@ import { clearAuthSessionKeys } from '@/shared/lib/sessionReset'
 import { SessionTimeoutModal } from '@/shared/components/SessionTimeoutModal'
 import type { ProfileRow, ModulePermissionRow, ModuleId, ModulePerm, PermAction } from '@/shared/types/supabase'
 
-const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'gastos', 'it']
+const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'documentos', 'gastos', 'it']
 
 // Only corporate Google accounts may sign in. Any other domain is rejected at the
 // auth boundary (signed out immediately + bounced to /login). The Login page reads

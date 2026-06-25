@@ -61,4 +61,7 @@ export const STORAGE_KEYS = {
   BILLING_CLIENT_EMPLOYEES: 'billing_client_employees',
   BILLING_INVOICES: 'billing_invoices',
   BILLING_META: 'billing_meta',
+  // Documentos (company documents) module
+  DOCUMENT_TEMPLATES: 'document_templates',
+  GENERATED_DOCUMENTS: 'generated_documents',
 } as const

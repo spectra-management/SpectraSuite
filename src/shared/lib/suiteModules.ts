@@ -1,7 +1,7 @@
 // Spectra Suite module registry. The Nómina module is the existing payroll app;
 // the others are placeholders with a Coming Soon screen.
 
-export type SuiteModuleId = 'rrhh' | 'nomina' | 'facturacion' | 'gastos' | 'it'
+export type SuiteModuleId = 'rrhh' | 'nomina' | 'facturacion' | 'documentos' | 'gastos' | 'it'
 
 export interface SuiteNavItem {
   icon: string        // emoji
@@ -31,6 +31,7 @@ export const SUITE_MODULES: SuiteModule[] = [
     ],
   },
   { id: 'nomina', icon: '💵', path: '/nomina', active: true, navItems: [] },
+  { id: 'documentos', icon: '📄', path: '/documentos', active: true, navItems: [] },
   {
     id: 'facturacion', icon: '🧾', path: '/facturacion', active: true,
     navItems: [

@@ -12,7 +12,7 @@ import { logAuditEvent } from '@/shared/lib/audit'
 import { toast } from '@/shared/hooks/useToast'
 import type { RoleRow, RolePermissionRow, ModuleId, ModulePerm } from '@/shared/types/supabase'
 
-const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'gastos', 'it']
+const MODULES: ModuleId[] = ['nomina', 'rrhh', 'facturacion', 'documentos', 'gastos', 'it']
 type Draft = Record<ModuleId, ModulePerm>
 const emptyDraft = (): Draft => {
   const d = {} as Draft

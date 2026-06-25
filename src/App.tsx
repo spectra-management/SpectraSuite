@@ -26,6 +26,7 @@ import {
   InvoiceDetail,
   BillingReports,
 } from '@/modules/facturacion'
+import { DocumentosLayout, DocumentosGenerate, DocumentosTemplates, DocumentosHistory } from '@/modules/documentos'
 
 export default function App() {
   return (
@@ -130,6 +131,21 @@ export default function App() {
             />
             <Route path="invoices/:id" element={<InvoiceDetail />} />
             <Route path="reports" element={<BillingReports />} />
+          </Route>
+
+          {/* Documentos module (company documents — contracts, letters, NDAs) */}
+          <Route
+            path="/documentos"
+            element={
+              <ProtectedRoute module="documentos">
+                <DocumentosLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="generate" replace />} />
+            <Route path="generate" element={<DocumentosGenerate />} />
+            <Route path="templates" element={<DocumentosTemplates />} />
+            <Route path="history" element={<DocumentosHistory />} />
           </Route>
 
           {/* Placeholder modules — Coming Soon */}
