@@ -111,28 +111,45 @@ function joinAddress(line1: string | undefined, line2: string | undefined): stri
 }
 
 // In the Dominican Republic the national id (cédula) is usually a CUSTOM BambooHR field,
-// not the standard `ssn` (which is empty). Match a field by its label/alias so this works
-// for any account without hard-coding a field id.
+// not the standard `ssn` (which is empty). We find it two ways, both account-agnostic:
+//   1. by VALUE — any field whose value has the DR cédula shape (11 digits, 000-0000000-0);
+//   2. by NAME  — a field labelled cédula / identidad / documento / national id.
+// Value-detection is primary because it works no matter how the field is named or keyed.
 const CEDULA_FIELD_RE = /c[eé]dula|identidad|documento|national\s*id|nationalid|\bnin\b/i
+const CEDULA_VALUE_RE = /^\d{3}-?\d{7}-?\d$/
 
-/**
- * Looks up the BambooHR field that holds the national id (cédula) by scanning the account's
- * field metadata (/v1/meta/fields) and matching the label/alias. Returns the field's alias
- * or id to request in the custom report, or null if none matches. Best-effort.
- */
-async function detectNationalIdField(subdomain: string, apiKey: string): Promise<string | null> {
+interface FieldHints {
+  /** Custom/text field ids to additionally request so their values can be scanned. */
+  textFieldIds: string[]
+  /** A field id/alias whose label looks like a national id, if any. */
+  namedCedulaId: string | null
+}
+
+/** Reads /v1/meta/fields to learn which extra fields to request + a name-matched candidate. */
+async function fetchFieldHints(subdomain: string, apiKey: string): Promise<FieldHints> {
   try {
     const qs = new URLSearchParams({ path: '/v1/meta/fields', subdomain, apiKey })
     const res = await fetch(`/api/bamboohr?${qs.toString()}`)
-    if (!res.ok) return null
-    const fields = (await res.json()) as Array<{ id?: string | number; name?: string; alias?: string }>
-    if (!Array.isArray(fields)) return null
-    const match = fields.find((f) => CEDULA_FIELD_RE.test(`${f.name ?? ''} ${f.alias ?? ''}`))
-    if (!match) return null
-    return match.alias ? String(match.alias) : match.id != null ? String(match.id) : null
+    if (!res.ok) return { textFieldIds: [], namedCedulaId: null }
+    const fields = (await res.json()) as Array<{ id?: string | number; name?: string; alias?: string; type?: string }>
+    if (!Array.isArray(fields)) return { textFieldIds: [], namedCedulaId: null }
+    const textFieldIds = fields
+      .filter((f) => f.id != null && (!f.type || f.type === 'text' || f.type === 'ssn'))
+      .map((f) => String(f.id))
+    const named = fields.find((f) => CEDULA_FIELD_RE.test(`${f.name ?? ''} ${f.alias ?? ''}`))
+    const namedCedulaId = named ? (named.alias ? String(named.alias) : String(named.id)) : null
+    return { textFieldIds, namedCedulaId }
   } catch {
-    return null
+    return { textFieldIds: [], namedCedulaId: null }
   }
+}
+
+/** First value in the row that has the DR cédula shape. "" if none. */
+export function findCedulaByValue(row: Record<string, unknown>): string {
+  for (const v of Object.values(row)) {
+    if (typeof v === 'string' && CEDULA_VALUE_RE.test(v.trim())) return v.trim()
+  }
+  return ''
 }
 
 /**
@@ -143,11 +160,13 @@ export async function fetchHrDirectory(
   subdomain: string,
   apiKey: string,
 ): Promise<HrEmployeeDetail[]> {
-  // Discover the cédula field for this account, then request it alongside the rest.
-  const cedulaField = await detectNationalIdField(subdomain, apiKey)
-  const requestFields = cedulaField && !REPORT_FIELDS.includes(cedulaField)
-    ? [...REPORT_FIELDS, cedulaField]
-    : [...REPORT_FIELDS]
+  // Learn this account's fields so we can request the cédula (a custom field) and scan for it.
+  const hints = await fetchFieldHints(subdomain, apiKey)
+  const requestFields = Array.from(new Set([
+    ...REPORT_FIELDS,
+    ...hints.textFieldIds,
+    ...(hints.namedCedulaId ? [hints.namedCedulaId] : []),
+  ]))
 
   const qs = new URLSearchParams({
     path: '/v1/reports/custom',
@@ -169,8 +188,11 @@ export async function fetchHrDirectory(
 
   const data = await res.json() as BambooHrReportResponse
   return (data.employees ?? []).map((e): HrEmployeeDetail => {
-    // The detected cédula field comes back keyed by the same alias/id we requested.
-    const detected = cedulaField ? String((e as unknown as Record<string, unknown>)[cedulaField] ?? '').trim() : ''
+    const row = e as unknown as Record<string, unknown>
+    // Cédula: prefer the name-matched field, else any field whose value looks like a
+    // cédula, else the standard SSN field.
+    const named = hints.namedCedulaId ? String(row[hints.namedCedulaId] ?? '').trim() : ''
+    const detected = named || findCedulaByValue(row)
     return {
     id: String(e.id),
     firstName: e.firstName ?? '',
