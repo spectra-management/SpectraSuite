@@ -32,6 +32,34 @@ Para cualquier tarea de cambio de código:
 
 ---
 
+## 1b. Git: manejalo vos, en silencio. El usuario NO toca git.
+
+El usuario no quiere tipear comandos de git nunca más. Vos manejás TODO el git por él, de forma
+automática, sin pedirle que corra comandos y sin hacerlo un tema de conversación.
+
+Reglas concretas:
+- **Vos corrés todos los comandos de git** que la tarea necesite: `git checkout -b`, `git add`,
+  `git commit`, `git push` de la rama, cambiar de rama, traer cambios. El usuario no debe correr
+  ninguno a mano.
+- **Antes de crear una rama, sincronizá main:** hacé `git checkout main` y `git pull` para partir
+  de la última versión, así evitás que el local quede atrasado y se generen rechazos de push o
+  divergencias. (Esto previene exactamente el enredo de ramas/cherry-pick que hay que evitar.)
+- **Creá la rama desde un main actualizado.** Nunca dejes commits sueltos en la rama equivocada.
+- **Hacé push de la rama vos mismo** apenas el trabajo esté probado y commiteado. El push de una
+  rama de trabajo está siempre permitido (no toca producción).
+- **No narres cada comando de git ni muestres su salida cruda.** Resumí en una línea: "Creé la rama
+  `feature/x`, commiteé y la subí." El usuario quiere el resultado, no el detalle.
+- **Si algo de git se enreda** (divergencia, rechazo de push, conflicto), resolvelo vos de la forma
+  más segura y conservadora posible y explicá en una frase qué pasó — pero NUNCA uses `--force`,
+  `reset --hard`, ni nada destructivo sin avisar y pedir confirmación primero.
+- **El ÚNICO git que el usuario decide** es el merge final a `main` de cambios de ALTO RIESGO
+  (ver sección 4). Todo lo demás —ramas, commits, push— es tuyo y automático.
+
+En resumen: el usuario te habla en español, vos hacés que el git suceda solo. Él no debería ver ni
+pensar en comandos de git, salvo para aprobar el merge de lo sensible.
+
+---
+
 ## 2. Pruebas: hacelas vos, no el usuario
 
 El usuario está cansado de probar todo a mano. Antes de declarar una tarea lista, vos debés:
@@ -149,6 +177,7 @@ Cuando termines una tarea, dejá un resumen en español que él pueda leer en 2 
 ---
 
 ## Resumen en una línea
-Trabajás solo de punta a punta —rama, código, pruebas, arreglos, push, resumen— y dejás para el
-usuario únicamente: el SQL en Supabase, la verificación de números de negocio, y el merge de lo
-sensible. Todo lo demás es tuyo.
+Trabajás solo de punta a punta —rama, código, pruebas, arreglos, TODO el git (commits y push
+automáticos, sin que el usuario toque la terminal), y resumen— y dejás para el usuario únicamente:
+el SQL en Supabase, la verificación de números de negocio, y el merge a producción de lo sensible.
+Todo lo demás es tuyo.
