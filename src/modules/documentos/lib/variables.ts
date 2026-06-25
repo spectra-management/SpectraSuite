@@ -42,6 +42,8 @@ export function formatLongDate(dateStr: string, lang: string): string {
 }
 
 function formatMoney(amount: number, currency?: string): string {
+  // payRate === 0 means "not set in BambooHR" (pairs with an empty payRateCurrency),
+  // so we render it as blank rather than "0.00" — the document just omits the figure.
   if (!amount) return ''
   const n = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   return currency ? `${currency} ${n}` : n

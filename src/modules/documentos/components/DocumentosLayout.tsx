@@ -10,23 +10,21 @@ import { useDocumentsStore } from '../store/documentsStore'
  * Documentos module shell. Same structure as the Nómina / RRHH / Billing layouts
  * (shared Header, mobile drawer, scrollable main, toaster) with the documents sidebar.
  *
- * On mount it seeds the built-in templates once, then reads templates + generated
- * records back from the cloud (best-effort, offline-safe).
+ * On mount it seeds the built-in templates once per workspace and reads templates +
+ * generated records back from the cloud (best-effort, offline-safe, cloud-authoritative).
  */
 export function DocumentosLayout() {
   const { t } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const ensureSeeded = useDocumentsStore((s) => s.ensureSeeded)
-  const hydrateFromCloud = useDocumentsStore((s) => s.hydrateFromCloud)
+  const initialize = useDocumentsStore((s) => s.initialize)
 
   useEffect(() => {
     document.title = `${t('suite.modules.documentos')} | Spectra Suite`
   }, [t])
 
   useEffect(() => {
-    ensureSeeded()
-    void hydrateFromCloud()
-  }, [ensureSeeded, hydrateFromCloud])
+    void initialize()
+  }, [initialize])
 
   return (
     <div className="flex h-screen overflow-hidden bg-canvas">

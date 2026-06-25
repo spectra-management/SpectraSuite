@@ -94,7 +94,7 @@ export default function Templates() {
   }
 
   const handleDuplicate = (tpl: DocumentTemplate) => {
-    const copy = duplicateTemplate(tpl.id)
+    const copy = duplicateTemplate(tpl.id, t('documentos.templates.copySuffix'))
     if (copy) toast({ variant: 'success', title: t('documentos.templates.duplicated') })
   }
 
@@ -117,7 +117,9 @@ export default function Templates() {
         <Card>
           <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
             <FileText className="h-8 w-8 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">{t('documentos.templates.empty')}</p>
+            <p className="text-sm text-muted-foreground">
+              {canEdit ? t('documentos.templates.empty') : t('documentos.templates.emptyNoPermission')}
+            </p>
           </CardContent>
         </Card>
       ) : (

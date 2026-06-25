@@ -5,24 +5,12 @@ import { generateId } from '@/shared/lib/utils'
 import type { DocumentTemplate, GeneratedDocumentRecord } from '../lib/types'
 import { buildSeedTemplates } from '../lib/seedTemplates'
 
-// Local flag so we don't re-seed the built-in templates after the user deletes them.
+// Workspace-level "templates were seeded once" marker. Synced to the cloud (not just
+// localStorage) so a fresh device / cleared cache does NOT re-seed templates that were
+// already seeded — and possibly deleted — elsewhere.
 const SEEDED_FLAG = 'documents_seeded'
 
-/** Cloud-wins-by-id merge for templates; keeps local-only entries. */
-function mergeById(
-  local: DocumentTemplate[],
-  cloud: DocumentTemplate[],
-): { merged: DocumentTemplate[]; hasLocalOnly: boolean } {
-  const byId = new Map<string, DocumentTemplate>()
-  for (const t of local) byId.set(t.id, t)
-  let hasLocalOnly = false
-  const cloudIds = new Set(cloud.map((t) => t.id))
-  for (const t of local) if (!cloudIds.has(t.id)) hasLocalOnly = true
-  for (const t of cloud) byId.set(t.id, t) // cloud wins per id
-  return { merged: [...byId.values()], hasLocalOnly }
-}
-
-/** Union-by-id merge for the append-only generated-document log. */
+/** Union-by-id merge for the append-only generated-document log (cloud + local). */
 function unionRecords(
   local: GeneratedDocumentRecord[],
   cloud: GeneratedDocumentRecord[],
@@ -40,17 +28,20 @@ function unionRecords(
 interface DocumentsState {
   templates: DocumentTemplate[]
   records: GeneratedDocumentRecord[]
-  /** Seed the built-in templates once (no-op if already seeded or templates exist). */
-  ensureSeeded: () => void
   getTemplate: (id: string) => DocumentTemplate | undefined
   addTemplate: (input: Pick<DocumentTemplate, 'name' | 'description' | 'title' | 'body'>) => DocumentTemplate
   updateTemplate: (id: string, patch: Partial<Omit<DocumentTemplate, 'id' | 'isSystem' | 'createdAt'>>) => void
   deleteTemplate: (id: string) => void
-  duplicateTemplate: (id: string) => DocumentTemplate | undefined
+  /** Duplicate a template; `copySuffix` is the translated word appended to the name. */
+  duplicateTemplate: (id: string, copySuffix: string) => DocumentTemplate | undefined
   /** Append generated-document records (bulk-safe). */
   addRecords: (records: GeneratedDocumentRecord[]) => void
-  /** Read templates + records back from the cloud (app_state) and merge. */
-  hydrateFromCloud: () => Promise<void>
+  /**
+   * Seed (once per workspace) + read templates/records back from the cloud. Cloud is
+   * authoritative: deleted built-in templates are NOT re-introduced, while local-only
+   * user templates are preserved and pushed up. Offline-safe (cloud null → local kept).
+   */
+  initialize: () => Promise<void>
 }
 
 function persistTemplates(templates: DocumentTemplate[]): void {
@@ -66,15 +57,6 @@ function persistRecords(records: GeneratedDocumentRecord[]): void {
 export const useDocumentsStore = create<DocumentsState>((set, get) => ({
   templates: storage.get<DocumentTemplate[]>(STORAGE_KEYS.DOCUMENT_TEMPLATES) ?? [],
   records: storage.get<GeneratedDocumentRecord[]>(STORAGE_KEYS.GENERATED_DOCUMENTS) ?? [],
-
-  ensureSeeded: () => {
-    if (get().templates.length > 0) return
-    if (storage.get<boolean>(SEEDED_FLAG)) return
-    const seeded = buildSeedTemplates(new Date().toISOString())
-    storage.set(SEEDED_FLAG, true)
-    persistTemplates(seeded)
-    set({ templates: seeded })
-  },
 
   getTemplate: (id) => get().templates.find((t) => t.id === id),
 
@@ -101,14 +83,14 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     set({ templates })
   },
 
-  duplicateTemplate: (id) => {
+  duplicateTemplate: (id, copySuffix) => {
     const src = get().templates.find((t) => t.id === id)
     if (!src) return undefined
     const ts = new Date().toISOString()
     const copy: DocumentTemplate = {
       ...src,
       id: generateId(),
-      name: `${src.name} (copia)`,
+      name: `${src.name} (${copySuffix})`,
       isSystem: false,
       createdAt: ts,
       updatedAt: ts,
@@ -126,21 +108,40 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     set({ records: merged })
   },
 
-  hydrateFromCloud: async () => {
-    const [cloudTemplates, cloudRecords] = await Promise.all([
+  initialize: async () => {
+    const [cloudTemplates, cloudRecords, cloudSeeded] = await Promise.all([
       fetchAppState<DocumentTemplate[]>(STORAGE_KEYS.DOCUMENT_TEMPLATES),
       fetchAppState<GeneratedDocumentRecord[]>(STORAGE_KEYS.GENERATED_DOCUMENTS),
+      fetchAppState<boolean>(SEEDED_FLAG),
     ])
 
+    // ── Templates ──────────────────────────────────────────────────────────────
     if (cloudTemplates) {
-      const { merged, hasLocalOnly } = mergeById(get().templates, cloudTemplates)
+      // Cloud is authoritative: take its set, keeping only local-only USER templates
+      // (never re-add a built-in template the cloud deliberately lacks = deleted elsewhere).
+      const cloudIds = new Set(cloudTemplates.map((t) => t.id))
+      const localOnlyUser = get().templates.filter((t) => !t.isSystem && !cloudIds.has(t.id))
+      const merged = [...cloudTemplates, ...localOnlyUser]
       storage.set(STORAGE_KEYS.DOCUMENT_TEMPLATES, merged)
       set({ templates: merged })
-      if (hasLocalOnly) void saveAppState(STORAGE_KEYS.DOCUMENT_TEMPLATES, merged)
-    } else if (get().templates.length > 0) {
-      void saveAppState(STORAGE_KEYS.DOCUMENT_TEMPLATES, get().templates)
+      if (localOnlyUser.length > 0) void saveAppState(STORAGE_KEYS.DOCUMENT_TEMPLATES, merged)
+    } else {
+      // No cloud copy yet. Seed only if this workspace was never seeded (locally or in cloud).
+      const seeded = !!storage.get<boolean>(SEEDED_FLAG) || cloudSeeded === true
+      let templates = get().templates
+      if (templates.length === 0 && !seeded) {
+        templates = buildSeedTemplates(new Date().toISOString())
+        storage.set(STORAGE_KEYS.DOCUMENT_TEMPLATES, templates)
+        set({ templates })
+      }
+      if (templates.length > 0 || seeded) {
+        storage.set(SEEDED_FLAG, true)
+        void saveAppState(SEEDED_FLAG, true)
+        if (templates.length > 0) void saveAppState(STORAGE_KEYS.DOCUMENT_TEMPLATES, templates)
+      }
     }
 
+    // ── Generated-document records ───────────────────────────────────────────────
     if (cloudRecords) {
       const { merged, hasLocalOnly } = unionRecords(get().records, cloudRecords)
       storage.set(STORAGE_KEYS.GENERATED_DOCUMENTS, merged)

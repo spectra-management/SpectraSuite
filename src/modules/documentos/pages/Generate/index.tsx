@@ -106,9 +106,10 @@ export default function Generate() {
     return { name: `${emp.firstName} ${emp.lastName}`, title: fillTemplate(template.title, vars), body: fillTemplate(template.body, vars) }
   }, [template, selectedEmployees, hrById, company, lang])
 
-  const pageFor = (emp: Employee): DocumentPageData => {
-    const vars = buildVariables(emp, hrById[emp.id], company, lang, new Date())
-    const footer = `${emp.firstName} ${emp.lastName} · ${new Date().toLocaleDateString(lang.startsWith('es') ? 'es-DO' : 'en-US')}`
+  // `now` is fixed once per batch so every page's fecha_hoy + footer share one timestamp.
+  const pageFor = (emp: Employee, now: Date): DocumentPageData => {
+    const vars = buildVariables(emp, hrById[emp.id], company, lang, now)
+    const footer = `${emp.firstName} ${emp.lastName} · ${now.toLocaleDateString(lang.startsWith('es') ? 'es-DO' : 'en-US')}`
     return { title: fillTemplate(template!.title, vars), body: fillTemplate(template!.body, vars), footer }
   }
 
@@ -117,15 +118,16 @@ export default function Generate() {
     setGenerating(true)
     try {
       const { ContractDocument, BulkDocument } = await import('../../lib/ContractDocument')
-      const nowIso = new Date().toISOString()
+      const now = new Date()
+      const nowIso = now.toISOString()
       const generatedBy = profile?.full_name || user?.email || ''
 
       if (selectedEmployees.length === 1) {
         const emp = selectedEmployees[0]
-        const blob = await generatePdfBlob(<ContractDocument data={pageFor(emp)} company={company} />)
+        const blob = await generatePdfBlob(<ContractDocument data={pageFor(emp, now)} company={company} />)
         downloadBlob(blob, `${safeFilePart(template.name)}_${safeFilePart(`${emp.firstName}_${emp.lastName}`)}.pdf`)
       } else {
-        const pages = selectedEmployees.map(pageFor)
+        const pages = selectedEmployees.map((emp) => pageFor(emp, now))
         const blob = await generatePdfBlob(<BulkDocument pages={pages} company={company} />)
         downloadBlob(blob, `${safeFilePart(template.name)}_${selectedEmployees.length}.pdf`)
       }
