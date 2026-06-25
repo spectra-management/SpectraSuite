@@ -28,11 +28,12 @@ const company = {
 // Deliberately sparse calculation — simulates a Salary employee / legacy saved entry
 // where several numeric fields are undefined.
 function entryWith(overrides: Record<string, unknown>): PayrollEntry {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Intentionally partial / undefined-valued objects to exercise the PDF's
+  // missing-data handling; cast via `unknown` to the real field types.
   return {
-    employee: { id: '1', firstName: 'Idaly', lastName: 'Peña', workEmail: '', payRate: 0, payType: 'Salary', jobTitle: 'x', department: 'y', hireDate: '', status: 'Active' } as any,
-    hours: { employeeId: '1', regularHours: undefined, otHours: undefined, holidayHours: undefined, source: 'manual' } as any,
-    calculation: { regularPay: undefined, otPay: undefined, holidayPay: undefined, grossPay: undefined, afpAmount: undefined, sfsAmount: undefined, isrPeriod: undefined, isrMonthlyBase: undefined, totalDeductions: undefined, netPay: undefined, customDeductionsBreakdown: [], customDeductions: undefined, ...overrides } as any,
+    employee: { id: '1', firstName: 'Idaly', lastName: 'Peña', workEmail: '', payRate: 0, payType: 'Salary', jobTitle: 'x', department: 'y', hireDate: '', status: 'Active' } as unknown as PayrollEntry['employee'],
+    hours: { employeeId: '1', regularHours: undefined, otHours: undefined, holidayHours: undefined, source: 'manual' } as unknown as PayrollEntry['hours'],
+    calculation: { regularPay: undefined, otPay: undefined, holidayPay: undefined, grossPay: undefined, afpAmount: undefined, sfsAmount: undefined, isrPeriod: undefined, isrMonthlyBase: undefined, totalDeductions: undefined, netPay: undefined, customDeductionsBreakdown: [], customDeductions: undefined, ...overrides } as unknown as PayrollEntry['calculation'],
   }
 }
 

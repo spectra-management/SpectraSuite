@@ -191,7 +191,8 @@ export function StepPeriod({ onNext }: Props) {
   const yearOptions = useMemo(() => {
     const y = today.getFullYear()
     return [y - 1, y, y + 1]
-  }, [])
+    // `today` is intentionally computed once at mount — the year list shouldn't react.
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const [loading, setLoading] = useState(false)
 
@@ -311,6 +312,7 @@ export function StepPeriod({ onNext }: Props) {
       }
 
       if (!hubstaffUserId) {
+        // No Hubstaff match — handled below (salary auto-fill or "Zero Hours").
       }
 
       // Salary employees don't track hours in Hubstaff — pay is fixed. Auto-fill the

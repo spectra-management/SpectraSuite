@@ -23,7 +23,8 @@ export default function Reports() {
   // Reports assume a single currency across the workspace; use the first client's currency for display.
   const displayCountry = clients[0]?.currencyCountry ?? 'Dominican Republic'
 
-  const byClient = useMemo(() => revenueByClient(invoices, nameFor), [invoices, clients])
+  // `nameFor` closes over `clients`, which is already a dep — no need to also list the fn.
+  const byClient = useMemo(() => revenueByClient(invoices, nameFor), [invoices, clients])  // eslint-disable-line react-hooks/exhaustive-deps
   const byMonth = useMemo(() => revenueByMonth(invoices), [invoices])
   const byType = useMemo(() => revenueByLineType(invoices), [invoices])
   const byHours = useMemo(() => billedHoursByEmployee(invoices), [invoices])
