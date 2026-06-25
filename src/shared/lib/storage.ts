@@ -64,4 +64,6 @@ export const STORAGE_KEYS = {
   // Documentos (company documents) module
   DOCUMENT_TEMPLATES: 'document_templates',
   GENERATED_DOCUMENTS: 'generated_documents',
+  // Cloud-backed employee HR detail (cédula, address, phone, DOB…) for Documentos/RRHH
+  EMPLOYEES_HR: 'employees_hr',
 } as const

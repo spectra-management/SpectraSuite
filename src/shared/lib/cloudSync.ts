@@ -8,6 +8,7 @@
 // ============================================================================
 import { supabase, isSupabaseConfigured } from '@/shared/lib/supabase'
 import type { CompanySettings, BambooHRConfig, HubstaffConfig, PayrollPeriod } from '@/shared/types'
+import type { CloudEmployee } from '@/shared/connectors/bamboohr-hr'
 
 async function isAuthenticated(): Promise<boolean> {
   if (!isSupabaseConfigured) return false
@@ -232,6 +233,129 @@ export async function fetchAppState<T>(key: string): Promise<T | null> {
   } catch (e) {
     console.warn(`[cloudSync] fetchAppState(${key}) failed:`, e)
     return null
+  }
+}
+
+// ─── Employees (durable HR detail; see migration 012) ────────────────────────
+//
+// The cloud copy of the employee directory + rich HR fields (cédula, address, phone,
+// DOB…). Lets the Documentos module fill documents from the database regardless of
+// whether BambooHR is currently connected. RLS gates the sensitive fields to admins /
+// RRHH / Documentos access (writes require an admin). Best-effort like the rest.
+
+interface EmployeeRow {
+  bamboohr_id: string
+  first_name: string
+  last_name: string
+  work_email: string
+  job_title: string
+  department: string
+  hire_date: string
+  status: string
+  country: string
+  pay_rate: number
+  pay_rate_currency: string
+  pay_type: string
+  national_id: string
+  address: string
+  city: string
+  state: string
+  zipcode: string
+  mobile_phone: string
+  work_phone: string
+  home_phone: string
+  date_of_birth: string
+  gender: string
+  marital_status: string
+  nationality: string
+  supervisor: string
+  employee_number: string
+}
+
+function toRow(e: CloudEmployee): EmployeeRow {
+  return {
+    bamboohr_id: e.id,
+    first_name: e.firstName,
+    last_name: e.lastName,
+    work_email: e.workEmail,
+    job_title: e.jobTitle,
+    department: e.department,
+    hire_date: e.hireDate,
+    status: e.status,
+    country: e.country,
+    pay_rate: e.payRate,
+    pay_rate_currency: e.payRateCurrency,
+    pay_type: e.payType,
+    national_id: e.nationalId,
+    address: e.address,
+    city: e.city,
+    state: e.state,
+    zipcode: e.zipcode,
+    mobile_phone: e.mobilePhone,
+    work_phone: e.workPhone,
+    home_phone: e.homePhone,
+    date_of_birth: e.dateOfBirth,
+    gender: e.gender,
+    marital_status: e.maritalStatus,
+    nationality: e.nationality,
+    supervisor: e.supervisor,
+    employee_number: e.employeeNumber,
+  }
+}
+
+function fromRow(r: EmployeeRow): CloudEmployee {
+  return {
+    id: r.bamboohr_id,
+    firstName: r.first_name ?? '',
+    lastName: r.last_name ?? '',
+    workEmail: r.work_email ?? '',
+    jobTitle: r.job_title ?? '',
+    department: r.department ?? '',
+    hireDate: r.hire_date ?? '',
+    status: r.status ?? '',
+    country: r.country ?? '',
+    payRate: Number(r.pay_rate ?? 0),
+    payRateCurrency: r.pay_rate_currency ?? '',
+    payType: r.pay_type === 'Hourly' ? 'Hourly' : 'Salary',
+    nationalId: r.national_id ?? '',
+    address: r.address ?? '',
+    city: r.city ?? '',
+    state: r.state ?? '',
+    zipcode: r.zipcode ?? '',
+    mobilePhone: r.mobile_phone ?? '',
+    workPhone: r.work_phone ?? '',
+    homePhone: r.home_phone ?? '',
+    dateOfBirth: r.date_of_birth ?? '',
+    gender: r.gender ?? '',
+    maritalStatus: r.marital_status ?? '',
+    nationality: r.nationality ?? '',
+    supervisor: r.supervisor ?? '',
+    employeeNumber: r.employee_number ?? '',
+  }
+}
+
+/** Upsert the full employee directory (base + rich HR) to the cloud. Best-effort. */
+export async function saveEmployeesCloud(employees: CloudEmployee[]): Promise<void> {
+  if (employees.length === 0) return
+  if (!(await isAuthenticated())) return
+  try {
+    const rows = employees.map((e) => ({ ...toRow(e), updated_at: new Date().toISOString() }))
+    await supabase.from('employees').upsert(rows, { onConflict: 'bamboohr_id' })
+  } catch (e) {
+    console.warn('[cloudSync] saveEmployeesCloud failed:', e)
+  }
+}
+
+/** Read the employee directory back from the cloud. Empty if unavailable / not permitted. */
+export async function fetchEmployeesCloud(): Promise<CloudEmployee[]> {
+  if (!(await isAuthenticated())) return []
+  try {
+    const { data, error } = await supabase.from('employees').select('*')
+    if (error || !data) return []
+    return (data as EmployeeRow[]).filter((r) => !!r.bamboohr_id).map(fromRow)
+  } catch (e) {
+    console.warn('[cloudSync] fetchEmployeesCloud failed:', e)
+    return []
   }
 }
 

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback, ty
 import type { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/shared/lib/supabase'
 import { useSettingsStore } from '@/shared/store/settingsStore'
+import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { useVacationPaymentsStore } from '@/shared/store/vacationPaymentsStore'
 import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrStore'
@@ -223,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // each hydrate falls back to the localStorage cache if the cloud is unreachable.
         void useSettingsStore.getState().hydrateCompanyFromCloud()
         void useSettingsStore.getState().hydrateConnectorsFromCloud()
+        void useEmployeeHrStore.getState().hydrateFromCloud()
         void usePayrollStore.getState().hydrateFromCloud()
         void useVacationPaymentsStore.getState().hydrateFromCloud()
         void usePendingVacationIsrStore.getState().hydrateFromCloud()

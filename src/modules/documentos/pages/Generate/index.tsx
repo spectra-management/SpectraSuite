@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { FileDown, Loader2, Search, Users, Info, FileText } from 'lucide-react'
@@ -16,7 +16,7 @@ import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { logAuditEvent } from '@/shared/lib/audit'
 import { generatePdfBlob, downloadBlob } from '@/shared/lib/pdf'
-import { fetchHrDirectory, indexHrById, type HrEmployeeDetail } from '@/shared/connectors/bamboohr-hr'
+import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
 import type { Employee } from '@/shared/types'
 import { useDocumentsStore } from '../../store/documentsStore'
 import { buildVariables, fillTemplate } from '../../lib/variables'
@@ -36,7 +36,9 @@ export default function Generate() {
   const addRecords = useDocumentsStore((s) => s.addRecords)
   const employees = useEmployeesStore((s) => s.employees)
   const company = useSettingsStore((s) => s.company)
-  const bamboohr = useSettingsStore((s) => s.bamboohr)
+  // Rich HR detail (cédula, address, phone, DOB…) read from the cloud-backed store
+  // (hydrated on login from the database) — works regardless of BambooHR connectivity.
+  const hrById = useEmployeeHrStore((s) => s.byId)
   const { profile, user, hasModuleAccess } = useAuth()
   const canGenerate = hasModuleAccess('documentos', 'edit')
 
@@ -52,21 +54,7 @@ export default function Generate() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [generating, setGenerating] = useState(false)
 
-  // Rich HR data (cédula, address, phone…) fetched once so documents fill completely.
-  const [hrById, setHrById] = useState<Record<string, HrEmployeeDetail>>({})
-  const [hrLoading, setHrLoading] = useState(false)
-
-  useEffect(() => {
-    if (!bamboohr.connected || !bamboohr.subdomain || !bamboohr.apiKey) return
-    let cancelled = false
-    setHrLoading(true)
-    fetchHrDirectory(bamboohr.subdomain, bamboohr.apiKey)
-      .then((rows) => { if (!cancelled) setHrById(indexHrById(rows)) })
-      .catch(() => { if (!cancelled) setHrById({}) })
-      .finally(() => { if (!cancelled) setHrLoading(false) })
-    return () => { cancelled = true }
-  }, [bamboohr.connected, bamboohr.subdomain, bamboohr.apiKey])
-
+  const hasHrData = Object.keys(hrById).length > 0
   const template = templates.find((tpl) => tpl.id === templateId)
 
   const visibleEmployees = useMemo(() => {
@@ -249,12 +237,6 @@ export default function Generate() {
                 <Button size="sm" variant="outline" onClick={clearAll} disabled={selected.size === 0}>
                   {t('documentos.generate.clearAll')}
                 </Button>
-                {hrLoading && (
-                  <span className="ml-auto inline-flex items-center gap-1 text-muted-foreground">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    {t('documentos.generate.loadingHr')}
-                  </span>
-                )}
               </div>
 
               <div className="max-h-[360px] divide-y divide-border overflow-y-auto rounded-lg border border-border">
@@ -297,12 +279,12 @@ export default function Generate() {
                 </>
               )}
 
-              {!bamboohr.connected && (
+              {!hasHrData && (
                 <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
                   <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
                   <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                    {t('documentos.generate.noHrNote')}{' '}
-                    <Link to="/suite/connectors" className="font-medium underline">{t('documentos.nav.connectors')}</Link>
+                    {t('documentos.generate.noHrData')}{' '}
+                    <Link to="/nomina/employees" className="font-medium underline">{t('documentos.generate.goToEmployees')}</Link>
                   </p>
                 </div>
               )}

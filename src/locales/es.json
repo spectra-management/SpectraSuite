@@ -824,6 +824,8 @@
       "previewPickEmployee": "Selecciona un empleado para ver el documento rellenado.",
       "previewFor": "Vista previa de {{name}}",
       "noHrNote": "BambooHR no está conectado, así que campos como la cédula y la dirección quedarán en blanco. Configúralo en",
+      "noHrData": "Aún no hay datos de RR.HH. de empleados (cédula, dirección…). Sincroniza en",
+      "goToEmployees": "Empleados",
       "generateOne": "Generar PDF",
       "generateBulk": "Generar PDF combinado ({{count}})",
       "generatedOne": "Documento generado y descargado",

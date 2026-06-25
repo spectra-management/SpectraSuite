@@ -38,6 +38,20 @@ export interface HrEmployeeDetail {
   employeeNumber: string
 }
 
+/**
+ * The durable, cloud-persisted employee record: the rich HR detail plus the few base
+ * payroll fields a document might need (salary, status, country). This is what the
+ * `public.employees` table stores and what the Documentos module reads back — so it
+ * works regardless of whether BambooHR is currently connected.
+ */
+export interface CloudEmployee extends HrEmployeeDetail {
+  payRate: number
+  payRateCurrency: string
+  payType: 'Hourly' | 'Salary'
+  status: string
+  country: string
+}
+
 interface BambooHrReportRow {
   id: string | number
   firstName?: string
@@ -154,4 +168,52 @@ export function indexHrById(rows: HrEmployeeDetail[]): Record<string, HrEmployee
   const out: Record<string, HrEmployeeDetail> = {}
   for (const r of rows) out[r.id] = r
   return out
+}
+
+/** Combine a base payroll Employee with its (optional) rich HR detail into a CloudEmployee. */
+export function toCloudEmployee(base: BaseEmployeeFields, hr: HrEmployeeDetail | undefined): CloudEmployee {
+  return {
+    id: base.id,
+    firstName: base.firstName,
+    lastName: base.lastName,
+    workEmail: base.workEmail,
+    jobTitle: base.jobTitle,
+    department: base.department,
+    hireDate: base.hireDate,
+    nationalId: hr?.nationalId ?? '',
+    address: hr?.address ?? '',
+    city: hr?.city ?? '',
+    state: hr?.state ?? '',
+    zipcode: hr?.zipcode ?? '',
+    mobilePhone: hr?.mobilePhone ?? '',
+    workPhone: hr?.workPhone ?? '',
+    homePhone: hr?.homePhone ?? '',
+    dateOfBirth: hr?.dateOfBirth ?? '',
+    gender: hr?.gender ?? '',
+    maritalStatus: hr?.maritalStatus ?? '',
+    nationality: hr?.nationality ?? '',
+    supervisor: hr?.supervisor ?? '',
+    employeeNumber: hr?.employeeNumber ?? '',
+    payRate: base.payRate,
+    payRateCurrency: base.payRateCurrency ?? '',
+    payType: base.payType,
+    status: base.status,
+    country: base.country ?? '',
+  }
+}
+
+/** The base payroll fields toCloudEmployee needs (a structural subset of Employee). */
+export interface BaseEmployeeFields {
+  id: string
+  firstName: string
+  lastName: string
+  workEmail: string
+  jobTitle: string
+  department: string
+  hireDate: string
+  payRate: number
+  payRateCurrency?: string
+  payType: 'Hourly' | 'Salary'
+  status: string
+  country?: string
 }

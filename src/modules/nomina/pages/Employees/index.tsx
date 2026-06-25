@@ -11,6 +11,8 @@ import { Pagination } from '@/shared/components/ui/pagination'
 import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { fetchBambooDirectory } from '@/shared/connectors/bamboohr'
+import { fetchHrDirectory, indexHrById, toCloudEmployee } from '@/shared/connectors/bamboohr-hr'
+import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
 import { toast } from '@/shared/hooks/useToast'
 import { formatPayRate, formatDate, getInitials, normalize } from '@/shared/lib/utils'
 import { EmployeeReports } from './EmployeeReports'
@@ -58,6 +60,7 @@ export default function Employees() {
   const employees = useEmployeesStore((s) => s.employees)
   const setEmployees = useEmployeesStore((s) => s.setEmployees)
   const setLastSync = useEmployeesStore((s) => s.setLastSync)
+  const setHrFromSync = useEmployeeHrStore((s) => s.setFromSync)
   const bamboohr = useSettingsStore((s) => s.bamboohr)
 
   const [search, setSearch] = useState('')
@@ -193,6 +196,19 @@ export default function Employees() {
       setEmployees(merged)
       setLastSync(new Date().toISOString())
       setPage(1)
+
+      // Additionally pull the rich HR detail (cédula, address, phone, DOB…) and persist
+      // the combined directory to the cloud, so the Documentos module can fill documents
+      // from the database even when BambooHR is later disconnected. Best-effort: a failure
+      // here never affects the payroll employee sync above.
+      try {
+        const hr = await fetchHrDirectory(bamboohr.subdomain, bamboohr.apiKey)
+        const hrById = indexHrById(hr)
+        setHrFromSync(merged.map((e) => toCloudEmployee(e, hrById[e.id])))
+      } catch (hrErr) {
+        console.warn('[employees] HR detail sync failed (payroll sync still succeeded):', hrErr)
+      }
+
       toast({ variant: 'success', title: t('employees.syncSuccess') })
     } catch (err) {
       const msg = err instanceof Error ? err.message : t('errors.syncFailed')

@@ -824,6 +824,8 @@
       "previewPickEmployee": "Select an employee to preview the filled document.",
       "previewFor": "Preview for {{name}}",
       "noHrNote": "BambooHR is not connected, so fields like national ID and address will be blank. Configure it in",
+      "noHrData": "No employee HR data yet (national ID, address…). Run a sync in",
+      "goToEmployees": "Employees",
       "generateOne": "Generate PDF",
       "generateBulk": "Generate combined PDF ({{count}})",
       "generatedOne": "Document generated and downloaded",
