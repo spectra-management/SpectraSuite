@@ -110,6 +110,31 @@ function joinAddress(line1: string | undefined, line2: string | undefined): stri
   return [line1, line2].map((s) => (s ?? '').trim()).filter(Boolean).join(', ')
 }
 
+// In the Dominican Republic the national id (cédula) is usually a CUSTOM BambooHR field,
+// not the standard `ssn` (which is empty). Match a field by its label/alias so this works
+// for any account without hard-coding a field id.
+const CEDULA_FIELD_RE = /c[eé]dula|identidad|documento|national\s*id|nationalid|\bnin\b/i
+
+/**
+ * Looks up the BambooHR field that holds the national id (cédula) by scanning the account's
+ * field metadata (/v1/meta/fields) and matching the label/alias. Returns the field's alias
+ * or id to request in the custom report, or null if none matches. Best-effort.
+ */
+async function detectNationalIdField(subdomain: string, apiKey: string): Promise<string | null> {
+  try {
+    const qs = new URLSearchParams({ path: '/v1/meta/fields', subdomain, apiKey })
+    const res = await fetch(`/api/bamboohr?${qs.toString()}`)
+    if (!res.ok) return null
+    const fields = (await res.json()) as Array<{ id?: string | number; name?: string; alias?: string }>
+    if (!Array.isArray(fields)) return null
+    const match = fields.find((f) => CEDULA_FIELD_RE.test(`${f.name ?? ''} ${f.alias ?? ''}`))
+    if (!match) return null
+    return match.alias ? String(match.alias) : match.id != null ? String(match.id) : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * Fetches the rich HR detail for every employee via a BambooHR custom report.
  * Returns an array keyed by `id` (string) — pair it with the shared Employee list by id.
@@ -118,6 +143,12 @@ export async function fetchHrDirectory(
   subdomain: string,
   apiKey: string,
 ): Promise<HrEmployeeDetail[]> {
+  // Discover the cédula field for this account, then request it alongside the rest.
+  const cedulaField = await detectNationalIdField(subdomain, apiKey)
+  const requestFields = cedulaField && !REPORT_FIELDS.includes(cedulaField)
+    ? [...REPORT_FIELDS, cedulaField]
+    : [...REPORT_FIELDS]
+
   const qs = new URLSearchParams({
     path: '/v1/reports/custom',
     subdomain,
@@ -128,7 +159,7 @@ export async function fetchHrDirectory(
   const res = await fetch(`/api/bamboohr?${qs.toString()}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields: REPORT_FIELDS }),
+    body: JSON.stringify({ fields: requestFields }),
   })
 
   if (!res.ok) {
@@ -137,7 +168,10 @@ export async function fetchHrDirectory(
   }
 
   const data = await res.json() as BambooHrReportResponse
-  return (data.employees ?? []).map((e): HrEmployeeDetail => ({
+  return (data.employees ?? []).map((e): HrEmployeeDetail => {
+    // The detected cédula field comes back keyed by the same alias/id we requested.
+    const detected = cedulaField ? String((e as unknown as Record<string, unknown>)[cedulaField] ?? '').trim() : ''
+    return {
     id: String(e.id),
     firstName: e.firstName ?? '',
     lastName: e.lastName ?? '',
@@ -145,8 +179,8 @@ export async function fetchHrDirectory(
     jobTitle: e.jobTitle ?? '',
     department: e.department ?? '',
     hireDate: e.hireDate ?? '',
-    // BambooHR stores the national id (cédula) in the SSN field for DR accounts.
-    nationalId: (e.ssn ?? '').trim(),
+    // Prefer the detected DR cédula custom field; fall back to the standard SSN field.
+    nationalId: detected || (e.ssn ?? '').trim(),
     address: joinAddress(e.address1, e.address2),
     city: e.city ?? '',
     state: e.state ?? '',
@@ -160,7 +194,8 @@ export async function fetchHrDirectory(
     nationality: e.nationality ?? '',
     supervisor: e.supervisor ?? '',
     employeeNumber: e.employeeNumber ?? '',
-  }))
+    }
+  })
 }
 
 /** Convenience: index a fetched HR directory by employee id for O(1) lookup. */
