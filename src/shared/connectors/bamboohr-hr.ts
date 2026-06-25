@@ -133,9 +133,9 @@ async function fetchFieldHints(subdomain: string, apiKey: string): Promise<Field
     if (!res.ok) return { textFieldIds: [], namedCedulaId: null }
     const fields = (await res.json()) as Array<{ id?: string | number; name?: string; alias?: string; type?: string }>
     if (!Array.isArray(fields)) return { textFieldIds: [], namedCedulaId: null }
-    const textFieldIds = fields
-      .filter((f) => f.id != null && (!f.type || f.type === 'text' || f.type === 'ssn'))
-      .map((f) => String(f.id))
+    // Request EVERY field by id (BambooHR ignores ones it doesn't recognise). This guarantees
+    // a custom field like "Cedula" is returned so the value scan can find it, no matter its type.
+    const textFieldIds = fields.filter((f) => f.id != null).map((f) => String(f.id))
     const named = fields.find((f) => CEDULA_FIELD_RE.test(`${f.name ?? ''} ${f.alias ?? ''}`))
     const namedCedulaId = named ? (named.alias ? String(named.alias) : String(named.id)) : null
     return { textFieldIds, namedCedulaId }
