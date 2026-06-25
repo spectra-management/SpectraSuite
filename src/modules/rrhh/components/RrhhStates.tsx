@@ -17,7 +17,7 @@ export function NotConnectedCard() {
         <p className="text-base font-semibold text-foreground">{t('rrhh.common.notConnected')}</p>
         <p className="max-w-md text-sm text-muted-foreground">{t('rrhh.common.notConnectedDesc')}</p>
         <Button variant="outline" asChild className="mt-1">
-          <Link to="/nomina/connectors">{t('rrhh.common.goToConnectors')}</Link>
+          <Link to="/suite/connectors">{t('rrhh.common.goToConnectors')}</Link>
         </Button>
       </CardContent>
     </Card>

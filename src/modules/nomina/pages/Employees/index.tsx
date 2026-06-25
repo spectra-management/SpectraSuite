@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pagination } from '@/shared/components/ui/pagination'
 import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { useSettingsStore } from '@/shared/store/settingsStore'
-import { fetchBambooDirectory } from '@/modules/nomina/lib/connectors/bamboohr'
+import { fetchBambooDirectory } from '@/shared/connectors/bamboohr'
 import { toast } from '@/shared/hooks/useToast'
 import { formatPayRate, formatDate, getInitials, normalize } from '@/shared/lib/utils'
 import { EmployeeReports } from './EmployeeReports'

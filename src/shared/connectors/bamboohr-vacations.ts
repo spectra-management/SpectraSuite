@@ -1,4 +1,4 @@
-import { roundHalfUp } from '@/modules/nomina/lib/payroll/calculations'
+import { roundHalfUp } from '@/shared/lib/number'
 
 // BambooHR Vacation time-off type (confirmed for this account).
 const VACATION_TYPE_ID = '83'

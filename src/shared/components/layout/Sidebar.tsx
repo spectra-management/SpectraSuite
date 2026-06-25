@@ -5,7 +5,6 @@ import {
   Users,
   DollarSign,
   History,
-  Plug,
   Settings,
   ArrowLeft,
   Banknote,
@@ -23,7 +22,6 @@ const navItems: { key: string; to: string; icon: typeof LayoutDashboard; end: bo
   { key: 'employees', to: '/nomina/employees', icon: Users, end: false },
   { key: 'payroll', to: '/nomina/payroll', icon: DollarSign, end: false, requires: 'edit' },
   { key: 'history', to: '/nomina/history', icon: History, end: false },
-  { key: 'connectors', to: '/nomina/connectors', icon: Plug, end: false, requires: 'admin' },
   { key: 'settings', to: '/nomina/settings', icon: Settings, end: false },
 ]
 

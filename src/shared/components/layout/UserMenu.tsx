@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Settings as SettingsIcon, UserRound, ChevronDown } from 'lucide-react'
+import { LogOut, Settings as SettingsIcon, UserRound, ChevronDown, Plug } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -72,6 +72,13 @@ export function UserMenu() {
           <UserRound className="h-4 w-4 text-muted-foreground" />
           {t('userMenu.profile')}
         </DropdownMenuItem>
+
+        {isSuperAdmin && (
+          <DropdownMenuItem onSelect={() => navigate('/suite/connectors')}>
+            <Plug className="h-4 w-4 text-muted-foreground" />
+            {t('userMenu.connectors')}
+          </DropdownMenuItem>
+        )}
 
         {isSuperAdmin && (
           <DropdownMenuItem onSelect={() => navigate('/suite/settings')}>

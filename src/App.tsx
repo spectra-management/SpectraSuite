@@ -8,12 +8,12 @@ import Login from './pages/Login'
 import AccessDenied from '@/shared/components/AccessDenied'
 import SuiteHome from '@/suite/pages/SuiteHome'
 import SuiteSettings from '@/suite/pages/SuiteSettings'
+import SuiteConnectors from '@/suite/pages/SuiteConnectors'
 import Dashboard from '@/modules/nomina/pages/Dashboard'
 import Employees from '@/modules/nomina/pages/Employees'
 import EmployeeProfile from '@/modules/nomina/pages/Employees/EmployeeProfile'
 import Payroll from '@/modules/nomina/pages/Payroll'
 import History from '@/modules/nomina/pages/History'
-import Connectors from '@/modules/nomina/pages/Connectors'
 import Settings from '@/modules/nomina/pages/Settings'
 import { RrhhLayout, Directory, Profile, OrgChart, TimeOff, Departments } from '@/modules/rrhh'
 import {
@@ -55,6 +55,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/suite/connectors"
+            element={
+              <ProtectedRoute requireSuperAdmin>
+                <SuiteConnectors />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Nómina module (the existing payroll app) */}
           <Route
@@ -78,7 +86,6 @@ export default function App() {
               }
             />
             <Route path="history" element={<History />} />
-            <Route path="connectors" element={<Connectors />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 

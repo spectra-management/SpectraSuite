@@ -237,7 +237,7 @@ export default function Dashboard() {
           <CardContent className="p-4">
             <p className="text-sm text-amber-700">
               No employees found.{' '}
-              <Link to="/nomina/connectors" className="font-medium underline">
+              <Link to="/suite/connectors" className="font-medium underline">
                 Configure BambooHR
               </Link>{' '}
               and sync employees to get started.

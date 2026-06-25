@@ -18,7 +18,7 @@ import { roundHalfUp, formatCurrencyWithSymbol } from '@/modules/nomina/lib/payr
 import { getCurrencySymbol } from '@/modules/nomina/lib/payroll/rules'
 import { getHolidaysInRange } from '@/modules/nomina/lib/holidays'
 import { calculateVacationPay, yearsOfService } from '@/modules/nomina/lib/vacations'
-import { fetchVacations, getVacationsForEmployee, getVacationsOverlappingPeriod, type VacationRequest } from '@/modules/nomina/lib/connectors/bamboohr-vacations'
+import { fetchVacations, getVacationsForEmployee, getVacationsOverlappingPeriod, type VacationRequest } from '@/shared/connectors/bamboohr-vacations'
 import { PAYMENT_METHOD_LABELS } from '@/modules/nomina/lib/pdf/paystubLabels'
 import { SinglePaystubModal } from './SinglePaystubModal'
 import { useAuth } from '@/shared/context/AuthContext'
@@ -215,7 +215,7 @@ export function StepHours({ employeeHours, startDate, endDate, frequency, countr
             </span>
           </div>
           <Link
-            to="/nomina/connectors"
+            to="/suite/connectors"
             className="shrink-0 text-xs font-semibold text-orange-700 underline underline-offset-2 hover:text-orange-900"
           >
             {t('payroll.review.configureMapping')}

@@ -316,7 +316,7 @@ export default function EmployeeProfile() {
           ) : (
             <p className="text-sm text-muted-foreground">
               {t('employees.profile.notMapped')}{' '}
-              <Link to="/nomina/connectors" className="text-emerald-600 hover:underline">
+              <Link to="/suite/connectors" className="text-emerald-600 hover:underline">
                 {t('employees.profile.configureConnectors')}
               </Link>
             </p>

@@ -14,7 +14,7 @@ import {
 } from '@/modules/nomina/lib/vacations'
 import {
   fetchVacations, getVacationsForEmployee, countVacationDays, type VacationRequest,
-} from '@/modules/nomina/lib/connectors/bamboohr-vacations'
+} from '@/shared/connectors/bamboohr-vacations'
 import { VacationReceiptModal } from './VacationReceiptModal'
 import type { Employee } from '@/shared/types'
 

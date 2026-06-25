@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Banknote } from 'lucide-react'
+import { Banknote, Plug } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/components/ui/button'
 import { useSettingsStore } from '@/shared/store/settingsStore'
@@ -27,7 +27,7 @@ export default function SuiteHome() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const company = useSettingsStore((s) => s.company)
-  const { user, profile, hasModuleAccess } = useAuth()
+  const { user, profile, hasModuleAccess, isSuperAdmin } = useAuth()
   const currentLang = i18n.language.startsWith('es') ? 'es' : 'en'
 
   useEffect(() => { document.title = 'Spectra Suite' }, [])
@@ -57,6 +57,18 @@ export default function SuiteHome() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/suite/connectors')}
+                className="gap-1.5"
+                title={t('connectors.title')}
+              >
+                <Plug className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('connectors.title')}</span>
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

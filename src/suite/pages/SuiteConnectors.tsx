@@ -1,21 +1,24 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, XCircle, Loader2, Plug, Link2, Mail, Wand2, Info, ChevronDown, Search } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowLeft, CheckCircle2, XCircle, Loader2, Plug, Link2, Mail, Wand2, Info, ChevronDown, Search } from 'lucide-react'
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Badge } from '@/shared/components/ui/badge'
-
 import { Separator } from '@/shared/components/ui/separator'
+import { Toaster } from '@/shared/components/ui/toaster'
+import { UserMenu } from '@/shared/components/layout/UserMenu'
+import { ThemeToggle } from '@/shared/components/ThemeToggle'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { toast } from '@/shared/hooks/useToast'
 import { logAuditEvent } from '@/shared/lib/audit'
-import { testHubstaffToken, fetchHubstaffMembers, fetchUserProfiles, normalizeEmail } from '@/modules/nomina/lib/connectors/hubstaff'
-import type { HubstaffOrganization } from '@/modules/nomina/lib/connectors/hubstaff'
-import type { HubstaffMember } from '@/modules/nomina/lib/connectors/types'
+import { testHubstaffToken, fetchHubstaffMembers, fetchUserProfiles, normalizeEmail } from '@/shared/connectors/hubstaff'
+import type { HubstaffOrganization } from '@/shared/connectors/hubstaff'
+import type { HubstaffMember } from '@/shared/connectors/types'
 import type { HubstaffMapping } from '@/shared/types'
 
 function ConnectorStatus({ connected, testing }: { connected: boolean; testing: boolean }) {
@@ -771,27 +774,56 @@ function EmailConnector() {
   )
 }
 
-function ConnectorsInner() {
-  const { t } = useTranslation()
+function SuiteConnectorsInner() {
+  const { t, i18n } = useTranslation()
+  const currentLang = i18n.language.startsWith('es') ? 'es' : 'en'
+
+  useEffect(() => { document.title = `${t('connectors.title')} | Spectra Suite` }, [t])
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('connectors.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('connectors.subtitle')}</p>
-      </div>
-      <div className="grid gap-6 max-w-2xl">
-        <BambooHRConnector />
-        <HubstaffConnector />
-        <EmailConnector />
-      </div>
+    <div className="min-h-screen bg-canvas">
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-4 md:px-6">
+          <Link to="/suite" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400">
+            <ArrowLeft className="h-4 w-4" /> {t('suite.backToSuite')}
+          </Link>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => i18n.changeLanguage(currentLang === 'en' ? 'es' : 'en')}
+              className="font-semibold tracking-wide"
+              aria-label="Toggle language"
+            >
+              {currentLang === 'en' ? 'ES' : 'EN'}
+            </Button>
+            <ThemeToggle />
+            <UserMenu />
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-3xl px-4 py-6 space-y-6 md:px-6 md:py-8">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{t('connectors.title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('connectors.subtitle')}</p>
+        </div>
+        <div className="grid gap-6 max-w-2xl">
+          <BambooHRConnector />
+          <HubstaffConnector />
+          <EmailConnector />
+        </div>
+      </main>
+      <Toaster />
     </div>
   )
 }
 
-export default function Connectors() {
+export default function SuiteConnectors() {
   return (
-    <ErrorBoundary>
-      <ConnectorsInner />
+    <ErrorBoundary fullScreen>
+      <SuiteConnectorsInner />
     </ErrorBoundary>
   )
 }

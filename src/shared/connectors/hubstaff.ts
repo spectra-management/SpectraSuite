@@ -1,6 +1,6 @@
 import type { HubstaffMember, HubstaffActivityUser, WeeklyHours } from './types'
 export type { HubstaffActivityUser }
-import { roundHalfUp } from '@/modules/nomina/lib/payroll/calculations'
+import { roundHalfUp } from '@/shared/lib/number'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 
 const ACCESS_TOKEN_MARGIN_MS = 5 * 60 * 1000  // skip exchange if token expires within 5 min

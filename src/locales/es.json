@@ -760,6 +760,7 @@
   },
   "userMenu": {
     "profile": "Perfil",
+    "connectors": "Conectores",
     "settings": "Configuración",
     "signOut": "Cerrar sesión"
   },
