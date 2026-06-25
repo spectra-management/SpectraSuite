@@ -23,9 +23,15 @@ interface EditorState {
   description: string
   title: string
   body: string
+  pageSize: 'A4' | 'LEGAL'
+  signatureLeft: string
+  signatureRight: string
 }
 
-const EMPTY: EditorState = { id: null, name: '', description: '', title: '', body: '' }
+const EMPTY: EditorState = {
+  id: null, name: '', description: '', title: '', body: '',
+  pageSize: 'A4', signatureLeft: '', signatureRight: '',
+}
 
 export default function Templates() {
   const { t } = useTranslation()
@@ -43,7 +49,10 @@ export default function Templates() {
 
   const openNew = () => setEditor({ ...EMPTY })
   const openEdit = (tpl: DocumentTemplate) =>
-    setEditor({ id: tpl.id, name: tpl.name, description: tpl.description, title: tpl.title, body: tpl.body })
+    setEditor({
+      id: tpl.id, name: tpl.name, description: tpl.description, title: tpl.title, body: tpl.body,
+      pageSize: tpl.pageSize ?? 'A4', signatureLeft: tpl.signatureLeft ?? '', signatureRight: tpl.signatureRight ?? '',
+    })
 
   const insertVariable = (key: string) => {
     const token = `{{${key}}}`
@@ -66,7 +75,8 @@ export default function Templates() {
 
   const save = () => {
     if (!editor) return
-    if (!editor.name.trim() || !editor.title.trim() || !editor.body.trim()) {
+    // Title is optional (e.g. the bank letter has none); name + body are required.
+    if (!editor.name.trim() || !editor.body.trim()) {
       toast({ variant: 'destructive', title: t('documentos.templates.missingFields') })
       return
     }
@@ -75,6 +85,9 @@ export default function Templates() {
       description: editor.description.trim(),
       title: editor.title.trim(),
       body: editor.body,
+      pageSize: editor.pageSize,
+      signatureLeft: editor.signatureLeft.trim() || undefined,
+      signatureRight: editor.signatureRight.trim() || undefined,
     }
     if (editor.id) {
       updateTemplate(editor.id, payload)
@@ -234,6 +247,40 @@ export default function Templates() {
                       {`{{${key}}}`}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Page size + side-by-side signature captions (optional) */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>{t('documentos.templates.pageSize')}</Label>
+                  <select
+                    value={editor.pageSize}
+                    onChange={(e) => setEditor({ ...editor, pageSize: e.target.value as 'A4' | 'LEGAL' })}
+                    className="flex h-9 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground"
+                  >
+                    <option value="A4">{t('documentos.templates.pageSizeA4')}</option>
+                    <option value="LEGAL">{t('documentos.templates.pageSizeLegal')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>{t('documentos.templates.signatures')}</Label>
+                <p className="text-[11px] text-muted-foreground">{t('documentos.templates.signaturesHint')}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Textarea
+                    value={editor.signatureLeft}
+                    onChange={(e) => setEditor({ ...editor, signatureLeft: e.target.value })}
+                    placeholder={t('documentos.templates.signatureLeftPlaceholder')}
+                    className="min-h-[72px] text-xs"
+                  />
+                  <Textarea
+                    value={editor.signatureRight}
+                    onChange={(e) => setEditor({ ...editor, signatureRight: e.target.value })}
+                    placeholder={t('documentos.templates.signatureRightPlaceholder')}
+                    className="min-h-[72px] text-xs"
+                  />
                 </div>
               </div>
             </div>

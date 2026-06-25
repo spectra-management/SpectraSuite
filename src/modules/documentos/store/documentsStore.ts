@@ -29,7 +29,7 @@ interface DocumentsState {
   templates: DocumentTemplate[]
   records: GeneratedDocumentRecord[]
   getTemplate: (id: string) => DocumentTemplate | undefined
-  addTemplate: (input: Pick<DocumentTemplate, 'name' | 'description' | 'title' | 'body'>) => DocumentTemplate
+  addTemplate: (input: Pick<DocumentTemplate, 'name' | 'description' | 'title' | 'body' | 'pageSize' | 'signatureLeft' | 'signatureRight'>) => DocumentTemplate
   updateTemplate: (id: string, patch: Partial<Omit<DocumentTemplate, 'id' | 'isSystem' | 'createdAt'>>) => void
   deleteTemplate: (id: string) => void
   /** Duplicate a template; `copySuffix` is the translated word appended to the name. */

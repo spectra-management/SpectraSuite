@@ -110,7 +110,13 @@ export default function Generate() {
   const pageFor = (emp: Employee, now: Date): DocumentPageData => {
     const vars = buildVariables(emp, hrById[emp.id], company, lang, now)
     const footer = `${emp.firstName} ${emp.lastName} · ${now.toLocaleDateString(lang.startsWith('es') ? 'es-DO' : 'en-US')}`
-    return { title: fillTemplate(template!.title, vars), body: fillTemplate(template!.body, vars), footer }
+    return {
+      title: fillTemplate(template!.title, vars),
+      body: fillTemplate(template!.body, vars),
+      footer,
+      signatureLeft: template!.signatureLeft ? fillTemplate(template!.signatureLeft, vars) : undefined,
+      signatureRight: template!.signatureRight ? fillTemplate(template!.signatureRight, vars) : undefined,
+    }
   }
 
   const generate = async () => {
@@ -121,14 +127,15 @@ export default function Generate() {
       const now = new Date()
       const nowIso = now.toISOString()
       const generatedBy = profile?.full_name || user?.email || ''
+      const size = template.pageSize ?? 'A4'
 
       if (selectedEmployees.length === 1) {
         const emp = selectedEmployees[0]
-        const blob = await generatePdfBlob(<ContractDocument data={pageFor(emp, now)} company={company} />)
+        const blob = await generatePdfBlob(<ContractDocument data={pageFor(emp, now)} company={company} size={size} />)
         downloadBlob(blob, `${safeFilePart(template.name)}_${safeFilePart(`${emp.firstName}_${emp.lastName}`)}.pdf`)
       } else {
         const pages = selectedEmployees.map((emp) => pageFor(emp, now))
-        const blob = await generatePdfBlob(<BulkDocument pages={pages} company={company} />)
+        const blob = await generatePdfBlob(<BulkDocument pages={pages} company={company} size={size} />)
         downloadBlob(blob, `${safeFilePart(template.name)}_${selectedEmployees.length}.pdf`)
       }
 

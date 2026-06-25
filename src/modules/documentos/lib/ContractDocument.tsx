@@ -17,7 +17,13 @@ export interface DocumentPageData {
   body: string
   /** Footer caption, e.g. employee name + generation date. */
   footer: string
+  /** Already-filled caption under the left signature line. Optional. */
+  signatureLeft?: string
+  /** Already-filled caption under the right signature line. When set, two lines render. */
+  signatureRight?: string
 }
+
+export type DocumentPageSize = 'A4' | 'LEGAL'
 
 const EMERALD = '#059669'
 const INK = '#111827'
@@ -52,6 +58,15 @@ const styles = StyleSheet.create({
     color: INK,
   },
   paragraph: { marginBottom: 10, textAlign: 'justify' },
+  signRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 56,
+    gap: 24,
+  },
+  signCol: { width: '45%', alignItems: 'center' },
+  signLine: { borderTopWidth: 1, borderTopColor: INK, width: '100%', marginBottom: 5 },
+  signCaption: { fontSize: 9, textAlign: 'center', fontFamily: 'Helvetica-Bold' },
   footer: {
     position: 'absolute',
     bottom: 28,
@@ -76,9 +91,29 @@ function paragraphsOf(body: string): string[] {
   return body.split(/\n{2,}/).map((p) => p.replace(/^\n+|\n+$/g, '')).filter((p) => p.length > 0)
 }
 
-export function DocumentPage({ data, company }: { data: DocumentPageData; company: CompanySettings }) {
+function Signatures({ left, right }: { left?: string; right?: string }) {
+  if (!left && !right) return null
   return (
-    <Page size="A4" style={styles.page}>
+    <View style={styles.signRow} wrap={false}>
+      <View style={styles.signCol}>
+        <View style={styles.signLine} />
+        <Text style={styles.signCaption}>{left ?? ''}</Text>
+      </View>
+      <View style={styles.signCol}>
+        <View style={styles.signLine} />
+        <Text style={styles.signCaption}>{right ?? ''}</Text>
+      </View>
+    </View>
+  )
+}
+
+export function DocumentPage({
+  data,
+  company,
+  size = 'A4',
+}: { data: DocumentPageData; company: CompanySettings; size?: DocumentPageSize }) {
+  return (
+    <Page size={size} style={styles.page}>
       <View style={styles.header}>
         {isRasterDataUri(company.logoBase64) && <Image src={company.logoBase64} style={styles.logo} />}
         <View>
@@ -96,6 +131,8 @@ export function DocumentPage({ data, company }: { data: DocumentPageData; compan
         <Text key={i} style={styles.paragraph}>{p}</Text>
       ))}
 
+      <Signatures left={data.signatureLeft} right={data.signatureRight} />
+
       <View style={styles.footer} fixed>
         <Text>{data.footer}</Text>
         <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
@@ -105,20 +142,28 @@ export function DocumentPage({ data, company }: { data: DocumentPageData; compan
 }
 
 /** Single-page document (individual generation). */
-export function ContractDocument({ data, company }: { data: DocumentPageData; company: CompanySettings }) {
+export function ContractDocument({
+  data,
+  company,
+  size = 'A4',
+}: { data: DocumentPageData; company: CompanySettings; size?: DocumentPageSize }) {
   return (
     <Document>
-      <DocumentPage data={data} company={company} />
+      <DocumentPage data={data} company={company} size={size} />
     </Document>
   )
 }
 
 /** Multi-page document — one page per employee (bulk generation, single file). */
-export function BulkDocument({ pages, company }: { pages: DocumentPageData[]; company: CompanySettings }) {
+export function BulkDocument({
+  pages,
+  company,
+  size = 'A4',
+}: { pages: DocumentPageData[]; company: CompanySettings; size?: DocumentPageSize }) {
   return (
     <Document>
       {pages.map((data, i) => (
-        <DocumentPage key={i} data={data} company={company} />
+        <DocumentPage key={i} data={data} company={company} size={size} />
       ))}
     </Document>
   )

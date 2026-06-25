@@ -43,8 +43,10 @@ export function buildSeedTemplates(nowIso: string): DocumentTemplate[] {
         'DÉCIMO SEGUNDO: Todo lo no previsto en el presente contrato se regirá de acuerdo a los lineamientos legales establecidos en el Código de Trabajo Dominicano y por el Derecho Común y con mi firma certifico que he recibido una copia íntegra de mi contrato de trabajo.',
         'DÉCIMO TERCERO: EL(LA) TRABAJADOR(A) declara que ha suscrito el presente contrato de trabajo de manera libre y voluntaria y que no ha sido objeto, en modo alguno, de coerción, presión ni violencia imputable a LA EMPRESA; y que por el contrario, la suscripción del presente acto se traduce en la expresión de su expresa voluntad.',
         'HECHO Y FIRMADO de buena fe, en cuatro (4) originales, uno para cada una de las partes y uno para los fines legales correspondientes. En la ciudad de Santiago de los Caballeros, municipio y provincia de Santiago, República Dominicana, {{fecha_legal}}.',
-        '\n\n_________________________________\n{{nombre}}\nEL (LA) TRABAJADOR(A)\n\n\n_________________________________\nRESLINE DORCENT\nLA EMPRESA',
       ].join('\n\n'),
+      pageSize: 'LEGAL',
+      signatureLeft: '{{nombre}}\nEL (LA) TRABAJADOR(A)',
+      signatureRight: 'RESLINE DORCENT\nLA EMPRESA',
     },
     {
       ...base,
@@ -100,8 +102,9 @@ export function buildSeedTemplates(nowIso: string): DocumentTemplate[] {
         'ARTÍCULO CUARTO (4º): ELECCIÓN DE DOMICILIO.\nPara los fines y consecuencias legales del presente contrato, las partes eligen formal domicilio en sus respectivos domicilios anteriormente indicados.',
         'PÁRRAFO: Las partes acuerdan que en caso de que una de ellas cambie el domicilio de elección antes indicado, no le será oponible a la otra, hasta que le sea oportunamente comunicado mediante acto de alguacil.',
         'HECHO Y FIRMADO en dos (2) originales. En la ciudad de Santiago, República Dominicana, {{fecha_legal}}.',
-        '\n\n_________________________________\nEn representación de la sociedad\nSPECTRA HEALTHCARE MANAGEMENT S.R.L.\nRESLINE DORCENT\n\n\n_________________________________\n{{nombre}}\nEL (LA) TRABAJADOR(A)',
       ].join('\n\n'),
+      signatureLeft: 'RESLINE DORCENT\nEn representación de la sociedad\nSPECTRA HEALTHCARE MANAGEMENT S.R.L.',
+      signatureRight: '{{nombre}}\nEL (LA) TRABAJADOR(A)',
     },
     {
       ...base,

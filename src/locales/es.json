@@ -796,7 +796,14 @@
       "descriptionPlaceholder": "Breve descripción de este documento",
       "body": "Contenido",
       "bodyPlaceholder": "Escribe el texto del documento. Usa las variables de abajo para rellenar los datos del empleado.",
-      "insertVariable": "Insertar una variable (se rellena con datos del empleado/empresa):"
+      "insertVariable": "Insertar una variable (se rellena con datos del empleado/empresa):",
+      "pageSize": "Tamaño de papel",
+      "pageSizeA4": "A4",
+      "pageSizeLegal": "Legal (8.5 x 14\")",
+      "signatures": "Líneas de firma (lado a lado)",
+      "signaturesHint": "Opcional. Texto debajo de cada línea de firma; déjalo vacío para una carta de un solo firmante. Admite {{variables}}.",
+      "signatureLeftPlaceholder": "Izquierda — ej. {{nombre}}\nEL (LA) TRABAJADOR(A)",
+      "signatureRightPlaceholder": "Derecha — ej. RESLINE DORCENT\nLA EMPRESA"
     },
     "generate": {
       "title": "Generar documentos",

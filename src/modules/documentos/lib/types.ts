@@ -15,6 +15,12 @@ export interface DocumentTemplate {
   title: string
   /** Body content; paragraphs separated by blank lines; contains `{{variables}}`. */
   body: string
+  /** Paper size for the generated PDF. Defaults to A4; contracts use Legal (8.5x14"). */
+  pageSize?: 'A4' | 'LEGAL'
+  /** Caption under the left-hand signature line (may contain `{{variables}}`). Optional. */
+  signatureLeft?: string
+  /** Caption under the right-hand signature line. When set, signatures render side by side. */
+  signatureRight?: string
   /** True for the built-in seed templates (cannot be deleted, only duplicated/edited). */
   isSystem: boolean
   createdAt: string

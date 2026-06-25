@@ -796,7 +796,14 @@
       "descriptionPlaceholder": "Short description of this document",
       "body": "Content",
       "bodyPlaceholder": "Write the document text. Use the variables below to auto-fill employee data.",
-      "insertVariable": "Insert a variable (fills from employee/company data):"
+      "insertVariable": "Insert a variable (fills from employee/company data):",
+      "pageSize": "Paper size",
+      "pageSizeA4": "A4",
+      "pageSizeLegal": "Legal (8.5 x 14\")",
+      "signatures": "Signature lines (side by side)",
+      "signaturesHint": "Optional. Caption under each signature line; leave blank for a single-signer letter. Supports {{variables}}.",
+      "signatureLeftPlaceholder": "Left — e.g. {{nombre}}\nEL (LA) TRABAJADOR(A)",
+      "signatureRightPlaceholder": "Right — e.g. RESLINE DORCENT\nLA EMPRESA"
     },
     "generate": {
       "title": "Generate documents",

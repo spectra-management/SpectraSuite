@@ -47,7 +47,6 @@ interface BambooHrReportRow {
   department?: string
   hireDate?: string
   ssn?: string
-  nationalId?: string
   address1?: string
   address2?: string
   city?: string
@@ -77,7 +76,6 @@ const REPORT_FIELDS = [
   'department',
   'hireDate',
   'ssn',
-  'nationalId',
   'address1',
   'address2',
   'city',
@@ -133,8 +131,8 @@ export async function fetchHrDirectory(
     jobTitle: e.jobTitle ?? '',
     department: e.department ?? '',
     hireDate: e.hireDate ?? '',
-    // Prefer an explicit nationalId field if the account has one; fall back to SSN.
-    nationalId: (e.nationalId ?? e.ssn ?? '').trim(),
+    // BambooHR stores the national id (cédula) in the SSN field for DR accounts.
+    nationalId: (e.ssn ?? '').trim(),
     address: joinAddress(e.address1, e.address2),
     city: e.city ?? '',
     state: e.state ?? '',
