@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Pencil, Copy, Trash2, FileText, Lock } from 'lucide-react'
+import { Plus, Pencil, Copy, Trash2, FileText, Lock, RotateCcw } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -34,6 +34,7 @@ export default function Templates() {
   const updateTemplate = useDocumentsStore((s) => s.updateTemplate)
   const deleteTemplate = useDocumentsStore((s) => s.deleteTemplate)
   const duplicateTemplate = useDocumentsStore((s) => s.duplicateTemplate)
+  const applyBuiltInTemplates = useDocumentsStore((s) => s.applyBuiltInTemplates)
   const { hasModuleAccess } = useAuth()
   const canEdit = hasModuleAccess('documentos', 'edit')
 
@@ -98,6 +99,12 @@ export default function Templates() {
     if (copy) toast({ variant: 'success', title: t('documentos.templates.duplicated') })
   }
 
+  const handleRestore = () => {
+    if (!window.confirm(t('documentos.templates.restoreConfirm'))) return
+    const { added, updated } = applyBuiltInTemplates()
+    toast({ variant: 'success', title: t('documentos.templates.restored', { added, updated }) })
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
@@ -106,10 +113,16 @@ export default function Templates() {
           <p className="mt-1 text-sm text-muted-foreground">{t('documentos.templates.subtitle')}</p>
         </div>
         {canEdit && (
-          <Button onClick={openNew}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('documentos.templates.new')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleRestore} title={t('documentos.templates.restoreHint')}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              {t('documentos.templates.restore')}
+            </Button>
+            <Button onClick={openNew}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('documentos.templates.new')}
+            </Button>
+          </div>
         )}
       </div>
 

@@ -776,6 +776,10 @@
       "system": "Built-in",
       "duplicate": "Duplicate",
       "copySuffix": "copy",
+      "restore": "Update built-in templates",
+      "restoreHint": "Re-apply the latest built-in template versions (your own templates are kept)",
+      "restoreConfirm": "Re-apply the built-in templates? This overwrites edits to the built-in ones; your own templates are kept.",
+      "restored": "Built-in templates updated ({{updated}} updated, {{added}} added)",
       "deleteConfirm": "Delete the template \"{{name}}\"? This cannot be undone.",
       "deleted": "Template deleted",
       "duplicated": "Template duplicated",
@@ -831,12 +835,16 @@
     },
     "vars": {
       "nombre": "Full name",
+      "trato": "Salutation (Mr./Mrs.)",
       "primer_nombre": "First name",
       "apellido": "Last name",
       "cedula": "National ID (cédula)",
       "cargo": "Job title",
       "departamento": "Department",
       "salario": "Salary / pay rate",
+      "salario_hora": "Hourly rate (figure)",
+      "salario_mensual": "Monthly salary (figure)",
+      "salario_letras": "Salary in words",
       "fecha_ingreso": "Hire date",
       "email": "Work email",
       "telefono": "Phone",
@@ -849,7 +857,8 @@
       "empresa_rnc": "Company RNC",
       "empresa_direccion": "Company address",
       "empresa_telefono": "Company phone",
-      "fecha_hoy": "Today's date"
+      "fecha_hoy": "Today's date",
+      "fecha_legal": "Today's date (legal, in words)"
     }
   },
   "userMenu": {

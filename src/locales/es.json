@@ -776,6 +776,10 @@
       "system": "Predefinida",
       "duplicate": "Duplicar",
       "copySuffix": "copia",
+      "restore": "Actualizar plantillas base",
+      "restoreHint": "Vuelve a aplicar las versiones más recientes de las plantillas base (tus plantillas propias se conservan)",
+      "restoreConfirm": "¿Volver a aplicar las plantillas base? Esto sobrescribe los cambios hechos a las base; tus plantillas propias se conservan.",
+      "restored": "Plantillas base actualizadas ({{updated}} actualizadas, {{added}} agregadas)",
       "deleteConfirm": "¿Eliminar la plantilla \"{{name}}\"? Esta acción no se puede deshacer.",
       "deleted": "Plantilla eliminada",
       "duplicated": "Plantilla duplicada",
@@ -831,12 +835,16 @@
     },
     "vars": {
       "nombre": "Nombre completo",
+      "trato": "Trato (el señor/la señora)",
       "primer_nombre": "Primer nombre",
       "apellido": "Apellido",
       "cedula": "Cédula",
       "cargo": "Cargo",
       "departamento": "Departamento",
       "salario": "Salario / tarifa",
+      "salario_hora": "Salario por hora (cifra)",
+      "salario_mensual": "Salario mensual (cifra)",
+      "salario_letras": "Salario en letras",
       "fecha_ingreso": "Fecha de ingreso",
       "email": "Correo de trabajo",
       "telefono": "Teléfono",
@@ -849,7 +857,8 @@
       "empresa_rnc": "RNC de la empresa",
       "empresa_direccion": "Dirección de la empresa",
       "empresa_telefono": "Teléfono de la empresa",
-      "fecha_hoy": "Fecha de hoy"
+      "fecha_hoy": "Fecha de hoy",
+      "fecha_legal": "Fecha de hoy (legal, en letras)"
     }
   },
   "userMenu": {

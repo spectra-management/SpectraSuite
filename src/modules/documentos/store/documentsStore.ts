@@ -37,6 +37,12 @@ interface DocumentsState {
   /** Append generated-document records (bulk-safe). */
   addRecords: (records: GeneratedDocumentRecord[]) => void
   /**
+   * Re-apply the built-in templates (latest code versions) by id: upserts every seed
+   * template, overwriting the matching system templates and leaving user templates
+   * untouched. Returns how many were added vs updated.
+   */
+  applyBuiltInTemplates: () => { added: number; updated: number }
+  /**
    * Seed (once per workspace) + read templates/records back from the cloud. Cloud is
    * authoritative: deleted built-in templates are NOT re-introduced, while local-only
    * user templates are preserved and pushed up. Offline-safe (cloud null → local kept).
@@ -106,6 +112,27 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
     const merged = [...records, ...get().records].sort((a, b) => b.generatedAt.localeCompare(a.generatedAt))
     persistRecords(merged)
     set({ records: merged })
+  },
+
+  applyBuiltInTemplates: () => {
+    const seeds = buildSeedTemplates(new Date().toISOString())
+    const existing = get().templates
+    const byId = new Map(existing.map((t) => [t.id, t]))
+    let added = 0
+    let updated = 0
+    for (const s of seeds) {
+      if (byId.has(s.id)) updated++
+      else added++
+      // Preserve original createdAt when updating an existing built-in.
+      const prev = byId.get(s.id)
+      byId.set(s.id, prev ? { ...s, createdAt: prev.createdAt } : s)
+    }
+    const templates = [...byId.values()]
+    storage.set(SEEDED_FLAG, true)
+    void saveAppState(SEEDED_FLAG, true)
+    persistTemplates(templates)
+    set({ templates })
+    return { added, updated }
   },
 
   initialize: async () => {

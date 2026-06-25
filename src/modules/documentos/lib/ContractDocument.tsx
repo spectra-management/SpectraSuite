@@ -90,7 +90,7 @@ export function DocumentPage({ data, company }: { data: DocumentPageData; compan
       </View>
       <View style={styles.rule} />
 
-      <Text style={styles.title}>{data.title}</Text>
+      {!!data.title && <Text style={styles.title}>{data.title}</Text>}
 
       {paragraphsOf(data.body).map((p, i) => (
         <Text key={i} style={styles.paragraph}>{p}</Text>

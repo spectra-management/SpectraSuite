@@ -1,6 +1,12 @@
 import type { Employee, CompanySettings } from '@/shared/types'
 import type { HrEmployeeDetail } from '@/shared/connectors/bamboohr-hr'
+import { roundHalfUp } from '@/shared/lib/number'
 import type { FilledVariables } from './types'
+import { montoEnLetras, fechaLegal } from './spanishWords'
+
+// Standard full-time month: 40 h/week x 52 weeks / 12 months = 173.3333 h. Used to derive a
+// monthly figure from an hourly rate (matches the company's letters, e.g. 270.11 -> 46,819.07).
+const MONTHLY_HOURS = (40 * 52) / 12
 
 /**
  * The catalog of `{{variable}}` keys a template author can insert. Order is the order
@@ -9,12 +15,16 @@ import type { FilledVariables } from './types'
  */
 export const TEMPLATE_VARIABLES = [
   'nombre',
+  'trato',
   'primer_nombre',
   'apellido',
   'cedula',
   'cargo',
   'departamento',
   'salario',
+  'salario_hora',
+  'salario_mensual',
+  'salario_letras',
   'fecha_ingreso',
   'email',
   'telefono',
@@ -28,6 +38,7 @@ export const TEMPLATE_VARIABLES = [
   'empresa_direccion',
   'empresa_telefono',
   'fecha_hoy',
+  'fecha_legal',
 ] as const
 
 export type TemplateVariableKey = (typeof TEMPLATE_VARIABLES)[number]
@@ -49,6 +60,28 @@ function formatMoney(amount: number, currency?: string): string {
   return currency ? `${currency} ${n}` : n
 }
 
+/** Plain grouped figure, no currency symbol: 46819.07 -> "46,819.07". 0 -> "". */
+function formatFigure(amount: number): string {
+  if (!amount) return ''
+  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+/** Gendered salutation from the HR sex field: "la señora" / "el señor" / "el/la señor(a)". */
+function salutation(gender?: string): string {
+  const g = (gender ?? '').trim().toLowerCase()
+  if (g.startsWith('f')) return 'la señora'        // Female / Femenino
+  if (g.startsWith('m')) return 'el señor'         // Male / Masculino
+  return 'el/la señor(a)'
+}
+
+/** Monthly figure: hourly rate x standard month for Hourly staff; the rate itself for Salary. */
+function monthlySalary(employee: Employee): number {
+  if (!employee.payRate) return 0
+  return employee.payType === 'Salary'
+    ? employee.payRate
+    : roundHalfUp(employee.payRate * MONTHLY_HOURS, 2)
+}
+
 /**
  * Resolves every template variable for one employee from the shared Employee record,
  * the (optional) rich HR detail, and company settings. Missing values resolve to "".
@@ -63,15 +96,20 @@ export function buildVariables(
   const fullAddress = [hr?.address, hr?.city, hr?.state].map((s) => (s ?? '').trim()).filter(Boolean).join(', ')
   const phone = (hr?.mobilePhone || hr?.workPhone || hr?.homePhone || '').trim()
   const todayStr = now.toISOString().slice(0, 10)
+  const monthly = monthlySalary(employee)
 
   return {
     nombre: `${employee.firstName} ${employee.lastName}`.trim(),
+    trato: salutation(hr?.gender),
     primer_nombre: employee.firstName,
     apellido: employee.lastName,
     cedula: hr?.nationalId ?? '',
     cargo: employee.jobTitle,
     departamento: employee.department,
     salario: formatMoney(employee.payRate, employee.payRateCurrency),
+    salario_hora: formatFigure(employee.payRate),
+    salario_mensual: formatFigure(monthly),
+    salario_letras: employee.payRate ? montoEnLetras(employee.payRate) : '',
     fecha_ingreso: formatLongDate(employee.hireDate, lang),
     email: employee.workEmail,
     telefono: phone,
@@ -85,6 +123,7 @@ export function buildVariables(
     empresa_direccion: company.address,
     empresa_telefono: company.phone,
     fecha_hoy: formatLongDate(todayStr, lang),
+    fecha_legal: fechaLegal(todayStr),
   }
 }
 
