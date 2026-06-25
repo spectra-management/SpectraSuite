@@ -17,6 +17,7 @@ import { useSettingsStore } from '@/shared/store/settingsStore'
 import { logAuditEvent } from '@/shared/lib/audit'
 import { generatePdfBlob, downloadBlob } from '@/shared/lib/pdf'
 import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
+import { toCloudEmployee } from '@/shared/connectors/bamboohr-hr'
 import type { Employee } from '@/shared/types'
 import { useDocumentsStore } from '../../store/documentsStore'
 import { buildVariables, fillTemplate } from '../../lib/variables'
@@ -39,8 +40,19 @@ export default function Generate() {
   // Rich HR detail (cédula, address, phone, DOB…) read from the cloud-backed store
   // (hydrated on login from the database) — works regardless of BambooHR connectivity.
   const hrById = useEmployeeHrStore((s) => s.byId)
+  const upsertEmployee = useEmployeeHrStore((s) => s.upsertEmployee)
   const { profile, user, hasModuleAccess } = useAuth()
   const canGenerate = hasModuleAccess('documentos', 'edit')
+
+  // Manually save a cédula (or correct one) for an employee — stored in the DB and
+  // preserved across BambooHR syncs. Lets documents fill even when BambooHR lacks it.
+  const saveCedula = (emp: Employee, value: string) => {
+    const cedula = value.trim()
+    const existing = hrById[emp.id]
+    if ((existing?.nationalId ?? '') === cedula) return
+    upsertEmployee({ ...(existing ?? toCloudEmployee(emp, undefined)), nationalId: cedula })
+    if (cedula) toast({ variant: 'success', title: t('documentos.generate.cedulaSaved') })
+  }
 
   const activeEmployees = useMemo(() => employees.filter((e) => e.status === 'Active'), [employees])
   const departments = useMemo(
@@ -277,6 +289,22 @@ export default function Generate() {
                     <p className="mt-2 whitespace-pre-wrap text-[11px] leading-relaxed text-foreground/90">{preview.body}</p>
                   </div>
                 </>
+              )}
+
+              {/* Manual cédula editor for the previewed employee (fills the doc + saves to DB). */}
+              {canGenerate && selectedEmployees.length > 0 && (
+                <div className="space-y-1.5 rounded-lg border border-border bg-secondary/30 p-3">
+                  <label className="text-xs font-medium text-foreground">
+                    {t('documentos.generate.cedulaLabel', { name: `${selectedEmployees[0].firstName} ${selectedEmployees[0].lastName}` })}
+                  </label>
+                  <Input
+                    key={selectedEmployees[0].id}
+                    defaultValue={hrById[selectedEmployees[0].id]?.nationalId ?? ''}
+                    placeholder="000-0000000-0"
+                    onBlur={(e) => saveCedula(selectedEmployees[0], e.target.value)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{t('documentos.generate.cedulaHint')}</p>
+                </div>
               )}
 
               {!hasHrData && (
