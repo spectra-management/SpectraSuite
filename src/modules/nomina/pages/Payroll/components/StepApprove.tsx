@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Button } from '@/shared/components/ui/button'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { useSettingsStore } from '@/shared/store/settingsStore'
+import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
 import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrStore'
 import { toast } from '@/shared/hooks/useToast'
 import { logAuditEvent } from '@/shared/lib/audit'
@@ -29,6 +30,8 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
   const { t, i18n } = useTranslation()
   const addPayroll = usePayrollStore((s) => s.addPayroll)
   const company = useSettingsStore((s) => s.company)
+  const hrById = useEmployeeHrStore((s) => s.byId)
+  const divisionById = Object.fromEntries(Object.entries(hrById).map(([id, e]) => [id, e.division ?? '']))
   const markVacationIsrApplied = usePendingVacationIsrStore((s) => s.markApplied)
   const navigate = useNavigate()
   const [approving, setApproving] = useState(false)
@@ -79,7 +82,7 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
     try {
       const { ManagerReportDocument } = await import('@/modules/nomina/lib/pdf/managerReportPdf')
       const element = React.createElement(ManagerReportDocument, {
-        startDate, endDate, frequency, entries, totals, company, lang,
+        startDate, endDate, frequency, entries, totals, company, lang, divisionById,
       })
       const blob = await generatePdfBlob(element)
       downloadBlob(blob, `ManagerReport_${startDate}_${endDate}.pdf`)

@@ -9,6 +9,7 @@ import { Progress } from '@/shared/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { useSettingsStore } from '@/shared/store/settingsStore'
+import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
 import { usePaymentMethodsStore } from '@/shared/store/paymentMethodsStore'
 import { useBankAccountsStore } from '@/shared/store/bankAccountsStore'
 import { toast } from '@/shared/hooks/useToast'
@@ -54,6 +55,11 @@ interface BatchStatus {
 function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
   const { t, i18n } = useTranslation()
   const company = useSettingsStore((s) => s.company)
+  const hrById = useEmployeeHrStore((s) => s.byId)
+  const divisionById = useMemo(
+    () => Object.fromEntries(Object.entries(hrById).map(([id, e]) => [id, e.division ?? ''])),
+    [hrById],
+  )
   const emailConfig = useSettingsStore((s) => s.email)
   const emailTemplate = useSettingsStore((s) => s.emailTemplate)
   const updatePayroll = usePayrollStore((s) => s.updatePayroll)
@@ -262,6 +268,7 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
         totals: payroll.totals,
         company,
         lang,
+        divisionById,
       })
       const blob = await generatePdfBlob(element)
       downloadBlob(blob, `ManagerReport_${payroll.startDate}_${payroll.endDate}.pdf`)

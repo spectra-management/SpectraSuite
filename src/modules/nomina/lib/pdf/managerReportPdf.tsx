@@ -97,10 +97,14 @@ interface DeptRow {
   net: number
 }
 
-function buildDeptSummary(entries: PayrollEntry[]): DeptRow[] {
+function buildClientSummary(
+  entries: PayrollEntry[],
+  divisionById: Record<string, string>,
+  noClientLabel: string,
+): DeptRow[] {
   const map = new Map<string, DeptRow>()
   for (const e of entries) {
-    const dept = e.employee.department || 'Unassigned'
+    const dept = (divisionById[e.employee.id] || '').trim() || noClientLabel
     const cur = map.get(dept) ?? { dept, count: 0, gross: 0, afp: 0, sfs: 0, isr: 0, customDed: 0, deductions: 0, net: 0 }
     map.set(dept, {
       dept,
@@ -125,6 +129,8 @@ export interface ManagerReportProps {
   totals: PayrollTotals
   company: CompanySettings
   lang: 'en' | 'es'
+  /** employeeId → client (BambooHR division), for the "payroll by client" summary. */
+  divisionById?: Record<string, string>
 }
 
 const RL = {
@@ -155,7 +161,9 @@ const RL = {
     otherDed: 'Other Ded.',
     net: 'Net Pay',
     totals: 'TOTALS',
-    deptSummary: 'DEPARTMENT SUMMARY',
+    deptSummary: 'PAYROLL BY CLIENT',
+    client: 'Client',
+    noClient: 'No client',
     count: '# Emp',
     deptGross: 'Gross',
     deptDed: 'Deductions',
@@ -190,7 +198,9 @@ const RL = {
     otherDed: 'Otras Ded.',
     net: 'Neto',
     totals: 'TOTALES',
-    deptSummary: 'RESUMEN POR DEPARTAMENTO',
+    deptSummary: 'NÓMINA POR CLIENTE',
+    client: 'Cliente',
+    noClient: 'Sin cliente',
     count: '# Emp',
     deptGross: 'Bruto',
     deptDed: 'Deducciones',
@@ -208,10 +218,11 @@ export function ManagerReportDocument({
   totals,
   company,
   lang,
+  divisionById = {},
 }: ManagerReportProps) {
   const l = RL[lang]
   const today = new Date().toLocaleDateString(lang === 'es' ? 'es-DO' : 'en-US')
-  const deptRows = buildDeptSummary(entries)
+  const deptRows = buildClientSummary(entries, divisionById, l.noClient)
   const logo = logoSrc(company.logoBase64)
 
   // Column flex widths for employee detail table
@@ -333,7 +344,7 @@ export function ManagerReportDocument({
         <Text style={S.sectionTitle}>{l.deptSummary}</Text>
         <View>
           <View style={S.dHead}>
-            <Text style={[S.tHeadLeft, { flex: 3.5 }]}>{l.dept}</Text>
+            <Text style={[S.tHeadLeft, { flex: 3.5 }]}>{l.client}</Text>
             <Text style={[S.tHeadText, { flex: 1 }]}>{l.count}</Text>
             <Text style={[S.tHeadText, { flex: 2.5 }]}>{l.deptGross}</Text>
             <Text style={[S.tHeadText, { flex: 2.5 }]}>{l.totalAfp} + {l.totalSfs}</Text>
