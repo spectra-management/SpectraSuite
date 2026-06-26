@@ -16,6 +16,45 @@ import { fetchRrhhDirectory } from '@/modules/rrhh/lib/connectors/bamboohr'
 import { fetchPhotoOverrides } from '@/modules/rrhh/lib/photoStorage'
 import { syncBambooPhotos } from '@/modules/rrhh/lib/photoSync'
 import { useRrhhAccess } from '@/modules/rrhh/lib/permissions'
+import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
+import type { CloudEmployee } from '@/shared/connectors/bamboohr-hr'
+import type { RrhhEmployee } from '@/modules/rrhh/types'
+
+/**
+ * Map an RRHH employee (from the RRHH connector) into the shared CloudEmployee shape so a RRHH
+ * sync ALSO refreshes the Documentos/HR store — the cédula + HR detail then flow to documents
+ * without needing a separate Nómina sync.
+ */
+function toCloudEmployee(e: RrhhEmployee): CloudEmployee {
+  return {
+    id: e.id,
+    firstName: e.firstName,
+    lastName: e.lastName,
+    workEmail: e.workEmail,
+    jobTitle: e.jobTitle,
+    department: e.department,
+    hireDate: e.hireDate,
+    nationalId: e.ssn,
+    address: e.address,
+    city: e.city,
+    state: e.state,
+    zipcode: e.zipcode,
+    mobilePhone: e.mobilePhone,
+    workPhone: e.workPhone,
+    homePhone: e.homePhone,
+    dateOfBirth: e.dateOfBirth,
+    gender: e.gender,
+    maritalStatus: e.maritalStatus,
+    nationality: e.nationality,
+    supervisor: e.supervisor,
+    employeeNumber: e.employeeNumber,
+    payRate: e.payRate,
+    payRateCurrency: e.payRateCurrency,
+    payType: e.payType === 'Salary' ? 'Salary' : 'Hourly',
+    status: e.status,
+    country: e.country,
+  }
+}
 
 export interface UseRrhhDirectory {
   employees: ReturnType<typeof useRrhhStore.getState>['employees']
@@ -53,6 +92,10 @@ export function useRrhhDirectory(): UseRrhhDirectory {
       const fresh = await fetchRrhhDirectory(bamboohr.subdomain, bamboohr.apiKey)
       setEmployees(fresh)
       setLastSync(new Date().toISOString())
+
+      // Feed the shared Documentos/HR store so a RRHH sync also fills documents with the
+      // cédula + HR detail (manual edits are preserved; best-effort cloud mirror).
+      useEmployeeHrStore.getState().setFromSync(fresh.map(toCloudEmployee))
 
       // Persist photos to the DB in the BACKGROUND (admins only — writes need admin RLS).
       // Only changed photos are downloaded; manual uploads are never touched. Refresh the
