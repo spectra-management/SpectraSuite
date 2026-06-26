@@ -89,7 +89,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const buffer = Buffer.from(await response.arrayBuffer())
       res.setHeader('Content-Type', contentType)
       res.setHeader('Content-Length', String(buffer.length))
-      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
+      // Cache in the BROWSER too (not just Vercel's CDN). The previous `s-maxage` only
+      // cached at the edge, so the browser re-fetched every photo on each visit to the HR
+      // directory — a visible reload/flicker. Employee photos rarely change, so let the
+      // browser hold them for a day and serve stale-while-revalidate for a week.
+      res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800')
       res.status(200)
       return res.end(buffer)
     }
