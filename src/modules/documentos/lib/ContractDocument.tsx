@@ -114,14 +114,11 @@ export function DocumentPage({
   size = 'A4',
   margin,
 }: { data: DocumentPageData; company: CompanySettings; size?: DocumentPageSize; margin?: number }) {
-  // When a margin (in points) is given, override the page padding + footer insets so the text
-  // reflows to the chosen page width and the footer sits inside the bottom margin.
+  // When a margin (in points) is given, override the page padding so the text reflows to the
+  // chosen page width with uniform margins.
   const pageStyle = margin != null
-    ? [styles.page, { paddingTop: margin, paddingBottom: margin + 22, paddingLeft: margin, paddingRight: margin }]
+    ? [styles.page, { paddingTop: margin, paddingBottom: margin, paddingLeft: margin, paddingRight: margin }]
     : styles.page
-  const footerStyle = margin != null
-    ? [styles.footer, { left: margin, right: margin, bottom: Math.max(16, Math.round(margin * 0.5)) }]
-    : styles.footer
   return (
     <Page size={size} style={pageStyle}>
       <View style={styles.header}>
@@ -142,11 +139,6 @@ export function DocumentPage({
       ))}
 
       <Signatures left={data.signatureLeft} right={data.signatureRight} />
-
-      <View style={footerStyle} fixed>
-        <Text>{data.footer}</Text>
-        <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
-      </View>
     </Page>
   )
 }
