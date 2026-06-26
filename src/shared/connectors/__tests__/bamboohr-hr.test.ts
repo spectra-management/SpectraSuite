@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { findCedulaByValue, fetchHrDirectory } from '../bamboohr-hr'
+import { findCedulaByValue, fetchHrDirectory, detectCedula } from '../bamboohr-hr'
 
 describe('findCedulaByValue', () => {
   it('finds a DR cédula by its 11-digit shape regardless of field name', () => {
@@ -17,6 +17,19 @@ describe('findCedulaByValue', () => {
 
   it('returns empty string when no value looks like a cédula', () => {
     expect(findCedulaByValue({ a: 'foo', b: '', c: '2024-03-01' })).toBe('')
+  })
+})
+
+describe('detectCedula', () => {
+  it('prefers the name-matched field, then a cédula-shaped value, then the SSN fallback', () => {
+    // 1. named field wins even when another value also looks like a cédula
+    expect(detectCedula({ customNIDS: '402-2410389-1', other: '001-1234567-8' }, 'customNIDS', '')).toBe('402-2410389-1')
+    // 2. no named field → value scan
+    expect(detectCedula({ x: '031-0398291-8' }, null, '')).toBe('031-0398291-8')
+    // 3. nothing detected → SSN fallback
+    expect(detectCedula({ x: 'foo' }, null, '010-20-3040')).toBe('010-20-3040')
+    // 4. named field present but empty → fall through to value scan
+    expect(detectCedula({ customNIDS: '', x: '037-0116342-4' }, 'customNIDS', '')).toBe('037-0116342-4')
   })
 })
 

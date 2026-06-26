@@ -118,15 +118,19 @@ function joinAddress(line1: string | undefined, line2: string | undefined): stri
 const CEDULA_FIELD_RE = /c[eé]dula|identidad|documento|national\s*id|nationalid|\bnin\b/i
 const CEDULA_VALUE_RE = /^\d{3}-?\d{7}-?\d$/
 
-interface FieldHints {
+export interface FieldHints {
   /** Custom/text field ids to additionally request so their values can be scanned. */
   textFieldIds: string[]
   /** A field id/alias whose label looks like a national id, if any. */
   namedCedulaId: string | null
 }
 
-/** Reads /v1/meta/fields to learn which extra fields to request + a name-matched candidate. */
-async function fetchFieldHints(subdomain: string, apiKey: string): Promise<FieldHints> {
+/**
+ * Reads /v1/meta/fields to learn which extra fields to request + a name-matched candidate.
+ * Exported so any BambooHR connector (shared OR a module's own, e.g. RRHH) can surface the
+ * cédula the same way — there is intentionally one source of truth for this detection.
+ */
+export async function fetchFieldHints(subdomain: string, apiKey: string): Promise<FieldHints> {
   try {
     const qs = new URLSearchParams({ path: '/v1/meta/fields', subdomain, apiKey })
     const res = await fetch(`/api/bamboohr?${qs.toString()}`)
@@ -157,6 +161,22 @@ export function findCedulaByValue(row: Record<string, unknown>): string {
     if (typeof v === 'string' && CEDULA_VALUE_RE.test(v.trim())) return v.trim()
   }
   return ''
+}
+
+/**
+ * Resolve an employee's cédula from a raw BambooHR report row, in priority order:
+ *   1. the name-matched custom field (if meta told us which one),
+ *   2. any field whose value has the DR cédula shape,
+ *   3. the standard SSN field as a last resort.
+ * Shared by every connector so detection behaves identically everywhere.
+ */
+export function detectCedula(
+  row: Record<string, unknown>,
+  namedCedulaId: string | null,
+  fallbackSsn: string,
+): string {
+  const named = namedCedulaId ? String(row[namedCedulaId] ?? '').trim() : ''
+  return named || findCedulaByValue(row) || fallbackSsn.trim()
 }
 
 /**
@@ -196,10 +216,7 @@ export async function fetchHrDirectory(
   const data = await res.json() as BambooHrReportResponse
   return (data.employees ?? []).map((e): HrEmployeeDetail => {
     const row = e as unknown as Record<string, unknown>
-    // Cédula: prefer the name-matched field, else any field whose value looks like a
-    // cédula, else the standard SSN field.
-    const named = hints.namedCedulaId ? String(row[hints.namedCedulaId] ?? '').trim() : ''
-    const detected = named || findCedulaByValue(row)
+    const detected = detectCedula(row, hints.namedCedulaId, e.ssn ?? '')
     return {
     id: String(e.id),
     firstName: e.firstName ?? '',
@@ -208,8 +225,7 @@ export async function fetchHrDirectory(
     jobTitle: e.jobTitle ?? '',
     department: e.department ?? '',
     hireDate: e.hireDate ?? '',
-    // Prefer the detected DR cédula custom field; fall back to the standard SSN field.
-    nationalId: detected || (e.ssn ?? '').trim(),
+    nationalId: detected,
     address: joinAddress(e.address1, e.address2),
     city: e.city ?? '',
     state: e.state ?? '',

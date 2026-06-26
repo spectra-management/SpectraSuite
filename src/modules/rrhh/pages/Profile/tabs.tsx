@@ -21,9 +21,11 @@ import type { RrhhEmployee } from '@/modules/rrhh/types'
 /** A muted-label / value pair inside a definition list. */
 export function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div>
+    // min-w-0 lets the cell shrink inside the grid; break-words wraps long unbreakable
+    // values (e.g. emails) instead of overflowing into the neighbouring column.
+    <div className="min-w-0">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={`mt-0.5 text-sm font-medium text-foreground${mono ? ' font-mono' : ''}`}>{value}</dd>
+      <dd className={`mt-0.5 break-words text-sm font-medium text-foreground${mono ? ' font-mono' : ''}`}>{value}</dd>
     </div>
   )
 }

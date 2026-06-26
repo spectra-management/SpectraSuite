@@ -70,7 +70,11 @@ export const useEmployeeHrStore = create<EmployeeHrState>((set, get) => ({
   hydrateFromCloud: async () => {
     const cloud = await fetchEmployeesCloud()
     if (cloud.length === 0) return // unreachable / not permitted / empty — keep local cache
-    const byId = indexById(cloud)
+    // Merge, preserving manual fields: a cédula typed by hand that only made it to
+    // localStorage (e.g. the cloud write was blocked by RLS) must survive the hydrate
+    // instead of being wiped by an empty cloud value.
+    const prev = get().byId
+    const byId = indexById(cloud.map((e) => mergePreservingManual(e, prev[e.id])))
     storage.set(STORAGE_KEYS.EMPLOYEES_HR, byId)
     set({ byId })
   },

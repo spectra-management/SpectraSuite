@@ -20,6 +20,9 @@ import type {
   RrhhCompensationEntry,
   RrhhDocument,
 } from '@/modules/rrhh/types'
+// Cédula detection is shared (one source of truth) — the DR national id is a custom
+// BambooHR field, so we reuse the same meta-driven lookup the Documentos connector uses.
+import { fetchFieldHints, detectCedula } from '@/shared/connectors/bamboohr-hr'
 
 interface BambooReportEmployee {
   id: string | number
@@ -149,6 +152,14 @@ export async function fetchRrhhDirectory(
   subdomain: string,
   apiKey: string,
 ): Promise<RrhhEmployee[]> {
+  // Learn this account's fields so we can request + detect the cédula (a custom field).
+  const hints = await fetchFieldHints(subdomain, apiKey)
+  const requestFields = Array.from(new Set([
+    ...REPORT_FIELDS,
+    ...hints.textFieldIds,
+    ...(hints.namedCedulaId ? [hints.namedCedulaId] : []),
+  ]))
+
   const qs = new URLSearchParams({
     path: '/v1/reports/custom',
     subdomain,
@@ -159,7 +170,7 @@ export async function fetchRrhhDirectory(
   const res = await fetch(`/api/bamboohr?${qs.toString()}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields: [...REPORT_FIELDS] }),
+    body: JSON.stringify({ fields: requestFields }),
   })
 
   if (!res.ok) {
@@ -171,6 +182,7 @@ export async function fetchRrhhDirectory(
 
   return (data.employees ?? []).map((e): RrhhEmployee => {
     const { rate, currency } = parsePayRate(e.payRate)
+    const row = e as unknown as Record<string, unknown>
     return {
       id: String(e.id),
       employeeNumber: e.employeeNumber ?? '',
@@ -201,7 +213,8 @@ export async function fetchRrhhDirectory(
       address: e.address1 ?? '',
       address2: e.address2 ?? '',
       zipcode: e.zipcode ?? '',
-      ssn: e.ssn ?? '',
+      // DR cédula lives in a custom field; fall back to the standard SSN field.
+      ssn: detectCedula(row, hints.namedCedulaId, e.ssn ?? ''),
       payRate: rate,
       payRateCurrency: currency,
       payType: mapPayType(e.payType, e.payPer),
