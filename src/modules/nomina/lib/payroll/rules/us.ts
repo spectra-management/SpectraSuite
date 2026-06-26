@@ -1,4 +1,4 @@
-import { COUNTRY_FISCAL_DEFAULTS } from '@/modules/nomina/lib/payroll/countryFiscalDefaults'
+import { COUNTRY_FISCAL_DEFAULTS } from '@/shared/lib/countryFiscalDefaults'
 import { buildRulesFromConfig } from './fromConfig'
 import type { PayrollRules } from './types'
 

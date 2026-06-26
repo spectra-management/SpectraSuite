@@ -2,7 +2,7 @@ import type { FiscalParameters, PayrollSettings, CountryFiscalConfig } from '@/s
 import { getDOPayrollRules } from './do'
 import { getDefaultPayrollRules } from './default'
 import { buildRulesFromConfig } from './fromConfig'
-import { COUNTRY_FISCAL_DEFAULTS, countryKey } from '@/modules/nomina/lib/payroll/countryFiscalDefaults'
+import { COUNTRY_FISCAL_DEFAULTS, countryKey } from '@/shared/lib/countryFiscalDefaults'
 import type { PayrollRules } from './types'
 
 export type { PayrollRules }

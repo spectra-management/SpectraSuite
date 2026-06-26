@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { storage, STORAGE_KEYS } from '@/shared/lib/storage'
 import { saveAppState, fetchAppState } from '@/shared/lib/cloudSync'
 import type { CountryFiscalConfig } from '@/shared/types'
-import { COUNTRY_FISCAL_DEFAULTS } from '@/modules/nomina/lib/payroll/countryFiscalDefaults'
+import { COUNTRY_FISCAL_DEFAULTS } from '@/shared/lib/countryFiscalDefaults'
 
 /**
  * Per-country fiscal configs (employee statutory deductions + income tax), editable in

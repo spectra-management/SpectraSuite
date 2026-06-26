@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { calculatePayroll } from '../calculations'
 import { getPayrollRules } from '../rules'
-import { COUNTRY_FISCAL_DEFAULTS } from '../countryFiscalDefaults'
+import { COUNTRY_FISCAL_DEFAULTS } from '@/shared/lib/countryFiscalDefaults'
 import { DEFAULT_FISCAL_PARAMETERS, DEFAULT_PAYROLL_SETTINGS } from '../constants'
 import type { CalculationInput } from '../types'
 
