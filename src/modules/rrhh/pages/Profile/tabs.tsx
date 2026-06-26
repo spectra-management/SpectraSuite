@@ -103,7 +103,7 @@ export function PersonalTab({
           <Field label={t('rrhh.profile.nationality')} value={employee.nationality || '—'} />
           <Field
             label={t('rrhh.profile.nationalId')}
-            value={maskNationalId(employee.ssn)}
+            value={canViewSensitive ? (employee.ssn || '—') : maskNationalId(employee.ssn)}
             mono
           />
         </dl>
