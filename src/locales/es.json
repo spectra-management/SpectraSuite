@@ -1051,7 +1051,9 @@
       "uploadFailed": "No se pudo subir la foto",
       "removeFailed": "No se pudo quitar la foto",
       "invalidType": "Por favor elige un archivo de imagen.",
-      "tooLarge": "La imagen es demasiado grande (máx. 5 MB)."
+      "tooLarge": "La imagen es demasiado grande (máx. 5 MB).",
+      "syncedOne": "1 foto guardada en la base de datos",
+      "syncedMany": "{{count}} fotos guardadas en la base de datos"
     },
     "directory": {
       "title": "Directorio de Empleados",

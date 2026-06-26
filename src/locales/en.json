@@ -1051,7 +1051,9 @@
       "uploadFailed": "Could not upload the photo",
       "removeFailed": "Could not remove the photo",
       "invalidType": "Please choose an image file.",
-      "tooLarge": "Image is too large (max 5 MB)."
+      "tooLarge": "Image is too large (max 5 MB).",
+      "syncedOne": "1 photo saved to the database",
+      "syncedMany": "{{count}} photos saved to the database"
     },
     "directory": {
       "title": "Employee Directory",

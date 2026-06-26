@@ -7,6 +7,8 @@
  */
 
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { toast } from '@/shared/hooks/useToast'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { useRrhhStore } from '@/modules/rrhh/store/rrhhStore'
 import { useRrhhPhotoStore } from '@/modules/rrhh/store/rrhhPhotoStore'
@@ -26,6 +28,7 @@ export interface UseRrhhDirectory {
 }
 
 export function useRrhhDirectory(): UseRrhhDirectory {
+  const { t } = useTranslation()
   const bamboohr = useSettingsStore((s) => s.bamboohr)
   const employees = useRrhhStore((s) => s.employees)
   const lastSync = useRrhhStore((s) => s.lastSync)
@@ -59,6 +62,12 @@ export function useRrhhDirectory(): UseRrhhDirectory {
           if (result.synced > 0) {
             const map = await fetchPhotoOverrides()
             if (map) mergeFromCloud(map)
+            toast({
+              variant: 'success',
+              title: result.synced === 1
+                ? t('rrhh.photo.syncedOne')
+                : t('rrhh.photo.syncedMany', { count: result.synced }),
+            })
           }
         })
       }
@@ -67,7 +76,7 @@ export function useRrhhDirectory(): UseRrhhDirectory {
     } finally {
       setSyncing(false)
     }
-  }, [connected, bamboohr.subdomain, bamboohr.apiKey, setEmployees, setLastSync, canManagePhotos, mergeFromCloud])
+  }, [connected, bamboohr.subdomain, bamboohr.apiKey, setEmployees, setLastSync, canManagePhotos, mergeFromCloud, t])
 
   return { employees, lastSync, syncing, error, connected, sync }
 }
