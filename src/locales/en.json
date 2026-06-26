@@ -966,6 +966,7 @@
       "evening": "Good evening, {{name}}"
     },
     "overview": "Overview",
+    "openModule": "Open module",
     "nomina": {
       "employees": "Employees",
       "lastTotal": "Last payroll",

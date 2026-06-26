@@ -966,6 +966,7 @@
       "evening": "Buenas noches, {{name}}"
     },
     "overview": "Resumen",
+    "openModule": "Abrir módulo",
     "nomina": {
       "employees": "Empleados",
       "lastTotal": "Última nómina",

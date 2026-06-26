@@ -58,11 +58,12 @@ export function ModuleSummaryCards() {
         </Card>
       )}
 
-      {/* RRHH — placeholder data */}
+      {/* RRHH — live */}
       {hasModuleAccess('rrhh') && (
-        <ComingSoonCard
+        <ActiveCard
           moduleId="rrhh"
           title={t('suite.modules.rrhh')}
+          path="/rrhh"
           stats={[
             { icon: <Users className="h-4 w-4" />, label: t('suiteHome.rrhh.totalEmployees'), value: String(employees.length) },
             { icon: <CalendarDays className="h-4 w-4" />, label: t('suiteHome.rrhh.onVacation'), value: '—' },
@@ -70,9 +71,9 @@ export function ModuleSummaryCards() {
         />
       )}
 
-      {/* Facturación */}
+      {/* Facturación — live */}
       {hasModuleAccess('facturacion') && (
-        <ComingSoonCard moduleId="facturacion" title={t('suite.modules.facturacion')} stats={[]} />
+        <ActiveCard moduleId="facturacion" title={t('suite.modules.facturacion')} path="/facturacion" stats={[]} />
       )}
 
       {/* Gastos */}
@@ -94,6 +95,41 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
       <div className="flex items-center gap-1.5 text-muted-foreground">{icon}<span className="text-xs">{label}</span></div>
       <p className="text-figure mt-1 truncate text-lg font-bold text-foreground">{value}</p>
     </div>
+  )
+}
+
+function ActiveCard({
+  moduleId, title, path, stats,
+}: {
+  moduleId: 'rrhh' | 'facturacion'
+  title: string
+  path: string
+  stats: { icon: React.ReactNode; label: string; value: string }[]
+}) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const Icon = MODULE_ICONS[moduleId]
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <Icon className="h-4 w-4" strokeWidth={1.75} />
+          </span>
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {stats.length > 0 && (
+          <div className="grid grid-cols-2 gap-3">
+            {stats.map((s, i) => <Stat key={i} {...s} />)}
+          </div>
+        )}
+        <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={() => navigate(path)}>
+          {t('suiteHome.openModule')} <ArrowRight className="h-4 w-4" />
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 
