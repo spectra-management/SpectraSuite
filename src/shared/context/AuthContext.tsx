@@ -227,6 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // each hydrate falls back to the localStorage cache if the cloud is unreachable.
         void useSettingsStore.getState().hydrateCompanyFromCloud()
         void useSettingsStore.getState().hydrateConnectorsFromCloud()
+        void useSettingsStore.getState().hydrateSettingsFromCloud()
         void useEmployeeHrStore.getState().hydrateFromCloud()
         void usePayrollStore.getState().hydrateFromCloud()
         void useVacationPaymentsStore.getState().hydrateFromCloud()

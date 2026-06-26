@@ -7,6 +7,8 @@ import {
   saveHubstaffIntegration,
   fetchCompanySettings,
   fetchConnectorConfigs,
+  saveAppState,
+  fetchAppState,
 } from '@/shared/lib/cloudSync'
 import { applyBambooCloud, applyHubstaffCloud } from '@/shared/lib/cloudMerge'
 import type {
@@ -61,6 +63,8 @@ interface SettingsState extends AppSettings {
   updateCompany: (data: Partial<CompanySettings>) => void
   hydrateCompanyFromCloud: () => Promise<void>
   hydrateConnectorsFromCloud: () => Promise<void>
+  /** Read fiscal/payroll/night/email settings back from the cloud (shared across users). */
+  hydrateSettingsFromCloud: () => Promise<void>
   updatePayrollSettings: (data: Partial<PayrollSettings>) => void
   updateNightShift: (data: Partial<NightShiftSettings>) => void
   updateFiscalParameters: (data: Partial<FiscalParameters>) => void
@@ -140,23 +144,27 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const updated = { ...get().payroll, ...data }
     storage.set(STORAGE_KEYS.PAYROLL_SETTINGS, updated)
     set({ payroll: updated })
+    void saveAppState(STORAGE_KEYS.PAYROLL_SETTINGS, updated)  // shared across users
   },
 
   updateNightShift: (data) => {
     const updated = { ...get().nightShift, ...data }
     storage.set(STORAGE_KEYS.NIGHT_SETTINGS, updated)
     set({ nightShift: updated })
+    void saveAppState(STORAGE_KEYS.NIGHT_SETTINGS, updated)
   },
 
   updateFiscalParameters: (data) => {
     const updated = { ...get().fiscal, ...data }
     storage.set(STORAGE_KEYS.FISCAL_PARAMETERS, updated)
     set({ fiscal: updated })
+    void saveAppState(STORAGE_KEYS.FISCAL_PARAMETERS, updated)
   },
 
   resetFiscalParameters: () => {
     storage.set(STORAGE_KEYS.FISCAL_PARAMETERS, DEFAULT_FISCAL_PARAMETERS)
     set({ fiscal: DEFAULT_FISCAL_PARAMETERS })
+    void saveAppState(STORAGE_KEYS.FISCAL_PARAMETERS, DEFAULT_FISCAL_PARAMETERS)
   },
 
   updateBambooHR: (data) => {
@@ -177,11 +185,32 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const updated = { ...get().email, ...data }
     storage.set(STORAGE_KEYS.EMAIL_CONFIG, updated)
     set({ email: updated })
+    void saveAppState(STORAGE_KEYS.EMAIL_CONFIG, updated)
   },
 
   updateEmailTemplate: (data) => {
     const updated = { ...get().emailTemplate, ...data }
     storage.set(STORAGE_KEYS.EMAIL_TEMPLATE, updated)
     set({ emailTemplate: updated })
+    void saveAppState(STORAGE_KEYS.EMAIL_TEMPLATE, updated)
+  },
+
+  // Read fiscal/payroll/night/email settings from app_state (shared, cloud-authoritative).
+  // Best-effort + offline-safe: any missing/unreadable key keeps the localStorage cache.
+  hydrateSettingsFromCloud: async () => {
+    const [payroll, nightShift, fiscal, email, emailTemplate] = await Promise.all([
+      fetchAppState<PayrollSettings>(STORAGE_KEYS.PAYROLL_SETTINGS),
+      fetchAppState<NightShiftSettings>(STORAGE_KEYS.NIGHT_SETTINGS),
+      fetchAppState<FiscalParameters>(STORAGE_KEYS.FISCAL_PARAMETERS),
+      fetchAppState<EmailConfig>(STORAGE_KEYS.EMAIL_CONFIG),
+      fetchAppState<EmailTemplate>(STORAGE_KEYS.EMAIL_TEMPLATE),
+    ])
+    const patch: Partial<AppSettings> = {}
+    if (payroll) { const m = { ...get().payroll, ...payroll }; storage.set(STORAGE_KEYS.PAYROLL_SETTINGS, m); patch.payroll = m }
+    if (nightShift) { const m = { ...get().nightShift, ...nightShift }; storage.set(STORAGE_KEYS.NIGHT_SETTINGS, m); patch.nightShift = m }
+    if (fiscal) { const m = { ...get().fiscal, ...fiscal }; storage.set(STORAGE_KEYS.FISCAL_PARAMETERS, m); patch.fiscal = m }
+    if (email) { const m = { ...get().email, ...email }; storage.set(STORAGE_KEYS.EMAIL_CONFIG, m); patch.email = m }
+    if (emailTemplate) { const m = { ...get().emailTemplate, ...emailTemplate }; storage.set(STORAGE_KEYS.EMAIL_TEMPLATE, m); patch.emailTemplate = m }
+    if (Object.keys(patch).length > 0) set(patch)
   },
 }))
