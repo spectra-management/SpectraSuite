@@ -35,9 +35,20 @@ export interface SignedPhoto {
   exp: number
 }
 
+/** Where a stored photo came from. 'manual' uploads always win over a 'bamboohr' sync. */
+export type PhotoSource = 'manual' | 'bamboohr'
+
 interface PhotoRow {
   employee_id: string
   storage_path: string
+}
+
+/** Full photo record used by the sync to decide what to (re)download. */
+export interface PhotoMeta {
+  storagePath: string
+  source: PhotoSource
+  /** BambooHR photo version (photoUrl path segment); null for manual uploads. */
+  bamboohrVersion: string | null
 }
 
 async function isAuthenticated(): Promise<boolean> {
@@ -74,6 +85,71 @@ export async function fetchPhotoOverrides(): Promise<Record<string, string> | nu
     console.warn('[rrhh-photo] fetchPhotoOverrides failed:', e)
     return null
   }
+}
+
+/**
+ * Fetch the full photo record for every employee (id → { storagePath, source, version }).
+ * Used by the BambooHR photo sync to decide which photos changed and must be re-downloaded,
+ * and to skip rows that were uploaded manually. Returns `null` when unreadable. Never throws.
+ */
+export async function fetchPhotoMeta(): Promise<Record<string, PhotoMeta> | null> {
+  if (!(await isAuthenticated())) return null
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('employee_id, storage_path, source, bamboohr_version')
+    if (error || !data) return null
+    const out: Record<string, PhotoMeta> = {}
+    for (const row of data as Array<PhotoRow & { source?: string; bamboohr_version?: string | null }>) {
+      if (!row.employee_id || !row.storage_path) continue
+      out[row.employee_id] = {
+        storagePath: row.storage_path,
+        source: row.source === 'bamboohr' ? 'bamboohr' : 'manual',
+        bamboohrVersion: row.bamboohr_version ?? null,
+      }
+    }
+    return out
+  } catch (e) {
+    console.warn('[rrhh-photo] fetchPhotoMeta failed:', e)
+    return null
+  }
+}
+
+/**
+ * Store a photo downloaded from BambooHR for `employeeId` in the private bucket and record
+ * it (source='bamboohr' + the version that produced it). Used by the sync. Throws on failure
+ * so the caller can count/skip. NEVER call this for an employee whose row is source='manual'
+ * — the caller must guard that (a manual upload always wins).
+ */
+export async function uploadBambooPhoto(
+  employeeId: string,
+  blob: Blob,
+  version: string,
+): Promise<string> {
+  if (!isSupabaseConfigured) throw new Error('supabase-not-configured')
+
+  // Synced photos live under a `bamboohr/` prefix so they never collide with the
+  // `{id}.{ext}` path a manual upload uses at the bucket root.
+  const path = `bamboohr/${employeeId}.jpg`
+
+  const { error: upErr } = await supabase.storage
+    .from(EMPLOYEE_PHOTOS_BUCKET)
+    .upload(path, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '3600' })
+  if (upErr) throw new Error(upErr.message)
+
+  const { error: tErr } = await supabase.from(TABLE).upsert(
+    {
+      employee_id: employeeId,
+      storage_path: path,
+      source: 'bamboohr',
+      bamboohr_version: version,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'employee_id' },
+  )
+  if (tErr) throw new Error(tErr.message)
+
+  return path
 }
 
 /**
@@ -144,6 +220,9 @@ export async function uploadEmployeePhoto(employeeId: string, file: File): Promi
     {
       employee_id: employeeId,
       storage_path: path,
+      // A manual upload always wins: mark the row so the BambooHR sync never overwrites it.
+      source: 'manual',
+      bamboohr_version: null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'employee_id' },
