@@ -40,6 +40,9 @@ interface BillingState {
   getClient: (id: string) => BillingClient | undefined
   /** Auto-create one client per BambooHR division not yet present (matched by division/name). */
   ensureClientsForDivisions: (divisions: string[]) => void
+  /** Auto-assign each employee to the client matching its division (idempotent); deactivates
+   *  auto assignments whose employee no longer matches. Manual assignments are untouched. */
+  ensureAssignmentsForDivisions: (roster: { id: string; division?: string }[]) => void
 
   // ── Title rates ──────────────────────────────────────────────────────────────
   upsertTitleRate: (clientId: string, title: string, baseRate: number, otRate: number) => TitleRate
@@ -149,6 +152,52 @@ export const useBillingStore = create<BillingState>((set, get) => ({
     const clients = [...existing, ...created]
     storage.set(STORAGE_KEYS.BILLING_CLIENTS, clients)
     set({ clients })
+  },
+
+  ensureAssignmentsForDivisions: (roster) => {
+    const clientByTarget = new Map<string, BillingClient>()
+    for (const c of get().clients) {
+      const key = (c.division || c.name).trim().toLowerCase()
+      if (key && !clientByTarget.has(key)) clientByTarget.set(key, c)
+    }
+    const ts = nowIso()
+    let next = get().clientEmployees
+    const byPair = new Map(next.map((a) => [`${a.clientId}:${a.employeeId}`, a]))
+    const desired = new Set<string>()
+    let changed = false
+
+    // Create / re-activate an auto assignment for each employee → its division's client.
+    for (const e of roster) {
+      const div = (e.division ?? '').trim().toLowerCase()
+      if (!div) continue
+      const client = clientByTarget.get(div)
+      if (!client) continue
+      const pair = `${client.id}:${e.id}`
+      desired.add(pair)
+      const ex = byPair.get(pair)
+      if (!ex) {
+        next = [...next, {
+          id: generateId(), clientId: client.id, employeeId: e.id,
+          method: null, baseRateOverride: null, otRateOverride: null,
+          fixedAmount: null, percentageRate: null, active: true, auto: true,
+          createdAt: ts, updatedAt: ts,
+        }]
+        changed = true
+      } else if (ex.auto && !ex.active) {
+        next = next.map((a) => (a.id === ex.id ? { ...a, active: true, updatedAt: ts } : a))
+        changed = true
+      }
+    }
+    // Deactivate auto assignments whose employee no longer matches (moved client / lost division).
+    for (const a of get().clientEmployees) {
+      if (a.auto && a.active && !desired.has(`${a.clientId}:${a.employeeId}`)) {
+        next = next.map((x) => (x.id === a.id ? { ...x, active: false, updatedAt: ts } : x))
+        changed = true
+      }
+    }
+    if (!changed) return
+    storage.set(STORAGE_KEYS.BILLING_CLIENT_EMPLOYEES, next)
+    set({ clientEmployees: next })
   },
 
   // ── Title rates ──────────────────────────────────────────────────────────────

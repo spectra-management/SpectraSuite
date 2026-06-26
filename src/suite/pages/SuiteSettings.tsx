@@ -50,7 +50,7 @@ export default function SuiteSettings() {
     <div className="min-h-screen bg-canvas">
       {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-4 md:px-6">
+        <div className="flex items-center justify-between gap-3 px-4 py-4 md:px-8">
           <Link to="/suite" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400">
             <ArrowLeft className="h-4 w-4" /> {t('suite.backToSuite')}
           </Link>
@@ -70,7 +70,7 @@ export default function SuiteSettings() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-6 space-y-6 md:px-6 md:py-8">
+      <main className="px-4 py-6 space-y-6 md:px-8 md:py-8">
         <h1 className="text-2xl font-bold text-foreground">{t('suite.settings.title')}</h1>
 
         <Card>

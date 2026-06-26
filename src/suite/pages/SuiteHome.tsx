@@ -40,7 +40,7 @@ export default function SuiteHome() {
     <div className="min-h-screen bg-canvas">
       {/* Top bar */}
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 md:px-6">
+        <div className="flex items-center justify-between gap-3 px-4 py-4 md:px-8">
           <div className="flex items-center gap-2.5">
             {company.logoBase64 ? (
               <img src={company.logoBase64} alt="logo" className="h-9 w-9 rounded-xl object-contain" />
@@ -84,7 +84,7 @@ export default function SuiteHome() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-8">
+      <main className="px-4 py-6 md:px-8 md:py-8">
         {/* Hero — ink "ledger" band with greeting + module launcher */}
         <section className="relative overflow-hidden rounded-2xl bg-ink-grad p-6 shadow-soft-lg animate-rise md:p-8">
           <div className="absolute inset-0 bg-guilloche opacity-90" aria-hidden="true" />

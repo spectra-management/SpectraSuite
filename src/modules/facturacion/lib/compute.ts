@@ -35,43 +35,6 @@ export interface RosterEmployee {
   firstName: string
   lastName: string
   jobTitle: string
-  /** BambooHR division = the client this employee works for (auto billing grouping). */
-  division?: string
-}
-
-/**
- * Auto-build a client's assignments from the BambooHR division: every roster employee whose
- * division matches the client (by its `division`, falling back to `name`) is billed. Any
- * existing manual ClientEmployee row (rate/method overrides) is kept; others get a synthetic
- * active assignment that inherits the client's default method + title rates.
- */
-export function assignmentsByDivision(
-  client: BillingClient,
-  roster: RosterEmployee[],
-  existing: ClientEmployee[],
-): ClientEmployee[] {
-  const target = (client.division || client.name).trim().toLowerCase()
-  if (!target) return existing.filter((a) => a.clientId === client.id)
-  const overrideByEmp = new Map(
-    existing.filter((a) => a.clientId === client.id).map((a) => [a.employeeId, a]),
-  )
-  return roster
-    .filter((e) => (e.division ?? '').trim().toLowerCase() === target)
-    .map((e) =>
-      overrideByEmp.get(e.id) ?? {
-        id: `auto_${client.id}_${e.id}`,
-        clientId: client.id,
-        employeeId: e.id,
-        method: null,
-        baseRateOverride: null,
-        otRateOverride: null,
-        fixedAmount: null,
-        percentageRate: null,
-        active: true,
-        createdAt: '',
-        updatedAt: '',
-      },
-    )
 }
 
 export interface ComputeInput {

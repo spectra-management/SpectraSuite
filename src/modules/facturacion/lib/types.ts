@@ -78,6 +78,8 @@ export interface ClientEmployee {
   /** Percentage of employee pay, e.g. 15 = 15% ('percentage' method). */
   percentageRate: number | null
   active: boolean
+  /** True when auto-created from the employee's BambooHR division (vs a manual assignment). */
+  auto?: boolean
   createdAt: string
   updatedAt: string
 }
