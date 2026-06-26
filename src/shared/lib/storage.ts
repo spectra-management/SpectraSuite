@@ -68,4 +68,6 @@ export const STORAGE_KEYS = {
   EMPLOYEES_HR: 'employees_hr',
   // Cloud-backed per-employee payroll overrides (tax exemption) shared by Nómina + RRHH
   EMPLOYEE_PAYROLL_SETTINGS: 'employee_payroll_settings',
+  // Cloud-backed per-employee baseball-card overrides (auto-filled from HR, editable)
+  EMPLOYEE_BASEBALL_CARDS: 'employee_baseball_cards',
 } as const

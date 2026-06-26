@@ -10,6 +10,7 @@ import {
   Phone,
   StickyNote,
   Files,
+  CreditCard,
 } from 'lucide-react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
@@ -34,6 +35,7 @@ import {
   DocumentsTab,
   RestrictedCard,
 } from './tabs'
+import { BaseballCardTab } from './BaseballCardTab'
 
 function statusVariant(status: RrhhEmployeeStatus): 'default' | 'secondary' | 'destructive' {
   if (status === 'Active') return 'default'
@@ -44,6 +46,7 @@ function statusVariant(status: RrhhEmployeeStatus): 'default' | 'secondary' | 'd
 type TabId =
   | 'personal'
   | 'job'
+  | 'baseballCard'
   | 'compensation'
   | 'timeOff'
   | 'emergency'
@@ -108,6 +111,7 @@ export default function Profile() {
   const tabs: RrhhTab[] = [
     { id: 'personal', label: t('rrhh.profile.tabs.personal'), icon: User },
     { id: 'job', label: t('rrhh.profile.tabs.job'), icon: Briefcase },
+    { id: 'baseballCard', label: t('rrhh.profile.tabs.baseballCard'), icon: CreditCard },
     ...(canViewSensitive
       ? [{ id: 'compensation', label: t('rrhh.profile.tabs.compensation'), icon: DollarSign }]
       : []),
@@ -163,6 +167,9 @@ export default function Profile() {
         <PersonalTab employee={employee} canViewSensitive={canViewSensitive} />
       )}
       {effectiveTab === 'job' && <JobTab employee={employee} directReports={directReports} />}
+      {effectiveTab === 'baseballCard' && (
+        <BaseballCardTab employee={employee} canEdit={canViewSensitive} photoSrc={photoSrc} />
+      )}
       {effectiveTab === 'compensation' &&
         (canViewSensitive ? (
           <CompensationTab employee={employee} enabled={effectiveTab === 'compensation'} />

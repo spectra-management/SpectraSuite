@@ -1065,6 +1065,29 @@
       "syncedOne": "1 photo saved to the database",
       "syncedMany": "{{count}} photos saved to the database"
     },
+    "baseballCard": {
+      "edit": "Edit",
+      "save": "Save",
+      "saved": "Card saved",
+      "editTitle": "Edit baseball card",
+      "editHint": "Fields are prefilled from HR; leave blank to use the HR value, or type to override.",
+      "downloadPdf": "Download PDF",
+      "downloadFailed": "Could not generate the PDF",
+      "onePerLine": "one per line",
+      "fullName": "Full Name",
+      "nickName": "Nick Name",
+      "dob": "Date of Birth (Mon & Day)",
+      "spectraStart": "Spectra Start Date (Mon & Year)",
+      "accountName": "Account Name",
+      "accountStart": "Account Start Date",
+      "jobTitle": "Job Title",
+      "jobHistory": "Job History",
+      "education": "Education",
+      "hobbies": "Hobbies",
+      "funFacts": "Fun Facts",
+      "leadershipStyle": "Preferred Leadership Style",
+      "goals": "Goals"
+    },
     "directory": {
       "title": "Employee Directory",
       "subtitle": "All employees synced from BambooHR (read-only).",
@@ -1153,7 +1176,8 @@
         "timeOff": "Time Off",
         "emergency": "Emergency",
         "notes": "Notes",
-        "documents": "Documents"
+        "documents": "Documents",
+        "baseballCard": "Baseball Card"
       },
       "emergency": {
         "title": "Emergency Contacts",

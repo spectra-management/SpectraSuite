@@ -419,6 +419,60 @@ export async function savePayrollSetting(employeeId: string, setting: PayrollSet
   }
 }
 
+// ─── Employee baseball cards (see migration 015) ─────────────────────────────
+//
+// Per-employee card overrides (auto-filled from HR, but every field is overridable, plus
+// manual-only fields like job history / hobbies / goals). Stored as a JSON blob per employee.
+
+import type { BaseballCardOverrides } from '@/shared/lib/baseballCard'
+
+interface BaseballCardRow {
+  bamboohr_id: string
+  data: BaseballCardOverrides | null
+}
+
+/** Read all baseball-card overrides (id → overrides). Empty if unavailable. */
+export async function fetchBaseballCards(): Promise<Record<string, BaseballCardOverrides>> {
+  if (!(await isAuthenticated())) return {}
+  try {
+    const { data, error } = await supabase
+      .from('employee_baseball_cards')
+      .select('bamboohr_id, data')
+    if (error || !data) return {}
+    const out: Record<string, BaseballCardOverrides> = {}
+    for (const r of data as BaseballCardRow[]) {
+      if (r.bamboohr_id && r.data) out[r.bamboohr_id] = r.data
+    }
+    return out
+  } catch (e) {
+    console.warn('[cloudSync] fetchBaseballCards failed:', e)
+    return {}
+  }
+}
+
+/** Upsert one employee's baseball-card overrides. Best-effort (nomina/rrhh edit RLS). */
+export async function saveBaseballCard(
+  employeeId: string,
+  overrides: BaseballCardOverrides,
+): Promise<void> {
+  if (!employeeId) return
+  if (!(await isAuthenticated())) return
+  try {
+    const { data: session } = await supabase.auth.getSession()
+    await supabase.from('employee_baseball_cards').upsert(
+      {
+        bamboohr_id: employeeId,
+        data: overrides,
+        updated_at: new Date().toISOString(),
+        updated_by: session.session?.user.id ?? null,
+      },
+      { onConflict: 'bamboohr_id' },
+    )
+  } catch (e) {
+    console.warn('[cloudSync] saveBaseballCard failed:', e)
+  }
+}
+
 // ─── Vacation payments ───────────────────────────────────────────────────────
 
 export interface CloudVacationPayment {
