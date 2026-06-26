@@ -23,7 +23,8 @@ export interface DocumentPageData {
   signatureRight?: string
 }
 
-export type DocumentPageSize = 'A4' | 'LEGAL'
+// LETTER = 8.5×11", LEGAL = 8.5×14" (both @react-pdf presets). A4 kept for older templates.
+export type DocumentPageSize = 'A4' | 'LETTER' | 'LEGAL'
 
 const EMERALD = '#059669'
 const INK = '#111827'
@@ -111,9 +112,18 @@ export function DocumentPage({
   data,
   company,
   size = 'A4',
-}: { data: DocumentPageData; company: CompanySettings; size?: DocumentPageSize }) {
+  margin,
+}: { data: DocumentPageData; company: CompanySettings; size?: DocumentPageSize; margin?: number }) {
+  // When a margin (in points) is given, override the page padding + footer insets so the text
+  // reflows to the chosen page width and the footer sits inside the bottom margin.
+  const pageStyle = margin != null
+    ? [styles.page, { paddingTop: margin, paddingBottom: margin + 22, paddingLeft: margin, paddingRight: margin }]
+    : styles.page
+  const footerStyle = margin != null
+    ? [styles.footer, { left: margin, right: margin, bottom: Math.max(16, Math.round(margin * 0.5)) }]
+    : styles.footer
   return (
-    <Page size={size} style={styles.page}>
+    <Page size={size} style={pageStyle}>
       <View style={styles.header}>
         {isRasterDataUri(company.logoBase64) && <Image src={company.logoBase64} style={styles.logo} />}
         <View>
@@ -133,7 +143,7 @@ export function DocumentPage({
 
       <Signatures left={data.signatureLeft} right={data.signatureRight} />
 
-      <View style={styles.footer} fixed>
+      <View style={footerStyle} fixed>
         <Text>{data.footer}</Text>
         <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
       </View>
@@ -146,10 +156,11 @@ export function ContractDocument({
   data,
   company,
   size = 'A4',
-}: { data: DocumentPageData; company: CompanySettings; size?: DocumentPageSize }) {
+  margin,
+}: { data: DocumentPageData; company: CompanySettings; size?: DocumentPageSize; margin?: number }) {
   return (
     <Document>
-      <DocumentPage data={data} company={company} size={size} />
+      <DocumentPage data={data} company={company} size={size} margin={margin} />
     </Document>
   )
 }
@@ -159,11 +170,12 @@ export function BulkDocument({
   pages,
   company,
   size = 'A4',
-}: { pages: DocumentPageData[]; company: CompanySettings; size?: DocumentPageSize }) {
+  margin,
+}: { pages: DocumentPageData[]; company: CompanySettings; size?: DocumentPageSize; margin?: number }) {
   return (
     <Document>
       {pages.map((data, i) => (
-        <DocumentPage key={i} data={data} company={company} size={size} />
+        <DocumentPage key={i} data={data} company={company} size={size} margin={margin} />
       ))}
     </Document>
   )

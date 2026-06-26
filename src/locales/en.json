@@ -870,7 +870,12 @@
       "generatedOne": "Document generated and downloaded",
       "generatedBulk": "Combined PDF generated with {{count}} documents",
       "error": "Could not generate the document",
-      "noPermission": "You need edit access to generate documents."
+      "noPermission": "You need edit access to generate documents.",
+      "pageSize": "Page size",
+      "pageLetter": "Letter (8.5 × 11\")",
+      "pageLegal": "Legal (8.5 × 14\")",
+      "margin": "Margins",
+      "inches": "inches"
     },
     "history": {
       "title": "Generated documents",

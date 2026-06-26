@@ -870,7 +870,12 @@
       "generatedOne": "Documento generado y descargado",
       "generatedBulk": "PDF combinado generado con {{count}} documentos",
       "error": "No se pudo generar el documento",
-      "noPermission": "Necesitas permiso de edición para generar documentos."
+      "noPermission": "Necesitas permiso de edición para generar documentos.",
+      "pageSize": "Tamaño de hoja",
+      "pageLetter": "Carta (8.5 × 11\")",
+      "pageLegal": "Legal (8.5 × 14\")",
+      "margin": "Márgenes",
+      "inches": "pulgadas"
     },
     "history": {
       "title": "Documentos generados",

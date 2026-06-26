@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { FileDown, Loader2, Search, Users, Info, FileText } from 'lucide-react'
@@ -22,7 +22,10 @@ import type { Employee } from '@/shared/types'
 import { useDocumentsStore } from '../../store/documentsStore'
 import { buildVariables, fillTemplate } from '../../lib/variables'
 import type { GeneratedDocumentRecord } from '../../lib/types'
-import type { DocumentPageData } from '../../lib/ContractDocument'
+import type { DocumentPageData, DocumentPageSize } from '../../lib/ContractDocument'
+
+/** Inches → PDF points (72 pt = 1 in). */
+const inchesToPoints = (inches: number): number => Math.round(inches * 72)
 
 const ALL_DEPTS = '__all__'
 
@@ -65,9 +68,18 @@ export default function Generate() {
   const [dept, setDept] = useState<string>(ALL_DEPTS)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [generating, setGenerating] = useState(false)
+  // Page size + margin chosen at generation time (override the template default).
+  const [pageSize, setPageSize] = useState<DocumentPageSize>('LETTER')
+  const [marginIn, setMarginIn] = useState(0.8)
 
   const hasHrData = Object.keys(hrById).length > 0
   const template = templates.find((tpl) => tpl.id === templateId)
+
+  // Seed the page-size selector from the chosen template (LEGAL → Legal, else Letter);
+  // the user can still change it before generating.
+  useEffect(() => {
+    if (template) setPageSize(template.pageSize === 'LEGAL' ? 'LEGAL' : 'LETTER')
+  }, [template])
 
   const visibleEmployees = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -127,15 +139,16 @@ export default function Generate() {
       const now = new Date()
       const nowIso = now.toISOString()
       const generatedBy = profile?.full_name || user?.email || ''
-      const size = template.pageSize ?? 'A4'
+      const size = pageSize
+      const margin = inchesToPoints(marginIn)
 
       if (selectedEmployees.length === 1) {
         const emp = selectedEmployees[0]
-        const blob = await generatePdfBlob(<ContractDocument data={pageFor(emp, now)} company={company} size={size} />)
+        const blob = await generatePdfBlob(<ContractDocument data={pageFor(emp, now)} company={company} size={size} margin={margin} />)
         downloadBlob(blob, `${safeFilePart(template.name)}_${safeFilePart(`${emp.firstName}_${emp.lastName}`)}.pdf`)
       } else {
         const pages = selectedEmployees.map((emp) => pageFor(emp, now))
-        const blob = await generatePdfBlob(<BulkDocument pages={pages} company={company} size={size} />)
+        const blob = await generatePdfBlob(<BulkDocument pages={pages} company={company} size={size} margin={margin} />)
         downloadBlob(blob, `${safeFilePart(template.name)}_${selectedEmployees.length}.pdf`)
       }
 
@@ -306,6 +319,35 @@ export default function Generate() {
                   <p className="text-[10px] text-muted-foreground">{t('documentos.generate.cedulaHint')}</p>
                 </div>
               )}
+
+              {/* Page size + margin (applied to the generated PDF) */}
+              <div className="space-y-3 rounded-lg border border-border bg-secondary/30 p-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">{t('documentos.generate.pageSize')}</label>
+                  <Select value={pageSize} onValueChange={(v) => setPageSize(v as DocumentPageSize)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="LETTER">{t('documentos.generate.pageLetter')}</SelectItem>
+                      <SelectItem value="LEGAL">{t('documentos.generate.pageLegal')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">{t('documentos.generate.margin')}</label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number" min={0.25} max={2} step={0.05}
+                      value={marginIn}
+                      onChange={(e) => {
+                        const n = parseFloat(e.target.value)
+                        setMarginIn(Number.isFinite(n) ? Math.min(2, Math.max(0.25, n)) : 0.8)
+                      }}
+                      className="w-24"
+                    />
+                    <span className="text-xs text-muted-foreground">{t('documentos.generate.inches')}</span>
+                  </div>
+                </div>
+              </div>
 
               {!hasHrData && (
                 <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
