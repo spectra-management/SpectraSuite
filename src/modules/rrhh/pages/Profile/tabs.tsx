@@ -1,8 +1,10 @@
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Loader2, AlertTriangle, Lock, FileText, ShieldCheck } from 'lucide-react'
+import { Loader2, AlertTriangle, Lock, FileText, ShieldCheck, Folder, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Badge } from '@/shared/components/ui/badge'
 import { formatDate } from '@/shared/lib/utils'
+import { useSettingsStore } from '@/shared/store/settingsStore'
 import {
   useRrhhEmergencyContacts,
   useRrhhCompensation,
@@ -14,7 +16,8 @@ import {
   maskNationalId,
   tenureFrom,
 } from '@/modules/rrhh/lib/format'
-import type { RrhhEmployee } from '@/modules/rrhh/types'
+import { buildFileDownloadUrl } from '@/modules/rrhh/lib/connectors/bamboohr'
+import type { RrhhEmployee, RrhhDocument } from '@/modules/rrhh/types'
 import { TaxExemptionControl } from '@/shared/components/TaxExemptionControl'
 
 /* ----------------------------- shared bits ------------------------------ */
@@ -373,9 +376,45 @@ export function NotesTab() {
 
 /* ------------------------------ Documents ------------------------------- */
 
+/** Human-readable size, e.g. "236 KB" / "2.4 MB". Accepts a byte count as string/number. */
+function formatFileSize(size: string): string {
+  const bytes = Number(size)
+  if (!Number.isFinite(bytes) || bytes <= 0) return '—'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export function DocumentsTab({ employeeId, enabled }: { employeeId: string; enabled: boolean }) {
   const { t } = useTranslation()
   const { data: docs, loading, error } = useRrhhDocuments(employeeId, enabled)
+  const subdomain = useSettingsStore((s) => s.bamboohr.subdomain)
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+
+  // Group documents by BambooHR category = folder.
+  const folders = useMemo(() => {
+    const map = new Map<string, RrhhDocument[]>()
+    for (const d of docs) {
+      const key = d.category || t('rrhh.profile.documents.uncategorized')
+      const list = map.get(key) ?? []
+      list.push(d)
+      map.set(key, list)
+    }
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))
+  }, [docs, t])
+
+  const toggle = (folder: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(folder)) next.delete(folder)
+      else next.add(folder)
+      return next
+    })
+
+  const openDoc = (d: RrhhDocument) => {
+    const url = buildFileDownloadUrl(subdomain, employeeId, d.id)
+    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   return (
     <Card>
@@ -385,7 +424,7 @@ export function DocumentsTab({ employeeId, enabled }: { employeeId: string; enab
           {t('rrhh.profile.documents.title')}
         </CardTitle>
       </CardHeader>
-      <CardContent className={docs.length === 0 ? undefined : 'p-0'}>
+      <CardContent>
         {loading ? (
           <TabLoading />
         ) : error ? (
@@ -393,36 +432,44 @@ export function DocumentsTab({ employeeId, enabled }: { employeeId: string; enab
         ) : docs.length === 0 ? (
           <TabEmpty message={t('rrhh.profile.documents.none')} />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-secondary">
-                  {['name', 'category', 'date', 'size'].map((k) => (
-                    <th
-                      key={k}
-                      className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                    >
-                      {t(`rrhh.profile.documents.${k}`)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {docs.map((d) => (
-                  <tr key={d.id} className="hover:bg-secondary transition-colors">
-                    <td className="px-6 py-3">
-                      <span className="flex items-center gap-2 font-medium text-foreground">
-                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        {d.name}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3 text-muted-foreground">{d.category || '—'}</td>
-                    <td className="px-6 py-3 text-muted-foreground">{d.dateCreated ? formatDate(d.dateCreated) : '—'}</td>
-                    <td className="px-6 py-3 text-muted-foreground">{d.size || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-2">
+            {folders.map(([folder, files]) => {
+              const isCollapsed = collapsed.has(folder)
+              return (
+                <div key={folder} className="overflow-hidden rounded-xl border border-border">
+                  <button
+                    type="button"
+                    onClick={() => toggle(folder)}
+                    className="flex w-full items-center gap-2 bg-secondary/60 px-4 py-2.5 text-left transition-colors hover:bg-secondary"
+                  >
+                    {isCollapsed ? <ChevronRight className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                    <Folder className="h-4 w-4 text-emerald-600" />
+                    <span className="font-medium text-foreground">{folder}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">{files.length}</span>
+                  </button>
+                  {!isCollapsed && (
+                    <ul className="divide-y divide-border">
+                      {files.map((d) => (
+                        <li key={d.id}>
+                          <button
+                            type="button"
+                            onClick={() => openDoc(d)}
+                            className="group flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-secondary/50"
+                            title={t('rrhh.profile.documents.open')}
+                          >
+                            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400">{d.name}</span>
+                            <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{d.dateCreated ? formatDate(d.dateCreated) : '—'}</span>
+                            <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{formatFileSize(d.size)}</span>
+                            <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </CardContent>

@@ -1231,7 +1231,9 @@
         "category": "Category",
         "date": "Date",
         "size": "Size",
-        "none": "No documents on record for this employee."
+        "none": "No documents on record for this employee.",
+        "open": "Open document",
+        "uncategorized": "No folder"
       }
     },
     "org": {

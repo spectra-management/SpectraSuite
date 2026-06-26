@@ -266,6 +266,20 @@ export function buildPhotoProxyUrl(
   return `/api/bamboohr?${qs.toString()}`
 }
 
+/**
+ * Build a URL to download/open an employee file through the shared proxy
+ * (GET /v1/employees/{id}/files/{fileId}). The proxy streams the binary INLINE so PDFs/images
+ * open in a new tab. The apiKey is added server-side — it never appears in the client URL.
+ */
+export function buildFileDownloadUrl(subdomain: string, employeeId: string, fileId: string): string {
+  if (!subdomain || !employeeId || !fileId) return ''
+  const qs = new URLSearchParams({
+    path: `/v1/employees/${employeeId}/files/${fileId}`,
+    subdomain,
+  })
+  return `/api/bamboohr?${qs.toString()}`
+}
+
 interface RawTableRow {
   id?: string | number
   employeeId?: string | number
@@ -403,7 +417,9 @@ export async function fetchRrhhDocuments(
         id: String(f.id ?? ''),
         name: f.name ?? f.originalFileName ?? '—',
         category: cat.name ?? '—',
-        dateCreated: f.dateCreated ?? '',
+        // BambooHR dates come as "2026-05-07T20:32:19+0000" (tz without a colon), which JS
+        // can't parse → "Invalid Date". Insert the colon so it's a valid ISO string.
+        dateCreated: (f.dateCreated ?? '').replace(/([+-]\d{2})(\d{2})$/, '$1:$2'),
         size: f.size != null ? String(f.size) : '',
         shareWithEmployee: f.shareWithEmployee === true || f.shareWithEmployee === 'yes',
       })

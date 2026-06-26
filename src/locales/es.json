@@ -1231,7 +1231,9 @@
         "category": "Categoría",
         "date": "Fecha",
         "size": "Tamaño",
-        "none": "No hay documentos registrados para este empleado."
+        "none": "No hay documentos registrados para este empleado.",
+        "open": "Abrir documento",
+        "uncategorized": "Sin carpeta"
       }
     },
     "org": {

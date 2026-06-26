@@ -30,6 +30,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const credentials = Buffer.from(`${apiKey}:x`).toString('base64')
   const isPhoto = path.includes('/photo/')
+  // Employee file download: /v1/employees/{id}/files/{fileId} (NOT /files/view, which is JSON).
+  const isFileDownload = /\/v1\/employees\/\d+\/files\/\d+\/?$/.test(path)
 
   // Forward extra query params (e.g., format=JSON for custom reports)
   const qs = new URLSearchParams()
@@ -42,8 +44,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const headers: Record<string, string> = {
       Authorization: `Basic ${credentials}`,
-      // Photo requests must NOT ask for JSON — BambooHR returns the raw image binary.
-      Accept: isPhoto ? 'image/*' : 'application/json',
+      // Photo / file-download requests must NOT ask for JSON — BambooHR returns raw binary.
+      Accept: isPhoto ? 'image/*' : isFileDownload ? '*/*' : 'application/json',
     }
 
     const fetchOptions: RequestInit = {
@@ -94,6 +96,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // directory — a visible reload/flicker. Employee photos rarely change, so let the
       // browser hold them for a day and serve stale-while-revalidate for a week.
       res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800')
+      res.status(200)
+      return res.end(buffer)
+    }
+
+    // Employee file download (GET /v1/employees/{id}/files/{fileId}) returns the raw file
+    // binary. Stream it verbatim with the upstream content-type, served INLINE so PDFs/images
+    // open in a new browser tab (other types download). apiKey is added server-side, so the
+    // secret never reaches the client URL.
+    if (isFileDownload) {
+      const contentType = response.headers.get('content-type') || 'application/octet-stream'
+      const disposition = response.headers.get('content-disposition')
+      const buffer = Buffer.from(await response.arrayBuffer())
+      res.setHeader('Content-Type', contentType)
+      res.setHeader('Content-Length', String(buffer.length))
+      // Prefer inline so PDFs/images render in-tab; keep the upstream filename when present.
+      res.setHeader('Content-Disposition', disposition ? disposition.replace(/^attachment/i, 'inline') : 'inline')
+      res.setHeader('Cache-Control', 'private, max-age=300')
       res.status(200)
       return res.end(buffer)
     }
