@@ -24,16 +24,16 @@ export function formatCurrencyWithSymbol(value: number, symbol: string): string 
 /**
  * Calculate hourly earnings (regular, OT, holiday).
  *
- * Holiday hours are hours WORKED on a holiday: they count as regular hours
- * (paid at the normal rate as part of regular pay) AND earn an additional
- * holidayRatePercent bonus on top — they are NOT paid as a separate double rate.
+ * ALL worked hours (regular + OT + holiday) are first paid at 100% of the rate in regular pay.
+ * OT and holiday hours then earn an ADDITIONAL premium on top (the differential only):
  *
- *   regularPay  = rate × (regularHours + holidayHours)
- *   holidayPay  = rate × holidayHours × (holidayRatePercent / 100)   // additional bonus only
+ *   regularPay  = rate × (regularHours + otHours + holidayHours)        // every hour at 100%
+ *   otPay       = rate × otHours × (otRatePercent / 100)                // OT differential (e.g. +50%)
+ *   holidayPay  = rate × holidayHours × (holidayRatePercent / 100)      // holiday differential (e.g. +100%)
  *
- * So worked-holiday hours appear once in the regular-pay base and once as the
- * extra bonus, never double-counted. (regularHours and holidayHours are stored
- * as disjoint buckets; regularHours excludes the holiday hours.)
+ * So OT hours total otRatePercent over base (100% + 50% = 150%) and holiday hours total
+ * holidayRatePercent over base (100% + 100% = 200%), each counted once in regular + once as
+ * the premium. (regularHours, otHours and holidayHours are stored as disjoint buckets.)
  */
 function calculateHourlyEarnings(
   hourlyRate: number,
@@ -43,10 +43,10 @@ function calculateHourlyEarnings(
   otRatePercent: number,
   holidayRatePercent: number,
 ): { regularPay: number; otPay: number; holidayPay: number; grossPay: number } {
-  // Worked holiday hours are part of regular pay.
-  const regularPay = roundHalfUp(hourlyRate * (regularHours + holidayHours))
-  const otMultiplier = 1 + otRatePercent / 100
-  const otPay = roundHalfUp(hourlyRate * otHours * otMultiplier)
+  // Every worked hour (regular + OT + holiday) is paid at 100% as regular pay.
+  const regularPay = roundHalfUp(hourlyRate * (regularHours + otHours + holidayHours))
+  // OT pay is the ADDITIONAL premium only (e.g. +50%), on top of regular pay.
+  const otPay = roundHalfUp(hourlyRate * otHours * (otRatePercent / 100))
   // Holiday pay is the ADDITIONAL premium only (e.g. +100%), on top of regular pay.
   const holidayPay = roundHalfUp(hourlyRate * holidayHours * (holidayRatePercent / 100))
   const grossPay = roundHalfUp(regularPay + otPay + holidayPay)
@@ -175,7 +175,7 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
   const {
     rules,
     frequency,
-    otRatePercent = 35,
+    otRatePercent = 50,
     holidayRatePercent = 100,
   } = input
 

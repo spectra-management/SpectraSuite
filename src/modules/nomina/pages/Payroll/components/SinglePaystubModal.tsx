@@ -108,14 +108,12 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
 
   // Rate shown in the earnings table. For Salary, the per-hour figure is gross ÷ period
   // hours (pay is fixed), so hours × rate = gross stays consistent. Hourly shows its rate.
-  // Worked holiday hours are part of regular pay, so the "Regular Hours" line shows
-  // regular + holiday hours (and regularPay is the pay for all of them).
-  const regularDisplayHours = hoursEntry.regularHours + hoursEntry.holidayHours
+  // Every worked hour is paid at 100% in regular pay, so the "Regular Hours" line shows
+  // regular + OT + holiday hours (regularPay is the pay for all of them).
+  const regularDisplayHours = hoursEntry.regularHours + hoursEntry.otHours + hoursEntry.holidayHours
   const displayRate = employee.payType === 'Salary'
     ? (regularDisplayHours > 0 ? calculation.regularPay / regularDisplayHours : 0)
     : effectiveRate
-
-  const otMultiplier = 1 + payrollSettings.otRatePercent / 100
 
   // Fixed deduction values
   const payAdvanceAmt    = lookupDed(calculation.customDeductionsBreakdown, ['advance', 'adelanto'])
@@ -318,7 +316,7 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
               <tr>
                 <td className="px-4 py-2 text-muted-foreground">{L.ot}</td>
                 <td className="px-3 py-2 text-right text-muted-foreground">{hoursEntry.otHours}</td>
-                <td className="px-3 py-2 text-right text-muted-foreground text-xs">{fmt(displayRate)}/hr × {otMultiplier.toFixed(2)}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground text-xs">{fmt(displayRate)}/hr × {payrollSettings.otRatePercent}%</td>
                 <td className="px-4 py-2 text-right font-semibold">{fmt(calculation.otPay)}</td>
               </tr>
             </tbody>

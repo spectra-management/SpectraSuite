@@ -185,7 +185,7 @@ describe('TSS Caps', () => {
 
 // ─── Test 4: OT calculation ───────────────────────────────────────────────────
 describe('Overtime Calculation', () => {
-  it('50 hrs/week, threshold 44, OT 35%: 44 regular + 6 at 1.35×', () => {
+  it('50 hrs/week, threshold 44, OT 50%: all hours at 100% + 6 OT hours at +50% differential', () => {
     const { regularHours, otHours } = splitOTHours(50, 44)
     expect(regularHours).toBe(44)
     expect(otHours).toBe(6)
@@ -195,11 +195,12 @@ describe('Overtime Calculation', () => {
       hourlyRate,
       regularHours: 44,
       otHours: 6,
-      otRatePercent: 35,
+      otRatePercent: 50,
     })
     const result = calculatePayroll(input)
-    const expectedRegular = roundHalfUp(hourlyRate * 44)
-    const expectedOT = roundHalfUp(hourlyRate * 6 * 1.35)
+    // Every worked hour at 100% (44 + 6 = 50), plus the OT differential on the 6 OT hours.
+    const expectedRegular = roundHalfUp(hourlyRate * 50)
+    const expectedOT = roundHalfUp(hourlyRate * 6 * 0.50)
     expect(result.regularPay).toBe(expectedRegular)
     expect(result.otPay).toBe(expectedOT)
     expect(result.grossPay).toBe(roundHalfUp(expectedRegular + expectedOT))

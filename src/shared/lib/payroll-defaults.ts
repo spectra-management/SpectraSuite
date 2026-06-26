@@ -29,7 +29,8 @@ export const DEFAULT_FISCAL_PARAMETERS: FiscalParameters = {
 export const DEFAULT_PAYROLL_SETTINGS: PayrollSettings = {
   frequency: 'biweekly',
   otThresholdHours: 40,
-  otRatePercent: 35,
+  // OT differential: +50% on top of the base rate (base hours are paid at 100% in regular pay).
+  otRatePercent: 50,
   holidayRatePercent: 100,
 }
 
