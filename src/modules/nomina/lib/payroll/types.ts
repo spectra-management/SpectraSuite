@@ -48,6 +48,8 @@ export interface CalculationResult {
   sfsBase: number
   sfsAmount: number
   tssTotal: number
+  /** Every statutory deduction applied this period (per-country list). tssTotal = Σ amount. */
+  deductionsBreakdown: Array<{ id: string; name: string; rate: number; base: number; amount: number }>
   taxableIncome: number
   // Monthly net base the ISR scale is applied to. DR biweekly 2nd quincena: net(1st)+net(2nd).
   // 1st quincena: 0 (deferred). Other countries/weekly: this period's gross (display continuity).

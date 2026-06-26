@@ -158,6 +158,7 @@ export function PayStubDocument({
   // Country-specific labels and currency. US uses its statutory names (Medicare/SS/Federal);
   // DR & every other country use the language-map deduction labels.
   const isUS = country.toLowerCase().includes('united states') || country.toLowerCase() === 'us'
+  const isDR = country.toLowerCase().includes('dominican') || country.toLowerCase().trim() === 'do' || country.toLowerCase().trim() === ''
   const countryL = isUS ? US_DEDUCTION_LABELS : { sfs: l.sfs, afp: l.afp, isr: l.isr }
   const fmt = makeFmt(getCurrencySymbol(country))
 
@@ -282,21 +283,33 @@ export function PayStubDocument({
             <Text style={[S.dedHeadText, { flex: dA, textAlign: 'right' }]}>{l.total}</Text>
           </View>
 
-          {/* SFS / Medicare */}
-          <View style={S.tRow}>
-            <Text style={[S.dedLabel, { flex: dD }]}>{countryL.sfs}</Text>
-            <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>{isUS ? '1.45%' : '3.04%'}</Text>
-            <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>{'>'}</Text>
-            <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.sfsAmount)}</Text>
-          </View>
-
-          {/* AFP / Social Security */}
-          <View style={S.tRow}>
-            <Text style={[S.dedLabel, { flex: dD }]}>{countryL.afp}</Text>
-            <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>{isUS ? '6.2%' : '2.87%'}</Text>
-            <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>{'>'}</Text>
-            <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.afpAmount)}</Text>
-          </View>
+          {/* Statutory deductions. DR keeps its exact SFS + AFP rows; every other country
+              renders its own per-country list (NIS, SSS, PhilHealth, NSSF, Housing Levy…). */}
+          {isDR ? (
+            <>
+              <View style={S.tRow}>
+                <Text style={[S.dedLabel, { flex: dD }]}>{countryL.sfs}</Text>
+                <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>3.04%</Text>
+                <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>{'>'}</Text>
+                <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.sfsAmount)}</Text>
+              </View>
+              <View style={S.tRow}>
+                <Text style={[S.dedLabel, { flex: dD }]}>{countryL.afp}</Text>
+                <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>2.87%</Text>
+                <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>{'>'}</Text>
+                <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(c.afpAmount)}</Text>
+              </View>
+            </>
+          ) : (
+            (c.deductionsBreakdown ?? []).map((ded) => (
+              <View key={ded.id} style={S.tRow}>
+                <Text style={[S.dedLabel, { flex: dD }]}>{ded.name}</Text>
+                <Text style={[S.dedRate, { flex: dR, textAlign: 'center' }]}>{ded.rate > 0 ? `${ded.rate}%` : ' '}</Text>
+                <Text style={[S.dedArrow, { flex: dArr, textAlign: 'center' }]}>{'>'}</Text>
+                <Text style={[S.dedAmount, { flex: dA, textAlign: 'right' }]}>{fmt(ded.amount)}</Text>
+              </View>
+            ))
+          )}
 
           {/* Pay Advance Deduction */}
           <View style={S.tRow}>

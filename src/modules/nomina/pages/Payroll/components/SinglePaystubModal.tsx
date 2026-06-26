@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/shared/components/ui/button'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
+import { useCountryFiscalStore } from '@/shared/store/countryFiscalStore'
 import { calculatePayroll, formatCurrencyWithSymbol, findFirstFortnightGross } from '@/modules/nomina/lib/payroll/calculations'
 import { getPayrollRules } from '@/modules/nomina/lib/payroll/rules'
 import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/modules/nomina/lib/pdf/generatePdf'
@@ -69,9 +70,10 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
   const [downloading, setDownloading] = useState(false)
   const [sending, setSending] = useState(false)
 
+  const countryConfigs = useCountryFiscalStore((s) => s.byCountry)
   const rules = useMemo(
-    () => getPayrollRules(country, frequency, fiscal, payrollSettings),
-    [country, frequency, fiscal, payrollSettings],
+    () => getPayrollRules(country, frequency, fiscal, payrollSettings, countryConfigs),
+    [country, frequency, fiscal, payrollSettings, countryConfigs],
   )
 
   // Admin-entered rate (for "Not set" employees) takes precedence over BambooHR rate
@@ -339,8 +341,16 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              <DedRow fmt={fmt} label={L.sfs} rate="3.04%" amount={calculation.sfsAmount} />
-              <DedRow fmt={fmt} label={L.afp} rate="2.87%" amount={calculation.afpAmount} />
+              {country.toLowerCase().includes('dominican') || country.toLowerCase().trim() === 'do' || country.toLowerCase().trim() === '' ? (
+                <>
+                  <DedRow fmt={fmt} label={L.sfs} rate="3.04%" amount={calculation.sfsAmount} />
+                  <DedRow fmt={fmt} label={L.afp} rate="2.87%" amount={calculation.afpAmount} />
+                </>
+              ) : (
+                calculation.deductionsBreakdown.map((d) => (
+                  <DedRow key={d.id} fmt={fmt} label={d.name} rate={d.rate > 0 ? `${d.rate}%` : undefined} amount={d.amount} />
+                ))
+              )}
               <DedRow fmt={fmt} label={L.payAdvance} amount={payAdvanceAmt} />
               <DedRow fmt={fmt} label={L.dependentTSS} amount={dependentTSSAmt} />
               {/* ISR — single line with the month's retained ISR. Hidden on the DR 1st

@@ -1,57 +1,46 @@
-import type { FiscalParameters, PayrollSettings } from '@/shared/types'
+import type { FiscalParameters, PayrollSettings, CountryFiscalConfig } from '@/shared/types'
 import { getDOPayrollRules } from './do'
-import { getUSPayrollRules } from './us'
-import { getMXPayrollRules } from './mx'
-import { getJMPayrollRules } from './jm'
-import { getPHPayrollRules } from './ph'
-import { getKEPayrollRules } from './ke'
 import { getDefaultPayrollRules } from './default'
+import { buildRulesFromConfig } from './fromConfig'
+import { COUNTRY_FISCAL_DEFAULTS, countryKey } from '@/modules/nomina/lib/payroll/countryFiscalDefaults'
 import type { PayrollRules } from './types'
 
 export type { PayrollRules }
 export { getCurrencySymbol } from './currency'
 
-export function isKnownCountry(country: string): boolean {
+function isDR(country: string): boolean {
   const c = country.toLowerCase().trim()
-  return (
-    c.includes('dominican') ||
-    c === 'do' ||
-    c.includes('united states') ||
-    c === 'us' ||
-    c.includes('mexic') || c.includes('méxic') || c === 'mx' ||
-    c.includes('jamaica') || c === 'jm' ||
-    c.includes('philippine') || c.includes('filipin') || c === 'ph' ||
-    c.includes('kenya') || c === 'ke' ||
-    c === 'unknown' ||
-    c === ''
-  )
+  return c.includes('dominican') || c === 'do' || c === 'unknown' || c === ''
 }
 
+export function isKnownCountry(country: string): boolean {
+  if (isDR(country)) return true
+  return !!COUNTRY_FISCAL_DEFAULTS[countryKey(country)]
+}
+
+/**
+ * Build the payroll rules for a country.
+ *
+ * - Dominican Republic keeps its dedicated path (Fiscal Parameters + quincena ISR).
+ * - Every other country is driven by its editable CountryFiscalConfig: the caller passes the
+ *   user's merged configs (defaults + edits) via `countryConfigs`; when absent (or the country
+ *   has none) we fall back to the researched defaults, then to a zero-deduction generic.
+ */
 export function getPayrollRules(
   country: string,
   frequency: 'biweekly' | 'weekly' | 'full_month',
   fiscal: FiscalParameters,
   payroll: PayrollSettings,
+  countryConfigs?: Record<string, CountryFiscalConfig>,
 ): PayrollRules {
-  const c = country.toLowerCase().trim()
-  if (c.includes('united states') || c === 'us') {
-    return getUSPayrollRules(frequency)
-  }
-  if (c.includes('dominican') || c === 'do' || c === 'unknown' || c === '') {
+  if (isDR(country)) {
     return getDOPayrollRules(fiscal, payroll, frequency)
   }
-  if (c.includes('mexic') || c.includes('méxic') || c === 'mx') {
-    return getMXPayrollRules(country, frequency)
+  const key = countryKey(country)
+  const config = countryConfigs?.[key] ?? COUNTRY_FISCAL_DEFAULTS[key]
+  if (config) {
+    return buildRulesFromConfig(config, frequency, payroll.otThresholdHours)
   }
-  if (c.includes('jamaica') || c === 'jm') {
-    return getJMPayrollRules(country, frequency)
-  }
-  if (c.includes('philippine') || c.includes('filipin') || c === 'ph') {
-    return getPHPayrollRules(country, frequency)
-  }
-  if (c.includes('kenya') || c === 'ke') {
-    return getKEPayrollRules(country, frequency)
-  }
-  // Any other country: generic rules — no statutory deductions, gross pay only
+  // Any other country: generic rules — no statutory deductions, gross pay only.
   return getDefaultPayrollRules(country, frequency)
 }

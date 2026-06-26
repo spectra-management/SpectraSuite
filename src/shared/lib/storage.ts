@@ -70,4 +70,6 @@ export const STORAGE_KEYS = {
   EMPLOYEE_PAYROLL_SETTINGS: 'employee_payroll_settings',
   // Cloud-backed per-employee baseball-card overrides (auto-filled from HR, editable)
   EMPLOYEE_BASEBALL_CARDS: 'employee_baseball_cards',
+  // Per-country fiscal configs (employee deductions + income tax), editable in Nómina settings
+  COUNTRY_FISCAL: 'country_fiscal_configs',
 } as const

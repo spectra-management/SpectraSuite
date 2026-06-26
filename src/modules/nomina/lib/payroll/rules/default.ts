@@ -16,6 +16,7 @@ export function getDefaultPayrollRules(
     pensionName: 'Pension',
     healthInsuranceCap: null,
     pensionCap: null,
+    deductions: [],
     calculateIncomeTax: () => 0,
     incomeTaxName: 'Income Tax',
     payPeriodsPerYear,

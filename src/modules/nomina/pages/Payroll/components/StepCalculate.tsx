@@ -8,6 +8,7 @@ import { useSettingsStore } from '@/shared/store/settingsStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrStore'
 import { usePayrollSettingsStore } from '@/shared/store/payrollSettingsStore'
+import { useCountryFiscalStore } from '@/shared/store/countryFiscalStore'
 import { calculatePayroll, findFirstFortnightGross } from '@/modules/nomina/lib/payroll/calculations'
 import { getPayrollRules } from '@/modules/nomina/lib/payroll/rules'
 import { getInitials } from '@/shared/lib/utils'
@@ -40,6 +41,7 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
   const history = usePayrollStore((s) => s.history)
   const pendingVacationIsr = usePendingVacationIsrStore((s) => s.pending)
   const payrollOverrides = usePayrollSettingsStore((s) => s.byId)
+  const countryConfigs = useCountryFiscalStore((s) => s.byCountry)
 
   // Global run = all countries in one pass; each employee is calculated with its
   // OWN country's tax rules.
@@ -47,8 +49,8 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
 
   // Build country-specific payroll rules (the selected country in single mode).
   const rules = useMemo(
-    () => getPayrollRules(country, frequency, fiscal, payrollSettings),
-    [country, frequency, fiscal, payrollSettings],
+    () => getPayrollRules(country, frequency, fiscal, payrollSettings, countryConfigs),
+    [country, frequency, fiscal, payrollSettings, countryConfigs],
   )
 
   // For UI banners only — actual quincena logic is inside calculatePayroll
@@ -64,7 +66,7 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
     const rulesFor = (c: string) => {
       const key = c || 'Unknown'
       let r = rulesByCountry.get(key)
-      if (!r) { r = getPayrollRules(key, frequency, fiscal, payrollSettings); rulesByCountry.set(key, r) }
+      if (!r) { r = getPayrollRules(key, frequency, fiscal, payrollSettings, countryConfigs); rulesByCountry.set(key, r) }
       return r
     }
 
@@ -118,7 +120,7 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
     }
 
     return { entries: computedEntries, totals }
-  }, [employeeHours, employees, rules, isGlobal, fiscal, frequency, payrollSettings, startDate, endDate, country, history, nightShift, pendingVacationIsr, payrollOverrides])
+  }, [employeeHours, employees, rules, isGlobal, fiscal, frequency, payrollSettings, startDate, endDate, country, history, nightShift, pendingVacationIsr, payrollOverrides, countryConfigs])
 
   // Per-country rollup for Global mode (native currencies, no conversion).
   const byCountry = useMemo(() => {

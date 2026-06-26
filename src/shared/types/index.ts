@@ -87,6 +87,8 @@ export interface PayrollCalculation {
   sfsBase: number
   sfsAmount: number
   tssTotal: number
+  /** Per-country statutory deduction breakdown (optional for runs saved before this existed). */
+  deductionsBreakdown?: Array<{ id: string; name: string; rate: number; base: number; amount: number }>
   taxableIncome: number
   isrMonthlyBase: number // monthly net base the ISR scale is applied to (net 1st + net 2nd fortnight)
   isrMonthly: number
@@ -156,6 +158,45 @@ export interface ISRBracket {
   maxAmount: number | null
   rate: number
   fixedAmount: number
+}
+
+/**
+ * A single employee statutory deduction in a country's fiscal config (e.g. NIS, SSS,
+ * PhilHealth, Housing Levy). Withheld BEFORE income tax. Either a percentage of the
+ * (optionally capped) base, or a flat per-period amount.
+ */
+export interface CountryDeduction {
+  /** Stable id; 'afp'/'sfs' map to the legacy pension/health slots for back-compat. */
+  id: string
+  /** Display name shown on the paystub — tax names aren't translated (e.g. "NIS", "SSS"). */
+  name: string
+  /** Percent of the base. Ignored when fixedAmount is set. */
+  rate: number
+  /** Max base per pay period the rate applies to; null = no cap. */
+  capBase: number | null
+  /** Flat per-period amount instead of rate × base (e.g. T&T Health Surcharge). */
+  fixedAmount?: number
+  /** When false, the deduction is NOT withheld (toggle per country in settings). */
+  enabled: boolean
+}
+
+/**
+ * Per-country fiscal rules (employee deductions + income tax). Editable in Nómina settings,
+ * stored/merged over researched defaults. The Dominican Republic keeps its dedicated
+ * FiscalParameters path (quincena ISR + legal paystub); this drives every OTHER country.
+ */
+export interface CountryFiscalConfig {
+  /** Canonical country display name (matches the employee country string). */
+  country: string
+  currency: string
+  currencySymbol: string
+  dailyDivisor: number
+  /** Employee statutory contributions, withheld before income tax. */
+  deductions: CountryDeduction[]
+  /** Income-tax label (ISR / PAYE / Withholding Tax / Federal Income Tax). */
+  incomeTaxName: string
+  /** Annual income-tax brackets (same engine as the DR DGII scale). */
+  incomeTaxBrackets: ISRBracket[]
 }
 
 export interface BambooHRConfig {

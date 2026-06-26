@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { HolidaysTab } from './HolidaysTab'
 import { VacationRulesTab } from './VacationRulesTab'
+import { CountryTaxesTab } from './CountryTaxesTab'
 import { toast } from '@/shared/hooks/useToast'
 
-type Tab = 'company' | 'payroll' | 'fiscal' | 'holidays' | 'vacations' | 'email'
+type Tab = 'company' | 'payroll' | 'fiscal' | 'countryTaxes' | 'holidays' | 'vacations' | 'email'
 
 // Company settings now live at the Suite level (Settings → Company shows a notice).
 function CompanyTab() {
@@ -356,6 +357,7 @@ export default function Settings() {
     { key: 'company', label: t('settings.tabs.company') },
     { key: 'payroll', label: t('settings.tabs.payroll') },
     { key: 'fiscal', label: t('settings.tabs.fiscal') },
+    { key: 'countryTaxes', label: t('settings.tabs.countryTaxes') },
     { key: 'holidays', label: t('settings.tabs.holidays') },
     { key: 'vacations', label: t('settings.tabs.vacations') },
     { key: 'email', label: t('settings.tabs.email') },
@@ -384,6 +386,7 @@ export default function Settings() {
       {activeTab === 'company' && <CompanyTab />}
       {activeTab === 'payroll' && <PayrollTab />}
       {activeTab === 'fiscal' && <FiscalTab />}
+      {activeTab === 'countryTaxes' && <CountryTaxesTab />}
       {activeTab === 'holidays' && <HolidaysTab />}
       {activeTab === 'vacations' && <VacationRulesTab />}
       {activeTab === 'email' && <EmailTab />}

@@ -211,6 +211,7 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
       sfsBase: 0,
       sfsAmount: 0,
       tssTotal: 0,
+      deductionsBreakdown: [],
       taxableIncome: 0,
       isrMonthlyBase: 0,
       isrMonthly: 0,
@@ -271,31 +272,46 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
   const holidayBonus = earnings.holidayPay
   const contributoryBase = isDR ? roundHalfUp(grossPay - holidayBonus) : grossPay
 
-  // Tax-exempt employee: AFP, SFS and ISR are all waived (custom deductions still apply).
+  // Tax-exempt employee: all statutory deductions and ISR are waived (custom deductions
+  // still apply).
   const taxExempt = !!input.taxExempt
 
-  // Pension (AFP / Social Security)
-  const afpBase = taxExempt ? 0 : roundHalfUp(Math.min(contributoryBase, rules.pensionCap ?? contributoryBase))
-  const afpAmount = taxExempt ? 0 : roundHalfUp(afpBase * (rules.pensionRate / 100))
+  // ── Statutory deductions (per-country, flexible list) ────────────────────────
+  // Each deduction is a flat amount or a percentage of the (optionally capped) base.
+  // The DR holiday bonus is non-cotizable, so it's already excluded from contributoryBase.
+  const deductionsBreakdown = rules.deductions.map((d) => {
+    const base = roundHalfUp(Math.min(contributoryBase, d.capBase ?? contributoryBase))
+    const amount = taxExempt
+      ? 0
+      : d.fixedAmount != null
+        ? roundHalfUp(d.fixedAmount)
+        : roundHalfUp(base * (d.rate / 100))
+    // rate shown on the paystub; 0 for flat-amount deductions.
+    return { id: d.id, name: d.name, rate: d.fixedAmount != null ? 0 : d.rate, base, amount }
+  })
+  const tssTotal = roundHalfUp(deductionsBreakdown.reduce((s, x) => s + x.amount, 0))
 
-  // Health insurance (SFS / Medicare)
-  const sfsBase = taxExempt ? 0 : roundHalfUp(Math.min(contributoryBase, rules.healthInsuranceCap ?? contributoryBase))
-  const sfsAmount = taxExempt ? 0 : roundHalfUp(sfsBase * (rules.healthInsuranceRate / 100))
-
-  const tssTotal = roundHalfUp(afpAmount + sfsAmount)
+  // Legacy pension/health result fields, kept for back-compat (DR/US set ids afp/sfs).
+  const afpEntry = deductionsBreakdown.find((x) => x.id === 'afp')
+  const sfsEntry = deductionsBreakdown.find((x) => x.id === 'sfs')
+  const afpBase = afpEntry?.base ?? 0
+  const afpAmount = afpEntry?.amount ?? 0
+  const sfsBase = sfsEntry?.base ?? 0
+  const sfsAmount = sfsEntry?.amount ?? 0
 
   // ── Income tax (ISR) ───────────────────────────────────────────────────────
-  // This fortnight's cotizable income net of TSS (ISR is applied AFTER AFP + SFS,
-  // and on the same base that excludes the non-cotizable holiday bonus).
+  // This fortnight's cotizable income net of all statutory deductions (ISR is applied
+  // AFTER them, on the same base that excludes the non-cotizable holiday bonus).
   const netThisPeriod = roundHalfUp(contributoryBase - tssTotal)
 
-  // TSS for an arbitrary gross (applies the same caps as this period) — used to
-  // derive the 1st fortnight's net from its gross.
-  const tssForGross = (gross: number): number => {
-    const afp = roundHalfUp(Math.min(gross, rules.pensionCap ?? gross) * (rules.pensionRate / 100))
-    const sfs = roundHalfUp(Math.min(gross, rules.healthInsuranceCap ?? gross) * (rules.healthInsuranceRate / 100))
-    return roundHalfUp(afp + sfs)
-  }
+  // Statutory deductions for an arbitrary gross (same caps) — used to derive the 1st
+  // fortnight's net from its gross (DR 2nd-quincena ISR aggregation).
+  const tssForGross = (gross: number): number =>
+    roundHalfUp(rules.deductions.reduce((s, d) => {
+      if (d.fixedAmount != null) return s + d.fixedAmount
+      const base = Math.min(gross, d.capBase ?? gross)
+      return s + roundHalfUp(base * (d.rate / 100))
+    }, 0))
 
   let isrMonthlyBase: number  // monthly net base the DGII scale is applied to
   let isrMonthly: number      // full month's ISR (annual ÷ 12)
@@ -367,6 +383,7 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
     sfsBase,
     sfsAmount,
     tssTotal,
+    deductionsBreakdown,
     taxableIncome: annualTaxable,
     isrMonthlyBase,
     isrMonthly,
