@@ -138,6 +138,19 @@ function parsePayRate(raw: string | null | undefined): { rate: number; currency:
   return { rate, currency }
 }
 
+/**
+ * Parse a BambooHR compensation-table rate. Tables return it as an OBJECT
+ * ({ currency, value }), unlike the directory report's "value CUR" string — handle both.
+ */
+function parseRateField(raw: unknown): { rate: number; currency: string } {
+  if (raw && typeof raw === 'object') {
+    const o = raw as { value?: unknown; currency?: unknown }
+    const rate = parseFloat(String(o.value ?? '')) || 0
+    return { rate, currency: typeof o.currency === 'string' ? o.currency : '' }
+  }
+  return parsePayRate(typeof raw === 'string' ? raw : '')
+}
+
 function fullName(e: BambooReportEmployee): string {
   const display = (e.displayName ?? '').trim()
   if (display) return display
@@ -328,7 +341,7 @@ export async function fetchRrhhCompensation(
 
   const data = (await res.json()) as RawTableRow[]
   const entries = (Array.isArray(data) ? data : []).map((r): RrhhCompensationEntry => {
-    const { rate, currency } = parsePayRate(rowStr(r, 'rate'))
+    const { rate, currency } = parseRateField(r.rate)
     return {
       id: String(r.id ?? ''),
       startDate: rowStr(r, 'startDate'),
