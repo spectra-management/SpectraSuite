@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { usePayrollStore } from '@/shared/store/payrollStore'
 import { PayrollStepper } from './components/PayrollStepper'
 import { StepPeriod } from './components/StepPeriod'
 import { StepHours } from './components/StepHours'
@@ -22,11 +24,38 @@ interface CalculatedData {
 
 export default function Payroll() {
   const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
+  const reopenId = searchParams.get('reopenId')
+  const getPayroll = usePayrollStore((s) => s.getPayroll)
+
   const [step, setStep] = useState(0)
   const [periodData, setPeriodData] = useState<PeriodData | null>(null)
   const [reviewedHours, setReviewedHours] = useState<EmployeeHoursEntry[]>([])
   const [calculatedData, setCalculatedData] = useState<CalculatedData | null>(null)
   const [selectedCountry, setSelectedCountry] = useState('')
+  // When set, re-approving UPDATES this existing run instead of creating a new one.
+  const [reopenedId, setReopenedId] = useState<string | null>(null)
+
+  // Reopen flow: load an approved run, restore its per-employee hours, and jump to the
+  // Review Hours step so the user can edit, recalculate and re-approve the SAME run.
+  useEffect(() => {
+    if (!reopenId) return
+    const run = getPayroll(reopenId)
+    if (!run) return
+    const hours = run.entries.map((e) => e.hours)
+    setPeriodData({
+      startDate: run.startDate,
+      endDate: run.endDate,
+      frequency: run.frequency,
+      employeeHours: hours,
+      country: run.country ?? '',
+    })
+    setSelectedCountry(run.country ?? '')
+    setReviewedHours(hours)
+    setReopenedId(reopenId)
+    setStep(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reopenId])
 
   const steps = [
     { key: 'period', label: t('payroll.steps.selectPeriod') },
@@ -93,6 +122,7 @@ export default function Payroll() {
           country={selectedCountry}
           entries={calculatedData.entries}
           totals={calculatedData.totals}
+          reopenId={reopenedId}
           onBack={() => setStep(2)}
         />
       )}

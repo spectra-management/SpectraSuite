@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import React from 'react'
-import { History as HistoryIcon, Download, Mail, Send, Loader2, ChevronDown, ChevronRight, FileText, Table } from 'lucide-react'
+import { History as HistoryIcon, Download, Mail, Send, Loader2, ChevronDown, ChevronRight, FileText, Table, RotateCcw } from 'lucide-react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
@@ -14,6 +15,7 @@ import { usePaymentMethodsStore } from '@/shared/store/paymentMethodsStore'
 import { useBankAccountsStore } from '@/shared/store/bankAccountsStore'
 import { toast } from '@/shared/hooks/useToast'
 import { logAuditEvent } from '@/shared/lib/audit'
+import { useAuth } from '@/shared/context/AuthContext'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
 import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/modules/nomina/lib/pdf/generatePdf'
 import { generatePayrollCSV, downloadCSV } from '@/modules/nomina/lib/pdf/generateCsv'
@@ -63,6 +65,9 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
   const emailConfig = useSettingsStore((s) => s.email)
   const emailTemplate = useSettingsStore((s) => s.emailTemplate)
   const updatePayroll = usePayrollStore((s) => s.updatePayroll)
+  const { hasModuleAccess } = useAuth()
+  const navigate = useNavigate()
+  const canReopen = hasModuleAccess('nomina', 'admin')
   const [expanded, setExpanded] = useState(false)
   const [batch, setBatch] = useState<BatchStatus | null>(null)
   const [downloadingAll, setDownloadingAll] = useState(false)
@@ -285,6 +290,19 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
     downloadCSV(csv, `ManagerReport_${payroll.startDate}_${payroll.endDate}.csv`)
   }
 
+  // Reopen an approved run: log + open the wizard on this run so it can be edited + re-approved.
+  const handleReopen = () => {
+    if (!window.confirm(t('history.reopenConfirm'))) return
+    void logAuditEvent({
+      action: 'payroll_reopened',
+      category: 'payroll',
+      resource_type: 'payroll_run',
+      resource_id: payroll.id,
+      details: { period: `${payroll.startDate}/${payroll.endDate}`, previousStatus: payroll.status },
+    })
+    navigate(`/nomina/payroll?reopenId=${payroll.id}`)
+  }
+
   return (
     <>
       <tr className="hover:bg-secondary transition-colors">
@@ -325,6 +343,11 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
             <Button variant="ghost" size="sm" onClick={handleManagerReportCsv} title={t('payroll.managerReport.downloadCsv')}>
               <Table className="h-3.5 w-3.5" />
             </Button>
+            {canReopen && (
+              <Button variant="ghost" size="sm" onClick={handleReopen} title={t('history.reopen')}>
+                <RotateCcw className="h-3.5 w-3.5" />
+              </Button>
+            )}
           </div>
         </td>
       </tr>

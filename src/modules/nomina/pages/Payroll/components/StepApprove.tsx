@@ -23,12 +23,15 @@ interface Props {
   country: string
   entries: PayrollEntry[]
   totals: PayrollTotals
+  /** When set, this is a REOPENED run — re-approving updates it in place (no new run). */
+  reopenId?: string | null
   onBack: () => void
 }
 
-export function StepApprove({ startDate, endDate, frequency, country, entries, totals, onBack }: Props) {
+export function StepApprove({ startDate, endDate, frequency, country, entries, totals, reopenId, onBack }: Props) {
   const { t, i18n } = useTranslation()
   const addPayroll = usePayrollStore((s) => s.addPayroll)
+  const updatePayroll = usePayrollStore((s) => s.updatePayroll)
   const company = useSettingsStore((s) => s.company)
   const hrById = useEmployeeHrStore((s) => s.byId)
   const divisionById = Object.fromEntries(Object.entries(hrById).map(([id, e]) => [id, e.division ?? '']))
@@ -43,16 +46,22 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
   const handleApprove = async () => {
     setApproving(true)
     await new Promise((r) => setTimeout(r, 600))
-    addPayroll({
+    const runFields = {
       startDate,
       endDate,
       frequency,
       country,
-      status: 'approved',
+      status: 'approved' as const,
       processedDate: new Date().toISOString().split('T')[0],
       entries,
       totals,
-    })
+    }
+    if (reopenId) {
+      // Re-approving a reopened run: update it in place (same id), don't create a new one.
+      updatePayroll(reopenId, runFields)
+    } else {
+      addPayroll(runFields)
+    }
     // Mark any collected vacation ISR as applied to this period.
     for (const e of entries) {
       if (e.calculation.vacationIsr > 0) {
@@ -60,9 +69,10 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
       }
     }
     void logAuditEvent({
-      action: 'payroll_approved',
+      action: reopenId ? 'payroll_reapproved' : 'payroll_approved',
       category: 'payroll',
       resource_type: 'payroll_run',
+      resource_id: reopenId ?? undefined,
       details: {
         period: `${startDate}/${endDate}`,
         country,
@@ -70,6 +80,7 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
         employeeCount: totals.employeeCount,
         totalGross: totals.totalGross,
         totalNet: totals.totalNet,
+        reopened: !!reopenId,
       },
     })
     setApproved(true)

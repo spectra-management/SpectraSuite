@@ -441,6 +441,8 @@
   "history": {
     "title": "Payroll History",
     "subtitle": "View and manage past payroll periods",
+    "reopen": "Reopen & edit",
+    "reopenConfirm": "Reopen this payroll to edit it? You can adjust hours, recalculate and re-approve the same run. This action is recorded in the audit log.",
     "table": {
       "period": "Period",
       "processedDate": "Processed",

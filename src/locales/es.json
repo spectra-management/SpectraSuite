@@ -441,6 +441,8 @@
   "history": {
     "title": "Historial de Nómina",
     "subtitle": "Ver y gestionar períodos de nómina anteriores",
+    "reopen": "Reabrir y editar",
+    "reopenConfirm": "¿Reabrir esta nómina para editarla? Podrás ajustar las horas, recalcular y volver a aprobar la misma corrida. La acción queda registrada en auditoría.",
     "table": {
       "period": "Período",
       "processedDate": "Procesado",
