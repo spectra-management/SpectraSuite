@@ -133,9 +133,16 @@ async function fetchFieldHints(subdomain: string, apiKey: string): Promise<Field
     if (!res.ok) return { textFieldIds: [], namedCedulaId: null }
     const fields = (await res.json()) as Array<{ id?: string | number; name?: string; alias?: string; type?: string }>
     if (!Array.isArray(fields)) return { textFieldIds: [], namedCedulaId: null }
-    // Request EVERY field by id (BambooHR ignores ones it doesn't recognise). This guarantees
-    // a custom field like "Cedula" is returned so the value scan can find it, no matter its type.
-    const textFieldIds = fields.filter((f) => f.id != null).map((f) => String(f.id))
+    // Request only TEXT-type fields (plus the standard SSN field). A DR cédula is always a
+    // plain text custom field (e.g. "Cedula" → alias customNIDS), so this still surfaces it
+    // for the value scan — while EXCLUDING the types that break the report. Requesting EVERY
+    // field id (time_off_type, benefit_history, currency, date sub-fields like "4573.6", …)
+    // made BambooHR reject the entire custom report with a 500 ("BambooHR API error"), which
+    // silently wiped out cédula detection and forced manual entry. Verified against the live
+    // spectrahm account: all-fields → 500; text-only (79 fields) → cédula returned correctly.
+    const textFieldIds = fields
+      .filter((f) => f.id != null && (f.type === 'text' || f.type === 'ssn'))
+      .map((f) => String(f.id))
     const named = fields.find((f) => CEDULA_FIELD_RE.test(`${f.name ?? ''} ${f.alias ?? ''}`))
     const namedCedulaId = named ? (named.alias ? String(named.alias) : String(named.id)) : null
     return { textFieldIds, namedCedulaId }

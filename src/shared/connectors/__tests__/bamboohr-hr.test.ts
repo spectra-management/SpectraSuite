@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { findCedulaByValue } from '../bamboohr-hr'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { findCedulaByValue, fetchHrDirectory } from '../bamboohr-hr'
 
 describe('findCedulaByValue', () => {
   it('finds a DR cédula by its 11-digit shape regardless of field name', () => {
@@ -17,5 +17,53 @@ describe('findCedulaByValue', () => {
 
   it('returns empty string when no value looks like a cédula', () => {
     expect(findCedulaByValue({ a: 'foo', b: '', c: '2024-03-01' })).toBe('')
+  })
+})
+
+describe('fetchHrDirectory field selection', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('requests only text/ssn-type fields (never time_off/benefit/etc. that 500 the report) and detects the cédula', async () => {
+    // Mirrors the live spectrahm account: the cédula is a text custom field ("Cedula"),
+    // alongside field types that crash a custom report if requested.
+    const META = [
+      { id: 4554, name: 'Cedula', type: 'text', alias: 'customNIDS' },
+      { id: 4573, name: 'Accrued Sick Leave - Policy Assigned', type: 'time_off_type_exists' },
+      { id: '4573.6', name: 'Accrued Sick Leave - Adjustments (YTD)', type: 'int' },
+      { id: 1502, name: 'Benefit History', type: 'benefit_history' },
+      { id: 4510, name: 'Annual Amount', type: 'currency', alias: 'amount' },
+    ]
+    const REPORT = {
+      employees: [
+        { id: '116', firstName: 'Mario', lastName: 'Guzman', ssn: null, customNIDS: '031-0398291-8' },
+      ],
+    }
+
+    let postedFields: string[] = []
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      // NB: URLSearchParams percent-encodes the path slashes, so match on 'meta', not '/v1/meta/fields'.
+      if (url.includes('meta')) {
+        return { ok: true, json: async () => META } as Response
+      }
+      // The custom report POST — capture the requested field list and reject any unsafe type.
+      postedFields = JSON.parse(String(init?.body)).fields
+      const unsafe = postedFields.filter((f) => ['4573', '4573.6', '1502', '4510'].includes(f))
+      if (unsafe.length) return { ok: false, status: 500, json: async () => ({ error: 'BambooHR API error' }) } as Response
+      return { ok: true, json: async () => REPORT } as Response
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const rows = await fetchHrDirectory('spectrahm', 'key')
+
+    // Never requested the crashing field types…
+    expect(postedFields).not.toContain('4573')
+    expect(postedFields).not.toContain('4573.6')
+    expect(postedFields).not.toContain('1502')
+    expect(postedFields).not.toContain('4510')
+    // …did request the text cédula field, and surfaced the value.
+    expect(postedFields).toContain('4554')
+    expect(rows[0].nationalId).toBe('031-0398291-8')
   })
 })
