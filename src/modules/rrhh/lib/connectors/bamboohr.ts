@@ -152,11 +152,10 @@ export async function fetchRrhhDirectory(
   subdomain: string,
   apiKey: string,
 ): Promise<RrhhEmployee[]> {
-  // Learn this account's fields so we can request + detect the cédula (a custom field).
+  // Learn this account's cédula field (a custom field) so we can request that one extra column.
   const hints = await fetchFieldHints(subdomain, apiKey)
   const requestFields = Array.from(new Set([
     ...REPORT_FIELDS,
-    ...hints.textFieldIds,
     ...(hints.namedCedulaId ? [hints.namedCedulaId] : []),
   ]))
 

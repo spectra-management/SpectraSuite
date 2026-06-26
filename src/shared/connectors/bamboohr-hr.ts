@@ -111,47 +111,38 @@ function joinAddress(line1: string | undefined, line2: string | undefined): stri
 }
 
 // In the Dominican Republic the national id (cédula) is usually a CUSTOM BambooHR field,
-// not the standard `ssn` (which is empty). We find it two ways, both account-agnostic:
-//   1. by VALUE — any field whose value has the DR cédula shape (11 digits, 000-0000000-0);
-//   2. by NAME  — a field labelled cédula / identidad / documento / national id.
-// Value-detection is primary because it works no matter how the field is named or keyed.
+// not the standard `ssn` (which is empty). We identify that field BY NAME from /v1/meta/fields
+// (labelled cédula / identidad / documento / national id) and request ONLY that one extra
+// field. Two earlier approaches failed against the live account and must not return:
+//   • requesting EVERY field id → BambooHR 500s the whole custom report ("BambooHR API error");
+//   • requesting every TEXT field → some are table/repeating fields, which MULTIPLY the report
+//     rows (≈50 employees became 1494 rows, most with null names → a broken directory).
+// A single, name-matched plain field is safe: report stays one row per employee.
 const CEDULA_FIELD_RE = /c[eé]dula|identidad|documento|national\s*id|nationalid|\bnin\b/i
 const CEDULA_VALUE_RE = /^\d{3}-?\d{7}-?\d$/
 
 export interface FieldHints {
-  /** Custom/text field ids to additionally request so their values can be scanned. */
-  textFieldIds: string[]
   /** A field id/alias whose label looks like a national id, if any. */
   namedCedulaId: string | null
 }
 
 /**
- * Reads /v1/meta/fields to learn which extra fields to request + a name-matched candidate.
- * Exported so any BambooHR connector (shared OR a module's own, e.g. RRHH) can surface the
- * cédula the same way — there is intentionally one source of truth for this detection.
+ * Reads /v1/meta/fields to find the cédula field by name. Exported so any BambooHR connector
+ * (shared OR a module's own, e.g. RRHH) can surface the cédula the same way — there is
+ * intentionally one source of truth for this detection.
  */
 export async function fetchFieldHints(subdomain: string, apiKey: string): Promise<FieldHints> {
   try {
     const qs = new URLSearchParams({ path: '/v1/meta/fields', subdomain, apiKey })
     const res = await fetch(`/api/bamboohr?${qs.toString()}`)
-    if (!res.ok) return { textFieldIds: [], namedCedulaId: null }
+    if (!res.ok) return { namedCedulaId: null }
     const fields = (await res.json()) as Array<{ id?: string | number; name?: string; alias?: string; type?: string }>
-    if (!Array.isArray(fields)) return { textFieldIds: [], namedCedulaId: null }
-    // Request only TEXT-type fields (plus the standard SSN field). A DR cédula is always a
-    // plain text custom field (e.g. "Cedula" → alias customNIDS), so this still surfaces it
-    // for the value scan — while EXCLUDING the types that break the report. Requesting EVERY
-    // field id (time_off_type, benefit_history, currency, date sub-fields like "4573.6", …)
-    // made BambooHR reject the entire custom report with a 500 ("BambooHR API error"), which
-    // silently wiped out cédula detection and forced manual entry. Verified against the live
-    // spectrahm account: all-fields → 500; text-only (79 fields) → cédula returned correctly.
-    const textFieldIds = fields
-      .filter((f) => f.id != null && (f.type === 'text' || f.type === 'ssn'))
-      .map((f) => String(f.id))
+    if (!Array.isArray(fields)) return { namedCedulaId: null }
     const named = fields.find((f) => CEDULA_FIELD_RE.test(`${f.name ?? ''} ${f.alias ?? ''}`))
     const namedCedulaId = named ? (named.alias ? String(named.alias) : String(named.id)) : null
-    return { textFieldIds, namedCedulaId }
+    return { namedCedulaId }
   } catch {
-    return { textFieldIds: [], namedCedulaId: null }
+    return { namedCedulaId: null }
   }
 }
 
@@ -187,11 +178,10 @@ export async function fetchHrDirectory(
   subdomain: string,
   apiKey: string,
 ): Promise<HrEmployeeDetail[]> {
-  // Learn this account's fields so we can request the cédula (a custom field) and scan for it.
+  // Learn this account's cédula field (a custom field) so we can request that one extra column.
   const hints = await fetchFieldHints(subdomain, apiKey)
   const requestFields = Array.from(new Set([
     ...REPORT_FIELDS,
-    ...hints.textFieldIds,
     ...(hints.namedCedulaId ? [hints.namedCedulaId] : []),
   ]))
 

@@ -38,14 +38,13 @@ describe('fetchHrDirectory field selection', () => {
     vi.unstubAllGlobals()
   })
 
-  it('requests only text/ssn-type fields (never time_off/benefit/etc. that 500 the report) and detects the cédula', async () => {
-    // Mirrors the live spectrahm account: the cédula is a text custom field ("Cedula"),
-    // alongside field types that crash a custom report if requested.
+  it('requests ONLY the name-matched cédula field (not every text/other field, which 500s or multiplies report rows) and detects it', async () => {
+    // Mirrors the live spectrahm account: the cédula is a custom field ("Cedula" → customNIDS).
+    // Other fields must NOT be bulk-requested: numeric/currency/etc. 500 the report, and some
+    // text fields are table/repeating fields that multiply the rows.
     const META = [
       { id: 4554, name: 'Cedula', type: 'text', alias: 'customNIDS' },
-      { id: 4573, name: 'Accrued Sick Leave - Policy Assigned', type: 'time_off_type_exists' },
-      { id: '4573.6', name: 'Accrued Sick Leave - Adjustments (YTD)', type: 'int' },
-      { id: 1502, name: 'Benefit History', type: 'benefit_history' },
+      { id: 4400, name: 'T-Shirt Size', type: 'text', alias: 'customTShirt' },
       { id: 4510, name: 'Annual Amount', type: 'currency', alias: 'amount' },
     ]
     const REPORT = {
@@ -60,23 +59,18 @@ describe('fetchHrDirectory field selection', () => {
       if (url.includes('meta')) {
         return { ok: true, json: async () => META } as Response
       }
-      // The custom report POST — capture the requested field list and reject any unsafe type.
       postedFields = JSON.parse(String(init?.body)).fields
-      const unsafe = postedFields.filter((f) => ['4573', '4573.6', '1502', '4510'].includes(f))
-      if (unsafe.length) return { ok: false, status: 500, json: async () => ({ error: 'BambooHR API error' }) } as Response
       return { ok: true, json: async () => REPORT } as Response
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const rows = await fetchHrDirectory('spectrahm', 'key')
 
-    // Never requested the crashing field types…
-    expect(postedFields).not.toContain('4573')
-    expect(postedFields).not.toContain('4573.6')
-    expect(postedFields).not.toContain('1502')
+    // Requested exactly one extra field — the cédula — and no other custom fields.
+    expect(postedFields).toContain('customNIDS')
+    expect(postedFields).not.toContain('customTShirt')
+    expect(postedFields).not.toContain('4400')
     expect(postedFields).not.toContain('4510')
-    // …did request the text cédula field, and surfaced the value.
-    expect(postedFields).toContain('4554')
     expect(rows[0].nationalId).toBe('031-0398291-8')
   })
 })
