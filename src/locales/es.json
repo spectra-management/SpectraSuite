@@ -799,6 +799,10 @@
   },
   "documentos": {
     "brand": "Documentos",
+    "country": {
+      "label": "País:",
+      "select": "Selecciona un país"
+    },
     "nav": {
       "generate": "Generar",
       "templates": "Plantillas",
@@ -838,6 +842,8 @@
       "pageSize": "Tamaño de papel",
       "pageSizeA4": "A4",
       "pageSizeLegal": "Legal (8.5 x 14\")",
+      "country": "País",
+      "allCountries": "Todos los países",
       "signatures": "Líneas de firma (lado a lado)",
       "signaturesHint": "Opcional. Texto debajo de cada línea de firma; déjalo vacío para una carta de un solo firmante. Admite {{variables}}.",
       "signatureLeftPlaceholder": "Izquierda — ej. {{nombre}}\nEL (LA) TRABAJADOR(A)",

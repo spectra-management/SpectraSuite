@@ -11,6 +11,8 @@ export interface DocumentTemplate {
   name: string
   /** Short description / purpose. */
   description: string
+  /** Country this template belongs to (employee country name). '' = applies to all countries. */
+  country?: string
   /** Document title rendered at the top of the PDF (may contain variables). */
   title: string
   /** Body content; paragraphs separated by blank lines; contains `{{variables}}`. */
@@ -33,6 +35,8 @@ export interface GeneratedDocumentRecord {
   templateName: string
   employeeId: string
   employeeName: string
+  /** Employee country at generation time (for the country-scoped history). '' if unknown. */
+  country?: string
   /** ISO timestamp. */
   generatedAt: string
   /** Email/name of the user who generated it (best-effort). */

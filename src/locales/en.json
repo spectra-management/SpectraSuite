@@ -799,6 +799,10 @@
   },
   "documentos": {
     "brand": "Documents",
+    "country": {
+      "label": "Country:",
+      "select": "Select a country"
+    },
     "nav": {
       "generate": "Generate",
       "templates": "Templates",
@@ -838,6 +842,8 @@
       "pageSize": "Paper size",
       "pageSizeA4": "A4",
       "pageSizeLegal": "Legal (8.5 x 14\")",
+      "country": "Country",
+      "allCountries": "All countries",
       "signatures": "Signature lines (side by side)",
       "signaturesHint": "Optional. Caption under each signature line; leave blank for a single-signer letter. Supports {{variables}}.",
       "signatureLeftPlaceholder": "Left — e.g. {{nombre}}\nEL (LA) TRABAJADOR(A)",

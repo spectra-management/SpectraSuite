@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Pencil, Copy, Trash2, FileText, Lock, RotateCcw } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/components/ui/card'
@@ -13,7 +13,10 @@ import {
 import { toast } from '@/shared/hooks/useToast'
 import { useAuth } from '@/shared/context/AuthContext'
 import { logAuditEvent } from '@/shared/lib/audit'
+import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { useDocumentsStore } from '../../store/documentsStore'
+import { CountryScopeSelect } from '../../components/CountryScopeSelect'
+import { templateInCountry } from '../../lib/country'
 import { TEMPLATE_VARIABLES } from '../../lib/variables'
 import type { DocumentTemplate } from '../../lib/types'
 
@@ -21,6 +24,8 @@ interface EditorState {
   id: string | null // null = creating
   name: string
   description: string
+  /** Country the template belongs to; '' = all countries. */
+  country: string
   title: string
   body: string
   pageSize: 'A4' | 'LEGAL'
@@ -29,13 +34,24 @@ interface EditorState {
 }
 
 const EMPTY: EditorState = {
-  id: null, name: '', description: '', title: '', body: '',
+  id: null, name: '', description: '', country: '', title: '', body: '',
   pageSize: 'A4', signatureLeft: '', signatureRight: '',
 }
 
 export default function Templates() {
   const { t } = useTranslation()
-  const templates = useDocumentsStore((s) => s.templates)
+  const allTemplates = useDocumentsStore((s) => s.templates)
+  const selectedCountry = useDocumentsStore((s) => s.selectedCountry)
+  const employees = useEmployeesStore((s) => s.employees)
+  const countries = useMemo(
+    () => [...new Set(employees.filter((e) => e.status === 'Active').map((e) => e.country).filter(Boolean) as string[])].sort(),
+    [employees],
+  )
+  // Templates for the selected country (or country-agnostic ones).
+  const templates = useMemo(
+    () => allTemplates.filter((tpl) => templateInCountry(tpl.country, selectedCountry)),
+    [allTemplates, selectedCountry],
+  )
   const addTemplate = useDocumentsStore((s) => s.addTemplate)
   const updateTemplate = useDocumentsStore((s) => s.updateTemplate)
   const deleteTemplate = useDocumentsStore((s) => s.deleteTemplate)
@@ -47,10 +63,10 @@ export default function Templates() {
   const [editor, setEditor] = useState<EditorState | null>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
 
-  const openNew = () => setEditor({ ...EMPTY })
+  const openNew = () => setEditor({ ...EMPTY, country: selectedCountry })
   const openEdit = (tpl: DocumentTemplate) =>
     setEditor({
-      id: tpl.id, name: tpl.name, description: tpl.description, title: tpl.title, body: tpl.body,
+      id: tpl.id, name: tpl.name, description: tpl.description, country: tpl.country ?? '', title: tpl.title, body: tpl.body,
       pageSize: tpl.pageSize ?? 'A4', signatureLeft: tpl.signatureLeft ?? '', signatureRight: tpl.signatureRight ?? '',
     })
 
@@ -83,6 +99,7 @@ export default function Templates() {
     const payload = {
       name: editor.name.trim(),
       description: editor.description.trim(),
+      country: editor.country,
       title: editor.title.trim(),
       body: editor.body,
       pageSize: editor.pageSize,
@@ -120,11 +137,14 @@ export default function Templates() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{t('documentos.templates.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t('documentos.templates.subtitle')}</p>
         </div>
+        <CountryScopeSelect />
+      </div>
+      <div className="flex items-center justify-end gap-3">
         {canEdit && (
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={handleRestore} title={t('documentos.templates.restoreHint')}>
@@ -155,12 +175,17 @@ export default function Templates() {
               <CardHeader className="flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-base">{tpl.name}</CardTitle>
-                  {tpl.isSystem && (
-                    <Badge variant="secondary" className="shrink-0 gap-1 text-[10px]">
-                      <Lock className="h-3 w-3" />
-                      {t('documentos.templates.system')}
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Badge variant="outline" className="text-[10px]">
+                      {tpl.country || t('documentos.templates.allCountries')}
                     </Badge>
-                  )}
+                    {tpl.isSystem && (
+                      <Badge variant="secondary" className="gap-1 text-[10px]">
+                        <Lock className="h-3 w-3" />
+                        {t('documentos.templates.system')}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 <CardDescription>{tpl.description}</CardDescription>
               </CardHeader>
@@ -250,8 +275,22 @@ export default function Templates() {
                 </div>
               </div>
 
-              {/* Page size + side-by-side signature captions (optional) */}
+              {/* Country + page size */}
               <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>{t('documentos.templates.country')}</Label>
+                  <select
+                    value={editor.country}
+                    onChange={(e) => setEditor({ ...editor, country: e.target.value })}
+                    className="flex h-9 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground"
+                  >
+                    <option value="">{t('documentos.templates.allCountries')}</option>
+                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {editor.country && !countries.includes(editor.country) && (
+                      <option value={editor.country}>{editor.country}</option>
+                    )}
+                  </select>
+                </div>
                 <div className="space-y-1.5">
                   <Label>{t('documentos.templates.pageSize')}</Label>
                   <select

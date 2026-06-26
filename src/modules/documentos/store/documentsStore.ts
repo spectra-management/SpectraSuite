@@ -28,8 +28,11 @@ function unionRecords(
 interface DocumentsState {
   templates: DocumentTemplate[]
   records: GeneratedDocumentRecord[]
+  /** Country the module is scoped to (templates/documents shown for this country). */
+  selectedCountry: string
+  setSelectedCountry: (country: string) => void
   getTemplate: (id: string) => DocumentTemplate | undefined
-  addTemplate: (input: Pick<DocumentTemplate, 'name' | 'description' | 'title' | 'body' | 'pageSize' | 'signatureLeft' | 'signatureRight'>) => DocumentTemplate
+  addTemplate: (input: Pick<DocumentTemplate, 'name' | 'description' | 'country' | 'title' | 'body' | 'pageSize' | 'signatureLeft' | 'signatureRight'>) => DocumentTemplate
   updateTemplate: (id: string, patch: Partial<Omit<DocumentTemplate, 'id' | 'isSystem' | 'createdAt'>>) => void
   deleteTemplate: (id: string) => void
   /** Duplicate a template; `copySuffix` is the translated word appended to the name. */
@@ -63,6 +66,12 @@ function persistRecords(records: GeneratedDocumentRecord[]): void {
 export const useDocumentsStore = create<DocumentsState>((set, get) => ({
   templates: storage.get<DocumentTemplate[]>(STORAGE_KEYS.DOCUMENT_TEMPLATES) ?? [],
   records: storage.get<GeneratedDocumentRecord[]>(STORAGE_KEYS.GENERATED_DOCUMENTS) ?? [],
+  selectedCountry: storage.get<string>(STORAGE_KEYS.DOCUMENTOS_COUNTRY) ?? '',
+
+  setSelectedCountry: (country) => {
+    storage.set(STORAGE_KEYS.DOCUMENTOS_COUNTRY, country)
+    set({ selectedCountry: country })
+  },
 
   getTemplate: (id) => get().templates.find((t) => t.id === id),
 

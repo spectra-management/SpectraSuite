@@ -20,6 +20,8 @@ import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
 import { toCloudEmployee } from '@/shared/connectors/bamboohr-hr'
 import type { Employee } from '@/shared/types'
 import { useDocumentsStore } from '../../store/documentsStore'
+import { CountryScopeSelect } from '../../components/CountryScopeSelect'
+import { templateInCountry } from '../../lib/country'
 import { buildVariables, fillTemplate } from '../../lib/variables'
 import type { GeneratedDocumentRecord } from '../../lib/types'
 import type { DocumentPageData, DocumentPageSize } from '../../lib/ContractDocument'
@@ -36,8 +38,14 @@ function safeFilePart(s: string): string {
 export default function Generate() {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
-  const templates = useDocumentsStore((s) => s.templates)
+  const allTemplates = useDocumentsStore((s) => s.templates)
+  const selectedCountry = useDocumentsStore((s) => s.selectedCountry)
   const addRecords = useDocumentsStore((s) => s.addRecords)
+  // Templates shown = those for the selected country (or country-agnostic ones).
+  const templates = useMemo(
+    () => allTemplates.filter((tpl) => templateInCountry(tpl.country, selectedCountry)),
+    [allTemplates, selectedCountry],
+  )
   const employees = useEmployeesStore((s) => s.employees)
   const company = useSettingsStore((s) => s.company)
   // Rich HR detail (cédula, address, phone, DOB…) read from the cloud-backed store
@@ -57,7 +65,11 @@ export default function Generate() {
     if (cedula) toast({ variant: 'success', title: t('documentos.generate.cedulaSaved') })
   }
 
-  const activeEmployees = useMemo(() => employees.filter((e) => e.status === 'Active'), [employees])
+  // Only this country's active employees.
+  const activeEmployees = useMemo(
+    () => employees.filter((e) => e.status === 'Active' && (e.country ?? '') === selectedCountry),
+    [employees, selectedCountry],
+  )
   const departments = useMemo(
     () => [...new Set(activeEmployees.map((e) => e.department).filter(Boolean))].sort(),
     [activeEmployees],
@@ -158,6 +170,7 @@ export default function Generate() {
         templateName: template.name,
         employeeId: emp.id,
         employeeName: `${emp.firstName} ${emp.lastName}`,
+        country: emp.country ?? selectedCountry,
         generatedAt: nowIso,
         generatedBy,
       }))
@@ -186,9 +199,12 @@ export default function Generate() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('documentos.generate.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('documentos.generate.subtitle')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{t('documentos.generate.title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('documentos.generate.subtitle')}</p>
+        </div>
+        <CountryScopeSelect />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-5">

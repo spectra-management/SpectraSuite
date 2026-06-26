@@ -1,11 +1,19 @@
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { History as HistoryIcon } from 'lucide-react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { useDocumentsStore } from '../../store/documentsStore'
+import { CountryScopeSelect } from '../../components/CountryScopeSelect'
 
 export default function History() {
   const { t, i18n } = useTranslation()
-  const records = useDocumentsStore((s) => s.records)
+  const allRecords = useDocumentsStore((s) => s.records)
+  const selectedCountry = useDocumentsStore((s) => s.selectedCountry)
+  // Documents generated for the selected country (legacy records without a country show in all).
+  const records = useMemo(
+    () => allRecords.filter((r) => !r.country || r.country === selectedCountry),
+    [allRecords, selectedCountry],
+  )
   const locale = i18n.language.startsWith('es') ? 'es-DO' : 'en-US'
 
   const fmt = (iso: string) => {
@@ -15,9 +23,12 @@ export default function History() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('documentos.history.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('documentos.history.subtitle')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{t('documentos.history.title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('documentos.history.subtitle')}</p>
+        </div>
+        <CountryScopeSelect />
       </div>
 
       {records.length === 0 ? (
