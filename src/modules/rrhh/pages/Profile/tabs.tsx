@@ -1,10 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Loader2, AlertTriangle, Lock, FileText, ShieldCheck, Folder, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
+import { Loader2, AlertTriangle, Lock, FileText, ShieldCheck, Folder, FolderPlus, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Input } from '@/shared/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
 import { formatDate } from '@/shared/lib/utils'
 import { useSettingsStore } from '@/shared/store/settingsStore'
+import { useDocFoldersStore } from '@/modules/rrhh/store/docFoldersStore'
 import {
   useRrhhEmergencyContacts,
   useRrhhCompensation,
@@ -389,19 +393,45 @@ export function DocumentsTab({ employeeId, enabled }: { employeeId: string; enab
   const { t } = useTranslation()
   const { data: docs, loading, error } = useRrhhDocuments(employeeId, enabled)
   const subdomain = useSettingsStore((s) => s.bamboohr.subdomain)
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const overrides = useDocFoldersStore((s) => s.byEmployee[employeeId])
+  const hydrated = useDocFoldersStore((s) => s.hydrated)
+  const hydrate = useDocFoldersStore((s) => s.hydrateFromCloud)
+  const addFolder = useDocFoldersStore((s) => s.addFolder)
+  const moveDoc = useDocFoldersStore((s) => s.moveDoc)
 
-  // Group documents by BambooHR category = folder.
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const [creating, setCreating] = useState(false)
+  const [newFolder, setNewFolder] = useState('')
+
+  useEffect(() => {
+    if (!hydrated) void hydrate()
+  }, [hydrated, hydrate])
+
+  const customFolders = useMemo(() => overrides?.folders ?? [], [overrides])
+  const moves = useMemo(() => overrides?.moves ?? {}, [overrides])
+  const uncategorized = t('rrhh.profile.documents.uncategorized')
+
+  /** A document's effective folder: a user move wins, else its BambooHR category. */
+  const folderOf = (d: RrhhDocument) => moves[d.id] || d.category || uncategorized
+
+  // All folders = BambooHR categories present + custom folders (custom shown even if empty).
   const folders = useMemo(() => {
     const map = new Map<string, RrhhDocument[]>()
+    for (const f of customFolders) map.set(f, [])
     for (const d of docs) {
-      const key = d.category || t('rrhh.profile.documents.uncategorized')
+      const key = moves[d.id] || d.category || uncategorized
       const list = map.get(key) ?? []
       list.push(d)
       map.set(key, list)
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]))
-  }, [docs, t])
+  }, [docs, customFolders, moves, uncategorized])
+
+  // The set of folders a document can be moved into (for the Move dropdown).
+  const allFolderNames = useMemo(
+    () => [...new Set([uncategorized, ...docs.map((d) => d.category || uncategorized), ...customFolders])].sort(),
+    [docs, customFolders, uncategorized],
+  )
 
   const toggle = (folder: string) =>
     setCollapsed((prev) => {
@@ -416,20 +446,48 @@ export function DocumentsTab({ employeeId, enabled }: { employeeId: string; enab
     if (url) window.open(url, '_blank', 'noopener,noreferrer')
   }
 
+  const createFolder = () => {
+    addFolder(employeeId, newFolder)
+    setNewFolder('')
+    setCreating(false)
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <ShieldCheck className="h-4 w-4 text-emerald-600" />
-          {t('rrhh.profile.documents.title')}
-        </CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            {t('rrhh.profile.documents.title')}
+          </CardTitle>
+          {!loading && !error && (
+            creating ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  autoFocus
+                  value={newFolder}
+                  onChange={(e) => setNewFolder(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') createFolder(); if (e.key === 'Escape') setCreating(false) }}
+                  placeholder={t('rrhh.profile.documents.folderName')}
+                  className="h-8 w-44"
+                />
+                <Button size="sm" onClick={createFolder} disabled={!newFolder.trim()}>{t('common.save')}</Button>
+                <Button size="sm" variant="ghost" onClick={() => { setCreating(false); setNewFolder('') }}>{t('common.cancel')}</Button>
+              </div>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setCreating(true)}>
+                <FolderPlus className="mr-1.5 h-3.5 w-3.5" />{t('rrhh.profile.documents.newFolder')}
+              </Button>
+            )
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {loading ? (
           <TabLoading />
         ) : error ? (
           <TabError message={error} />
-        ) : docs.length === 0 ? (
+        ) : docs.length === 0 && customFolders.length === 0 ? (
           <TabEmpty message={t('rrhh.profile.documents.none')} />
         ) : (
           <div className="space-y-2">
@@ -449,20 +507,30 @@ export function DocumentsTab({ employeeId, enabled }: { employeeId: string; enab
                   </button>
                   {!isCollapsed && (
                     <ul className="divide-y divide-border">
-                      {files.map((d) => (
-                        <li key={d.id}>
+                      {files.length === 0 ? (
+                        <li className="px-4 py-3 text-xs text-muted-foreground">{t('rrhh.profile.documents.emptyFolder')}</li>
+                      ) : files.map((d) => (
+                        <li key={d.id} className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-secondary/50">
                           <button
                             type="button"
                             onClick={() => openDoc(d)}
-                            className="group flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-secondary/50"
+                            className="flex min-w-0 flex-1 items-center gap-3 text-left"
                             title={t('rrhh.profile.documents.open')}
                           >
                             <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                             <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400">{d.name}</span>
-                            <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{d.dateCreated ? formatDate(d.dateCreated) : '—'}</span>
-                            <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{formatFileSize(d.size)}</span>
+                            <span className="hidden shrink-0 text-xs text-muted-foreground md:inline">{d.dateCreated ? formatDate(d.dateCreated) : '—'}</span>
+                            <span className="hidden shrink-0 text-xs text-muted-foreground md:inline">{formatFileSize(d.size)}</span>
                             <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                           </button>
+                          <Select value={folderOf(d)} onValueChange={(v) => moveDoc(employeeId, d.id, v)}>
+                            <SelectTrigger className="h-7 w-36 shrink-0 text-xs" title={t('rrhh.profile.documents.moveTo')}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allFolderNames.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                         </li>
                       ))}
                     </ul>

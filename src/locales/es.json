@@ -1233,7 +1233,11 @@
         "size": "Tamaño",
         "none": "No hay documentos registrados para este empleado.",
         "open": "Abrir documento",
-        "uncategorized": "Sin carpeta"
+        "uncategorized": "Sin carpeta",
+        "newFolder": "Nueva carpeta",
+        "folderName": "Nombre de la carpeta",
+        "emptyFolder": "Carpeta vacía",
+        "moveTo": "Mover a carpeta"
       }
     },
     "org": {

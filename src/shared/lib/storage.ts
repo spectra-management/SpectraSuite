@@ -72,4 +72,6 @@ export const STORAGE_KEYS = {
   EMPLOYEE_BASEBALL_CARDS: 'employee_baseball_cards',
   // Per-country fiscal configs (employee deductions + income tax), editable in Nómina settings
   COUNTRY_FISCAL: 'country_fiscal_configs',
+  // RRHH app-local document folders: custom folders + per-document folder moves (over BambooHR)
+  RRHH_DOC_FOLDERS: 'rrhh_doc_folders',
 } as const
