@@ -133,7 +133,7 @@ export default function ClientDetail() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label={t('facturacion.clients.invoicePrefix')} value={client.invoicePrefix} />
         <SummaryCard label={t('facturacion.clients.defaultMethod')} value={t(`facturacion.method.${client.defaultMethod}`)} />
-        <SummaryCard label={t('facturacion.clients.currency')} value={client.currencyCountry} />
+        <SummaryCard label={t('facturacion.clients.currency')} value="USD ($)" />
         <SummaryCard label={t('facturacion.clients.assigned')} value={String(clientAssignments.length)} />
       </div>
 

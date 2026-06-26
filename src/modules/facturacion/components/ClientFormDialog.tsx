@@ -6,7 +6,6 @@ import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
-import { COUNTRY_CURRENCIES } from '@/shared/lib/utils/currency'
 import type { BillingClient, BillingMethod } from '@/modules/facturacion/lib/types'
 
 export interface ClientFormValues {
@@ -27,7 +26,7 @@ export interface ClientFormValues {
 const empty: ClientFormValues = {
   name: '', contactName: '', contactEmail: '', contactPhone: '', billingAddress: '',
   remitToName: '', remitToAddress: '', remitToDetails: '', invoicePrefix: 'INV',
-  defaultMethod: 'hour', currencyCountry: 'Dominican Republic', notes: '',
+  defaultMethod: 'hour', currencyCountry: 'United States', notes: '',
 }
 
 export function ClientFormDialog({
@@ -103,14 +102,10 @@ export function ClientFormDialog({
           </div>
           <div>
             <Label>{t('facturacion.clients.currency')}</Label>
-            <Select value={v.currencyCountry} onValueChange={(val) => set('currencyCountry', val)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {Object.entries(COUNTRY_CURRENCIES).map(([country, info]) => (
-                  <SelectItem key={country} value={country}>{country} ({info.symbol})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Billing/invoicing is always USD. */}
+            <div className="flex h-10 items-center rounded-lg border border-border bg-secondary/40 px-3 text-sm text-muted-foreground">
+              USD ($)
+            </div>
           </div>
           <div className="sm:col-span-2 mt-1 rounded-lg border border-border bg-secondary/40 p-3">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('facturacion.clients.remitTo')}</p>

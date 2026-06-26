@@ -21,7 +21,7 @@ export default function Reports() {
 
   const nameFor = (id: string) => clients.find((c) => c.id === id)?.name ?? id
   // Reports assume a single currency across the workspace; use the first client's currency for display.
-  const displayCountry = clients[0]?.currencyCountry ?? 'Dominican Republic'
+  const displayCountry = clients[0]?.currencyCountry ?? 'United States'
 
   // `nameFor` closes over `clients`, which is already a dep — no need to also list the fn.
   const byClient = useMemo(() => revenueByClient(invoices, nameFor), [invoices, clients])  // eslint-disable-line react-hooks/exhaustive-deps

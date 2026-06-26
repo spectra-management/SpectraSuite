@@ -43,6 +43,8 @@ interface BillingState {
   /** Auto-assign each employee to the client matching its division (idempotent); deactivates
    *  auto assignments whose employee no longer matches. Manual assignments are untouched. */
   ensureAssignmentsForDivisions: (roster: { id: string; division?: string }[]) => void
+  /** Billing/invoicing is always USD: migrate any client/invoice still on another currency. */
+  forceBillingCurrencyUsd: () => void
 
   // ── Title rates ──────────────────────────────────────────────────────────────
   upsertTitleRate: (clientId: string, title: string, baseRate: number, otRate: number) => TitleRate
@@ -98,7 +100,8 @@ export const useBillingStore = create<BillingState>((set, get) => ({
       invoicePrefix: (data.invoicePrefix ?? 'INV').toUpperCase(),
       nextInvoiceSeq: data.nextInvoiceSeq ?? 1,
       defaultMethod: data.defaultMethod ?? 'hour',
-      currencyCountry: data.currencyCountry ?? 'Dominican Republic',
+      // Billing/invoicing is always in USD.
+      currencyCountry: data.currencyCountry ?? 'United States',
       notes: data.notes ?? '',
       active: data.active ?? true,
       createdAt: ts,
@@ -146,7 +149,7 @@ export const useBillingStore = create<BillingState>((set, get) => ({
       contactName: '', contactEmail: '', contactPhone: '',
       billingAddress: '', remitToName: '', remitToAddress: '', remitToDetails: '',
       invoicePrefix: 'INV', nextInvoiceSeq: 1,
-      defaultMethod: 'hour', currencyCountry: 'Dominican Republic',
+      defaultMethod: 'hour', currencyCountry: 'United States',
       notes: '', active: true, createdAt: ts, updatedAt: ts,
     }))
     const clients = [...existing, ...created]
@@ -198,6 +201,26 @@ export const useBillingStore = create<BillingState>((set, get) => ({
     if (!changed) return
     storage.set(STORAGE_KEYS.BILLING_CLIENT_EMPLOYEES, next)
     set({ clientEmployees: next })
+  },
+
+  forceBillingCurrencyUsd: () => {
+    const USD = 'United States'
+    const ts = nowIso()
+    let changed = false
+    const clients = get().clients.map((c) => {
+      if (c.currencyCountry === USD) return c
+      changed = true
+      return { ...c, currencyCountry: USD, updatedAt: ts }
+    })
+    const invoices = get().invoices.map((i) => {
+      if (i.currencyCountry === USD) return i
+      changed = true
+      return { ...i, currencyCountry: USD }
+    })
+    if (!changed) return
+    storage.set(STORAGE_KEYS.BILLING_CLIENTS, clients)
+    storage.set(STORAGE_KEYS.BILLING_INVOICES, invoices)
+    set({ clients, invoices })
   },
 
   // ── Title rates ──────────────────────────────────────────────────────────────

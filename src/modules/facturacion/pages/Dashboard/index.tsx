@@ -23,7 +23,7 @@ export default function Dashboard() {
 
   const runs = useMemo(() => getBillablePayrollRuns(), [])
   const totals = useMemo(() => billingTotals(invoices), [invoices])
-  const displayCountry = clients[0]?.currencyCountry ?? 'Dominican Republic'
+  const displayCountry = clients[0]?.currencyCountry ?? 'United States'
 
   const activeClients = clients.filter((c) => c.active).length
   const activeAssignments = assignments.filter((a) => a.active).length

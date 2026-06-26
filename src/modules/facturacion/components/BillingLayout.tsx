@@ -26,16 +26,19 @@ export function BillingLayout() {
   const hrById = useEmployeeHrStore((s) => s.byId)
   const ensureClientsForDivisions = useBillingStore((s) => s.ensureClientsForDivisions)
   const ensureAssignmentsForDivisions = useBillingStore((s) => s.ensureAssignmentsForDivisions)
+  const forceBillingCurrencyUsd = useBillingStore((s) => s.forceBillingCurrencyUsd)
   const roster = useMemo(
     () => employees.map((e) => ({ id: e.id, division: hrById[e.id]?.division ?? '' })),
     [employees, hrById],
   )
   useEffect(() => {
+    // Billing is USD-only: migrate any legacy non-USD client/invoice (does not touch Nómina).
+    forceBillingCurrencyUsd()
     const divisions = [...new Set(roster.map((r) => (r.division ?? '').trim()).filter(Boolean))]
     if (divisions.length === 0) return
     ensureClientsForDivisions(divisions)
     ensureAssignmentsForDivisions(roster)
-  }, [roster, ensureClientsForDivisions, ensureAssignmentsForDivisions])
+  }, [roster, ensureClientsForDivisions, ensureAssignmentsForDivisions, forceBillingCurrencyUsd])
 
   return (
     <div className="flex h-screen overflow-hidden bg-canvas">

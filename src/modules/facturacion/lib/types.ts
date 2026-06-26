@@ -36,7 +36,7 @@ export interface BillingClient {
   nextInvoiceSeq: number
   /** Default billing method for assigned employees (override per employee). */
   defaultMethod: BillingMethod
-  /** Single currency for this client's invoices (country name, e.g. "Dominican Republic"). */
+  /** Currency country for this client's invoices. Billing is always USD ("United States"). */
   currencyCountry: string
   notes: string
   active: boolean
