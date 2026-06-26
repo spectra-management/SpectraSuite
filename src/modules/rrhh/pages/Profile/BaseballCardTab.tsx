@@ -155,9 +155,9 @@ export function BaseballCardTab({
 
             <div className="mb-3 rounded-xl bg-white p-1">
               {photoSrc ? (
-                <img src={photoSrc} alt={resolved.fullName} className="h-44 w-full rounded-lg object-cover" />
+                <img src={photoSrc} alt={resolved.fullName} className="aspect-[4/5] w-full rounded-lg object-cover object-top" />
               ) : (
-                <div className="flex h-44 w-full items-center justify-center rounded-lg bg-emerald-700 text-4xl font-bold text-white">
+                <div className="flex aspect-[4/5] w-full items-center justify-center rounded-lg bg-emerald-700 text-4xl font-bold text-white">
                   {initials}
                 </div>
               )}

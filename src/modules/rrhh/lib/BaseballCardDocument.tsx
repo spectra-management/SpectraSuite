@@ -36,7 +36,8 @@ const INK = '#111827'
 const WHITE = '#FFFFFF'
 
 const styles = StyleSheet.create({
-  page: { flexDirection: 'row', fontFamily: 'Helvetica', color: INK, backgroundColor: WHITE },
+  page: { fontFamily: 'Helvetica', color: INK, backgroundColor: WHITE },
+  row: { flexDirection: 'row', height: '100%' },
 
   // ── Left emerald sidebar ──
   sidebar: { width: '36%', backgroundColor: EMERALD, padding: 20, color: WHITE },
@@ -45,9 +46,9 @@ const styles = StyleSheet.create({
   logo: { width: 18, height: 18, objectFit: 'contain' },
   brand: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: WHITE, letterSpacing: 0.3 },
   photoFrame: { backgroundColor: WHITE, borderRadius: 10, padding: 3, marginBottom: 12 },
-  photo: { width: '100%', height: 150, objectFit: 'cover', borderRadius: 7 },
+  photo: { width: '100%', height: 168, objectFit: 'cover', objectPositionY: '15%', borderRadius: 7 },
   photoFallback: {
-    width: '100%', height: 150, borderRadius: 7, backgroundColor: EMERALD_DARK,
+    width: '100%', height: 168, borderRadius: 7, backgroundColor: EMERALD_DARK,
     alignItems: 'center', justifyContent: 'center',
   },
   photoInitials: { fontSize: 40, fontFamily: 'Helvetica-Bold', color: WHITE },
@@ -115,7 +116,8 @@ export function BaseballCardDocument({
   const accountLine = [card.accountName, card.accountStartDate].filter(Boolean).join('  ·  ')
   return (
     <Document>
-      <Page size={[780, 440]} orientation="landscape" style={styles.page}>
+      <Page size={[760, 430]} style={styles.page}>
+       <View style={styles.row} wrap={false}>
         {/* Emerald sidebar */}
         <View style={styles.sidebar}>
           <View style={styles.brandRow}>
@@ -190,6 +192,7 @@ export function BaseballCardDocument({
             </View>
           )}
         </View>
+       </View>
       </Page>
     </Document>
   )
