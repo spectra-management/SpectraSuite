@@ -38,6 +38,8 @@ interface BillingState {
   updateClient: (id: string, data: Partial<BillingClient>) => void
   removeClient: (id: string) => void
   getClient: (id: string) => BillingClient | undefined
+  /** Auto-create one client per BambooHR division not yet present (matched by division/name). */
+  ensureClientsForDivisions: (divisions: string[]) => void
 
   // ── Title rates ──────────────────────────────────────────────────────────────
   upsertTitleRate: (clientId: string, title: string, baseRate: number, otRate: number) => TitleRate
@@ -82,6 +84,7 @@ export const useBillingStore = create<BillingState>((set, get) => ({
     const client: BillingClient = {
       id: generateId(),
       name: data.name,
+      division: data.division ?? '',
       contactName: data.contactName ?? '',
       contactEmail: data.contactEmail ?? '',
       contactPhone: data.contactPhone ?? '',
@@ -123,6 +126,30 @@ export const useBillingStore = create<BillingState>((set, get) => ({
   },
 
   getClient: (id) => get().clients.find((c) => c.id === id),
+
+  ensureClientsForDivisions: (divisions) => {
+    const existing = get().clients
+    const known = new Set(
+      existing.map((c) => (c.division || c.name).trim().toLowerCase()).filter(Boolean),
+    )
+    const wanted = [...new Set(divisions.map((d) => d.trim()).filter(Boolean))]
+    const toCreate = wanted.filter((d) => !known.has(d.toLowerCase()))
+    if (toCreate.length === 0) return
+    const ts = nowIso()
+    const created: BillingClient[] = toCreate.map((name) => ({
+      id: generateId(),
+      name,
+      division: name,
+      contactName: '', contactEmail: '', contactPhone: '',
+      billingAddress: '', remitToName: '', remitToAddress: '', remitToDetails: '',
+      invoicePrefix: 'INV', nextInvoiceSeq: 1,
+      defaultMethod: 'hour', currencyCountry: 'Dominican Republic',
+      notes: '', active: true, createdAt: ts, updatedAt: ts,
+    }))
+    const clients = [...existing, ...created]
+    storage.set(STORAGE_KEYS.BILLING_CLIENTS, clients)
+    set({ clients })
+  },
 
   // ── Title rates ──────────────────────────────────────────────────────────────
   upsertTitleRate: (clientId, title, baseRate, otRate) => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, FileText, AlertTriangle } from 'lucide-react'
@@ -10,10 +10,11 @@ import { formatDateRange } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/lib/utils/currency'
 import { getBillablePayrollRuns } from '@/shared/lib/payrollData'
 import { useEmployeesStore } from '@/shared/store/employeesStore'
+import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
 import { useBillingStore } from '@/modules/facturacion/store/billingStore'
 import { useBillingAccess } from '@/modules/facturacion/lib/permissions'
 import { auditInvoiceGenerated } from '@/modules/facturacion/lib/audit'
-import { computeInvoiceLines, sumLineItems, type RosterEmployee } from '@/modules/facturacion/lib/compute'
+import { computeInvoiceLines, sumLineItems, assignmentsByDivision, type RosterEmployee } from '@/modules/facturacion/lib/compute'
 import { BillingPageHeader } from '@/modules/facturacion/components/BillingPageHeader'
 import { EmptyStateCard, RestrictedCard } from '@/modules/facturacion/components/BillingStates'
 
@@ -27,17 +28,29 @@ export default function NewInvoice() {
   const titleRates = useBillingStore((s) => s.titleRates)
   const assignments = useBillingStore((s) => s.clientEmployees)
   const createInvoice = useBillingStore((s) => s.createInvoice)
+  const ensureClientsForDivisions = useBillingStore((s) => s.ensureClientsForDivisions)
   const employees = useEmployeesStore((s) => s.employees)
+  const hrById = useEmployeeHrStore((s) => s.byId)
 
   const [clientId, setClientId] = useState(params.get('client') ?? '')
   const [selectedRuns, setSelectedRuns] = useState<Set<string>>(new Set())
 
   const runs = useMemo(() => getBillablePayrollRuns(), [])
   const client = clients.find((c) => c.id === clientId)
+  // Roster carries each employee's division (= client) from the shared HR store.
   const roster: RosterEmployee[] = useMemo(
-    () => employees.map((e) => ({ id: e.id, firstName: e.firstName, lastName: e.lastName, jobTitle: e.jobTitle })),
-    [employees],
+    () => employees.map((e) => ({
+      id: e.id, firstName: e.firstName, lastName: e.lastName, jobTitle: e.jobTitle,
+      division: hrById[e.id]?.division ?? '',
+    })),
+    [employees, hrById],
   )
+
+  // Auto-create a billing client for every BambooHR division (client) present in the roster.
+  useEffect(() => {
+    const divisions = [...new Set(roster.map((e) => (e.division ?? '').trim()).filter(Boolean))]
+    if (divisions.length) ensureClientsForDivisions(divisions)
+  }, [roster, ensureClientsForDivisions])
 
   const labels = {
     basePay: t('facturacion.lines.basePay'),
@@ -46,9 +59,10 @@ export default function NewInvoice() {
     percentage: t('facturacion.lines.percentage'),
   }
 
+  // Auto-grouped: every employee whose division matches the client (manual overrides kept).
   const clientAssignments = useMemo(
-    () => assignments.filter((a) => a.clientId === clientId && a.active),
-    [assignments, clientId],
+    () => (client ? assignmentsByDivision(client, roster, assignments).filter((a) => a.active) : []),
+    [client, roster, assignments],
   )
 
   // Does this client use the percentage method anywhere? Then financial access is required.

@@ -20,6 +20,8 @@ export interface HrEmployeeDetail {
   workEmail: string
   jobTitle: string
   department: string
+  /** BambooHR "division" — used as the CLIENT the employee works for (billing). */
+  division: string
   hireDate: string
   /** National id (cédula). BambooHR stores it in the SSN field for DR accounts. */
   nationalId: string
@@ -59,6 +61,7 @@ interface BambooHrReportRow {
   workEmail?: string
   jobTitle?: string
   department?: string
+  division?: string
   hireDate?: string
   ssn?: string
   address1?: string
@@ -88,6 +91,7 @@ const REPORT_FIELDS = [
   'workEmail',
   'jobTitle',
   'department',
+  'division',
   'hireDate',
   'ssn',
   'address1',
@@ -214,6 +218,7 @@ export async function fetchHrDirectory(
     workEmail: e.workEmail ?? '',
     jobTitle: e.jobTitle ?? '',
     department: e.department ?? '',
+    division: e.division ?? '',
     hireDate: e.hireDate ?? '',
     nationalId: detected,
     address: joinAddress(e.address1, e.address2),
@@ -249,6 +254,7 @@ export function toCloudEmployee(base: BaseEmployeeFields, hr: HrEmployeeDetail |
     workEmail: base.workEmail,
     jobTitle: base.jobTitle,
     department: base.department,
+    division: hr?.division ?? '',
     hireDate: base.hireDate,
     nationalId: hr?.nationalId ?? '',
     address: hr?.address ?? '',

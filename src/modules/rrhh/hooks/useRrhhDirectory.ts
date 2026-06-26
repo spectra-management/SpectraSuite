@@ -33,6 +33,7 @@ function toCloudEmployee(e: RrhhEmployee): CloudEmployee {
     workEmail: e.workEmail,
     jobTitle: e.jobTitle,
     department: e.department,
+    division: e.division,
     hireDate: e.hireDate,
     nationalId: e.ssn,
     address: e.address,

@@ -250,6 +250,8 @@ interface EmployeeRow {
   work_email: string
   job_title: string
   department: string
+  /** Optional: the `division` (client) column may not exist yet — read if present, never required. */
+  division?: string
   hire_date: string
   status: string
   country: string
@@ -311,6 +313,7 @@ function fromRow(r: EmployeeRow): CloudEmployee {
     workEmail: r.work_email ?? '',
     jobTitle: r.job_title ?? '',
     department: r.department ?? '',
+    division: r.division ?? '',
     hireDate: r.hire_date ?? '',
     status: r.status ?? '',
     country: r.country ?? '',

@@ -35,6 +35,9 @@ const MANUAL_FIELDS = [
   'nationalId', 'address', 'city', 'state', 'zipcode',
   'mobilePhone', 'workPhone', 'homePhone', 'dateOfBirth',
   'gender', 'maritalStatus', 'nationality',
+  // `division` (the client) isn't in the cloud employees table yet, so preserve the locally
+  // synced value across a cloud hydrate (which would otherwise blank it).
+  'division',
 ] as const
 
 /** Fresh (BambooHR) values win, but a manual field is kept when the fresh value is empty. */

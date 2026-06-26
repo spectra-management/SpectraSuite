@@ -45,6 +45,7 @@ export default function Directory() {
   const [search, setSearch] = useState('')
   const [deptFilter, setDeptFilter] = useState('all')
   const [locationFilter, setLocationFilter] = useState('all')
+  const [clientFilter, setClientFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('Active')
   const [sortCol, setSortCol] = useState<SortCol | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
@@ -58,10 +59,16 @@ export default function Directory() {
     () => [...new Set(employees.map((e) => e.location).filter(Boolean))].sort(),
     [employees],
   )
+  // The BambooHR "division" is the CLIENT each employee works for.
+  const clients = useMemo(
+    () => [...new Set(employees.map((e) => e.division).filter(Boolean))].sort(),
+    [employees],
+  )
 
   const activeFilterCount = [
     deptFilter !== 'all',
     locationFilter !== 'all',
+    clientFilter !== 'all',
     statusFilter !== 'Active',
     !!search,
   ].filter(Boolean).length
@@ -70,6 +77,7 @@ export default function Directory() {
     setSearch('')
     setDeptFilter('all')
     setLocationFilter('all')
+    setClientFilter('all')
     setStatusFilter('Active')
     setPage(1)
   }
@@ -87,6 +95,7 @@ export default function Directory() {
         if (q && !normalize(`${e.displayName} ${e.jobTitle} ${e.workEmail}`).includes(q)) return false
         if (deptFilter !== 'all' && e.department !== deptFilter) return false
         if (locationFilter !== 'all' && e.location !== locationFilter) return false
+        if (clientFilter !== 'all' && e.division !== clientFilter) return false
         if (statusFilter === 'Active' && e.status !== 'Active') return false
         if (statusFilter === 'not-active' && e.status === 'Active') return false
         return true
@@ -99,7 +108,7 @@ export default function Directory() {
         if (sortCol === 'hireDate') cmp = (a.hireDate || '').localeCompare(b.hireDate || '')
         return sortDir === 'asc' ? cmp : -cmp
       })
-  }, [employees, search, deptFilter, locationFilter, statusFilter, sortCol, sortDir])
+  }, [employees, search, deptFilter, locationFilter, clientFilter, statusFilter, sortCol, sortDir])
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -172,6 +181,16 @@ export default function Directory() {
               </Select>
             )}
 
+            {clients.length > 1 && (
+              <Select value={clientFilter} onValueChange={handleFilter(setClientFilter)}>
+                <SelectTrigger className="w-44"><SelectValue placeholder={t('rrhh.directory.allClients')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('rrhh.directory.allClients')}</SelectItem>
+                  {clients.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+
             <Select value={statusFilter} onValueChange={handleFilter(setStatusFilter)}>
               <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -224,6 +243,9 @@ export default function Directory() {
                         </button>
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {t('rrhh.directory.table.client')}
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         {t('rrhh.directory.table.location')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -260,6 +282,7 @@ export default function Directory() {
                         </td>
                         <td className="px-6 py-4 text-muted-foreground">{emp.jobTitle || '—'}</td>
                         <td className="px-6 py-4 text-muted-foreground">{emp.department || '—'}</td>
+                        <td className="px-6 py-4 text-muted-foreground">{emp.division || '—'}</td>
                         <td className="px-6 py-4 text-muted-foreground">{emp.location || '—'}</td>
                         <td className="px-6 py-4 text-muted-foreground">{formatDate(emp.hireDate)}</td>
                         <td className="px-6 py-4">

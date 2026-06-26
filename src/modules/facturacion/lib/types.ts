@@ -17,6 +17,9 @@ export type BillingMethod = 'hour' | 'fixed' | 'percentage'
 export interface BillingClient {
   id: string
   name: string
+  /** The BambooHR "division" this client was created from (auto clients). Used to match the
+   *  employees that belong to this client. Empty for manually-created clients. */
+  division?: string
   contactName: string
   contactEmail: string
   contactPhone: string
