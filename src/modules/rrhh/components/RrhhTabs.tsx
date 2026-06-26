@@ -8,9 +8,10 @@ export interface RrhhTab {
 }
 
 /**
- * Horizontal, scrollable tab bar used on the employee profile. Purely presentational;
- * the active tab is owned by the parent. Matches the Suite's emerald/underline style and
- * works in light & dark mode.
+ * Tab bar used on the employee profile. Tabs WRAP to a new line when they don't fit (rather
+ * than scrolling off-screen and being clipped), so every tab stays reachable at any width.
+ * Purely presentational; the active tab is owned by the parent. Matches the Suite's
+ * emerald/underline style and works in light & dark mode.
  */
 export function RrhhTabBar({
   tabs,
@@ -23,7 +24,7 @@ export function RrhhTabBar({
 }) {
   return (
     <div className="border-b border-border">
-      <div className="-mb-px flex gap-1 overflow-x-auto" role="tablist">
+      <div className="-mb-px flex flex-wrap gap-1" role="tablist">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = tab.id === active
