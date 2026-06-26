@@ -1,10 +1,14 @@
+import type { ReactNode } from 'react'
 import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer'
 import type { ResolvedBaseballCard } from '@/shared/lib/baseballCard'
 
 /**
- * Employee "baseball card" PDF — landscape card with the Spectra letterhead, a left column
- * of profile fields and a right column with the photo + a Goals box. Built with @react-pdf's
- * built-in Helvetica (Latin-1 covers EN/ES). Lazy-loaded by the Baseball Card tab.
+ * Employee "baseball card" PDF — a premium landscape card on Spectra's emerald/white system.
+ *
+ * Layout: a full-height EMERALD sidebar (logo, framed photo, identity + key facts) and a white
+ * main panel of sections with emerald accent labels and a highlighted Goals box. Built with
+ * @react-pdf's Helvetica (Latin-1 covers EN/ES); depth comes from fills + accent bars + borders
+ * (react-pdf has no box-shadow). Lazy-loaded by the Baseball Card tab.
  */
 
 export interface BaseballCardLabels {
@@ -24,58 +28,71 @@ export interface BaseballCardLabels {
 }
 
 const EMERALD = '#059669'
+const EMERALD_DARK = '#047857'
+const EMERALD_50 = '#ECFDF5'
+const EMERALD_100 = '#D1FAE5'
+const EMERALD_700 = '#047857'
 const INK = '#111827'
-const BORDER = '#1f2937'
+const WHITE = '#FFFFFF'
 
 const styles = StyleSheet.create({
-  page: { padding: 22, fontSize: 9, color: INK, fontFamily: 'Helvetica', backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 },
-  logo: { width: 28, height: 28, objectFit: 'contain' },
-  brand: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: INK },
-  brandThin: { fontSize: 18, color: EMERALD },
-  body: { flexDirection: 'row', gap: 12, flexGrow: 1 },
-  leftBox: { flex: 2, borderWidth: 1, borderColor: '#9ca3af', borderRadius: 4, padding: 12 },
-  rightCol: { flex: 1, gap: 12 },
-  photo: { width: '100%', height: 150, objectFit: 'cover', borderRadius: 4 },
+  page: { flexDirection: 'row', fontFamily: 'Helvetica', color: INK, backgroundColor: WHITE },
+
+  // ── Left emerald sidebar ──
+  sidebar: { width: '36%', backgroundColor: EMERALD, padding: 20, color: WHITE },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
+  logoChip: { backgroundColor: WHITE, borderRadius: 6, padding: 4 },
+  logo: { width: 18, height: 18, objectFit: 'contain' },
+  brand: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: WHITE, letterSpacing: 0.3 },
+  photoFrame: { backgroundColor: WHITE, borderRadius: 10, padding: 3, marginBottom: 12 },
+  photo: { width: '100%', height: 150, objectFit: 'cover', borderRadius: 7 },
   photoFallback: {
-    width: '100%', height: 150, borderRadius: 4, backgroundColor: '#d1fae5',
+    width: '100%', height: 150, borderRadius: 7, backgroundColor: EMERALD_DARK,
     alignItems: 'center', justifyContent: 'center',
   },
-  photoInitials: { fontSize: 36, fontFamily: 'Helvetica-Bold', color: EMERALD },
-  goalsBox: { borderWidth: 1, borderColor: BORDER, borderRadius: 4, padding: 10 },
-  goalsTitle: { fontSize: 12, fontFamily: 'Helvetica-Bold', textAlign: 'center', marginBottom: 6 },
-  row: { marginBottom: 8 },
-  inline: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
-  label: { fontFamily: 'Helvetica-Bold', color: INK },
-  value: { color: INK },
-  sectionLabel: { fontFamily: 'Helvetica-Bold', color: INK, marginBottom: 2 },
-  bullet: { flexDirection: 'row', gap: 4, marginBottom: 1.5 },
-  bulletDot: { color: INK },
-  bulletText: { flex: 1, color: INK },
-  goalBullet: { flexDirection: 'row', gap: 4, marginBottom: 4 },
+  photoInitials: { fontSize: 40, fontFamily: 'Helvetica-Bold', color: WHITE },
+  name: { fontSize: 17, fontFamily: 'Helvetica-Bold', color: WHITE, lineHeight: 1.15 },
+  nick: { fontSize: 10, color: EMERALD_100, marginTop: 1 },
+  jobTitle: { fontSize: 9.5, color: EMERALD_100, marginTop: 4 },
+  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.3)', marginVertical: 12 },
+  factLabel: { fontSize: 6.5, fontFamily: 'Helvetica-Bold', color: EMERALD_100, letterSpacing: 1, textTransform: 'uppercase' },
+  factValue: { fontSize: 9.5, color: WHITE, marginBottom: 8 },
+
+  // ── Right white panel ──
+  main: { flex: 1, padding: 22 },
+  section: { marginBottom: 11 },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
+  accentBar: { width: 3, height: 9, backgroundColor: EMERALD, borderRadius: 2 },
+  sectionLabel: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: EMERALD_700, letterSpacing: 0.8, textTransform: 'uppercase' },
+  body: { fontSize: 9.5, color: INK, lineHeight: 1.4 },
+  bullet: { flexDirection: 'row', gap: 5, marginBottom: 2 },
+  bulletDot: { color: EMERALD, fontFamily: 'Helvetica-Bold' },
+  bulletText: { flex: 1, fontSize: 9.5, color: INK, lineHeight: 1.35 },
+  twoCol: { flexDirection: 'row', gap: 16 },
+  col: { flex: 1 },
+
+  goalsBox: { backgroundColor: EMERALD_50, borderRadius: 8, borderLeftWidth: 3, borderLeftColor: EMERALD, padding: 10, marginTop: 2 },
+  goalsTitle: { fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: EMERALD_700, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 5 },
 })
 
-function Labeled({ label, value }: { label: string; value: string }) {
-  if (!value) return null
+function Section({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <Text style={styles.value}>
-      <Text style={styles.label}>{label}: </Text>
-      {value}
-    </Text>
+    <View style={styles.section}>
+      <View style={styles.sectionHead}>
+        <View style={styles.accentBar} />
+        <Text style={styles.sectionLabel}>{label}</Text>
+      </View>
+      {children}
+    </View>
   )
 }
 
-function Bullets({ label, items }: { label?: string; items: string[] }) {
-  if (items.length === 0) return null
+function Fact({ label, value }: { label: string; value: string }) {
+  if (!value) return null
   return (
-    <View style={styles.row}>
-      {label ? <Text style={styles.sectionLabel}>{label}:</Text> : null}
-      {items.map((it, i) => (
-        <View key={i} style={styles.bullet}>
-          <Text style={styles.bulletDot}>•</Text>
-          <Text style={styles.bulletText}>{it}</Text>
-        </View>
-      ))}
+    <View>
+      <Text style={styles.factLabel}>{label}</Text>
+      <Text style={styles.factValue}>{value}</Text>
     </View>
   )
 }
@@ -95,74 +112,83 @@ export function BaseballCardDocument({
   photoSrc?: string
   initials: string
 }) {
+  const accountLine = [card.accountName, card.accountStartDate].filter(Boolean).join('  ·  ')
   return (
     <Document>
       <Page size={[780, 440]} orientation="landscape" style={styles.page}>
-        {/* Letterhead */}
-        <View style={styles.header}>
-          {logoSrc ? <Image src={logoSrc} style={styles.logo} /> : null}
-          <Text style={styles.brand}>{companyName}</Text>
-        </View>
-
-        <View style={styles.body}>
-          {/* Left: fields */}
-          <View style={styles.leftBox}>
-            <View style={styles.row}>
-              <View style={styles.inline}>
-                <Labeled label={labels.fullName} value={card.fullName} />
-                <Labeled label={labels.nickName} value={card.nickName} />
-              </View>
-            </View>
-
-            <View style={styles.row}>
-              <Labeled label={labels.dob} value={card.dobMonthDay} />
-            </View>
-
-            <View style={styles.row}>
-              <Labeled label={labels.spectraStart} value={card.spectraStartDate} />
-              <View style={styles.inline}>
-                <Labeled label={labels.accountName} value={card.accountName} />
-                <Labeled label={labels.accountStart} value={card.accountStartDate} />
-              </View>
-              <Labeled label={labels.jobTitle} value={card.jobTitle} />
-            </View>
-
-            <Bullets label={labels.jobHistory} items={card.jobHistory} />
-            <View style={styles.row}>
-              <Labeled label={labels.education} value={card.education} />
-            </View>
-            <View style={styles.row}>
-              <Labeled label={labels.hobbies} value={card.hobbies.join(', ')} />
-            </View>
-            <View style={styles.row}>
-              <Labeled label={labels.funFacts} value={card.funFacts.join(', ')} />
-            </View>
-            <View style={styles.row}>
-              <Labeled label={labels.leadershipStyle} value={card.leadershipStyle} />
-            </View>
+        {/* Emerald sidebar */}
+        <View style={styles.sidebar}>
+          <View style={styles.brandRow}>
+            {logoSrc ? (
+              <View style={styles.logoChip}><Image src={logoSrc} style={styles.logo} /></View>
+            ) : null}
+            <Text style={styles.brand}>{companyName}</Text>
           </View>
 
-          {/* Right: photo + goals */}
-          <View style={styles.rightCol}>
+          <View style={styles.photoFrame}>
             {photoSrc ? (
               <Image src={photoSrc} style={styles.photo} />
             ) : (
-              <View style={styles.photoFallback}>
-                <Text style={styles.photoInitials}>{initials}</Text>
+              <View style={styles.photoFallback}><Text style={styles.photoInitials}>{initials}</Text></View>
+            )}
+          </View>
+
+          <Text style={styles.name}>{card.fullName}</Text>
+          {card.nickName ? <Text style={styles.nick}>“{card.nickName}”</Text> : null}
+          {card.jobTitle ? <Text style={styles.jobTitle}>{card.jobTitle}</Text> : null}
+
+          <View style={styles.divider} />
+
+          <Fact label={labels.dob} value={card.dobMonthDay} />
+          <Fact label={labels.spectraStart} value={card.spectraStartDate} />
+          <Fact label={labels.accountName} value={accountLine} />
+        </View>
+
+        {/* White main panel */}
+        <View style={styles.main}>
+          {card.jobHistory.length > 0 && (
+            <Section label={labels.jobHistory}>
+              {card.jobHistory.map((j, i) => (
+                <View key={i} style={styles.bullet}>
+                  <Text style={styles.bulletDot}>•</Text>
+                  <Text style={styles.bulletText}>{j}</Text>
+                </View>
+              ))}
+            </Section>
+          )}
+
+          {card.education ? (
+            <Section label={labels.education}><Text style={styles.body}>{card.education}</Text></Section>
+          ) : null}
+
+          <View style={styles.twoCol}>
+            {card.hobbies.length > 0 && (
+              <View style={styles.col}>
+                <Section label={labels.hobbies}><Text style={styles.body}>{card.hobbies.join(', ')}</Text></Section>
               </View>
             )}
-            {card.goals.length > 0 ? (
-              <View style={styles.goalsBox}>
-                <Text style={styles.goalsTitle}>{labels.goals}:</Text>
-                {card.goals.map((g, i) => (
-                  <View key={i} style={styles.goalBullet}>
-                    <Text style={styles.bulletDot}>•</Text>
-                    <Text style={styles.bulletText}>{g}</Text>
-                  </View>
-                ))}
+            {card.leadershipStyle ? (
+              <View style={styles.col}>
+                <Section label={labels.leadershipStyle}><Text style={styles.body}>{card.leadershipStyle}</Text></Section>
               </View>
             ) : null}
           </View>
+
+          {card.funFacts.length > 0 && (
+            <Section label={labels.funFacts}><Text style={styles.body}>{card.funFacts.join(', ')}</Text></Section>
+          )}
+
+          {card.goals.length > 0 && (
+            <View style={styles.goalsBox}>
+              <Text style={styles.goalsTitle}>{labels.goals}</Text>
+              {card.goals.map((g, i) => (
+                <View key={i} style={styles.bullet}>
+                  <Text style={styles.bulletDot}>•</Text>
+                  <Text style={styles.bulletText}>{g}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </Page>
     </Document>

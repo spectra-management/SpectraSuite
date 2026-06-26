@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Download, Loader2, Pencil, Check } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
@@ -139,63 +139,102 @@ export function BaseballCardTab({
         </Button>
       </div>
 
-      {/* Preview */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="mb-4 flex items-center justify-center gap-2">
-            {company.logoBase64 ? (
-              <img src={company.logoBase64} alt="" className="h-7 w-7 object-contain" />
-            ) : null}
-            <span className="text-lg font-bold text-foreground">{company.name || 'Spectra'}</span>
-          </div>
-          <div className="flex flex-col gap-4 sm:flex-row">
-            {/* Left: fields */}
-            <div className="flex-[2] rounded-lg border border-border p-4 text-sm">
-              <p>
-                <span className="font-semibold">{t('rrhh.baseballCard.fullName')}:</span> {resolved.fullName || '—'}
-                {resolved.nickName ? <>{'   '}<span className="font-semibold">{t('rrhh.baseballCard.nickName')}:</span> {resolved.nickName}</> : null}
-              </p>
-              {resolved.dobMonthDay && <p className="mt-2"><span className="font-semibold">{t('rrhh.baseballCard.dob')}:</span> {resolved.dobMonthDay}</p>}
-              {resolved.spectraStartDate && <p className="mt-2"><span className="font-semibold">{t('rrhh.baseballCard.spectraStart')}:</span> {resolved.spectraStartDate}</p>}
-              {(resolved.accountName || resolved.accountStartDate) && (
-                <p className="mt-1">
-                  {resolved.accountName && <><span className="font-semibold">{t('rrhh.baseballCard.accountName')}:</span> {resolved.accountName}{'   '}</>}
-                  {resolved.accountStartDate && <><span className="font-semibold">{t('rrhh.baseballCard.accountStart')}:</span> {resolved.accountStartDate}</>}
-                </p>
-              )}
-              {resolved.jobTitle && <p className="mt-1"><span className="font-semibold">{t('rrhh.baseballCard.jobTitle')}:</span> {resolved.jobTitle}</p>}
-
-              {resolved.jobHistory.length > 0 && (
-                <div className="mt-3">
-                  <p className="font-semibold">{t('rrhh.baseballCard.jobHistory')}:</p>
-                  <ul className="ml-4 list-disc">{resolved.jobHistory.map((j, i) => <li key={i}>{j}</li>)}</ul>
-                </div>
-              )}
-              {resolved.education && <p className="mt-3"><span className="font-semibold">{t('rrhh.baseballCard.education')}:</span> {resolved.education}</p>}
-              {resolved.hobbies.length > 0 && <p className="mt-3"><span className="font-semibold">{t('rrhh.baseballCard.hobbies')}:</span> {resolved.hobbies.join(', ')}</p>}
-              {resolved.funFacts.length > 0 && <p className="mt-3"><span className="font-semibold">{t('rrhh.baseballCard.funFacts')}:</span> {resolved.funFacts.join(', ')}</p>}
-              {resolved.leadershipStyle && <p className="mt-3"><span className="font-semibold">{t('rrhh.baseballCard.leadershipStyle')}:</span> {resolved.leadershipStyle}</p>}
+      {/* Preview — premium card: emerald identity sidebar + white sections panel */}
+      <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex flex-col sm:flex-row">
+          {/* Emerald sidebar */}
+          <div className="bg-emerald-600 p-6 text-white sm:w-[36%]">
+            <div className="mb-4 flex items-center gap-2">
+              {company.logoBase64 ? (
+                <span className="rounded-md bg-white p-1">
+                  <img src={company.logoBase64} alt="" className="h-4 w-4 object-contain" />
+                </span>
+              ) : null}
+              <span className="text-sm font-bold tracking-wide">{company.name || 'Spectra'}</span>
             </div>
 
-            {/* Right: photo + goals */}
-            <div className="flex-1 space-y-3">
+            <div className="mb-3 rounded-xl bg-white p-1">
               {photoSrc ? (
-                <img src={photoSrc} alt="" className="h-40 w-full rounded-lg object-cover" />
+                <img src={photoSrc} alt={resolved.fullName} className="h-44 w-full rounded-lg object-cover" />
               ) : (
-                <div className="flex h-40 w-full items-center justify-center rounded-lg bg-emerald-100 text-3xl font-bold text-emerald-700">
+                <div className="flex h-44 w-full items-center justify-center rounded-lg bg-emerald-700 text-4xl font-bold text-white">
                   {initials}
                 </div>
               )}
-              {resolved.goals.length > 0 && (
-                <div className="rounded-lg border border-border p-3">
-                  <p className="text-center font-bold">{t('rrhh.baseballCard.goals')}:</p>
-                  <ul className="ml-4 list-disc text-sm">{resolved.goals.map((g, i) => <li key={i}>{g}</li>)}</ul>
+            </div>
+
+            <h2 className="text-xl font-bold leading-tight">{resolved.fullName || '—'}</h2>
+            {resolved.nickName && <p className="text-sm text-emerald-100">“{resolved.nickName}”</p>}
+            {resolved.jobTitle && <p className="mt-1 text-sm text-emerald-100">{resolved.jobTitle}</p>}
+
+            <div className="my-4 border-t border-white/30" />
+
+            <Fact label={t('rrhh.baseballCard.dob')} value={resolved.dobMonthDay} />
+            <Fact label={t('rrhh.baseballCard.spectraStart')} value={resolved.spectraStartDate} />
+            <Fact
+              label={t('rrhh.baseballCard.accountName')}
+              value={[resolved.accountName, resolved.accountStartDate].filter(Boolean).join('  ·  ')}
+            />
+          </div>
+
+          {/* White sections panel */}
+          <div className="flex-1 space-y-4 p-6">
+            {resolved.jobHistory.length > 0 && (
+              <PreviewSection label={t('rrhh.baseballCard.jobHistory')}>
+                <ul className="space-y-1">
+                  {resolved.jobHistory.map((j, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-foreground">
+                      <span className="font-bold text-emerald-600">•</span><span>{j}</span>
+                    </li>
+                  ))}
+                </ul>
+              </PreviewSection>
+            )}
+
+            {resolved.education && (
+              <PreviewSection label={t('rrhh.baseballCard.education')}>
+                <p className="text-sm text-foreground">{resolved.education}</p>
+              </PreviewSection>
+            )}
+
+            <div className="flex flex-col gap-4 sm:flex-row">
+              {resolved.hobbies.length > 0 && (
+                <div className="flex-1">
+                  <PreviewSection label={t('rrhh.baseballCard.hobbies')}>
+                    <p className="text-sm text-foreground">{resolved.hobbies.join(', ')}</p>
+                  </PreviewSection>
+                </div>
+              )}
+              {resolved.leadershipStyle && (
+                <div className="flex-1">
+                  <PreviewSection label={t('rrhh.baseballCard.leadershipStyle')}>
+                    <p className="text-sm text-foreground">{resolved.leadershipStyle}</p>
+                  </PreviewSection>
                 </div>
               )}
             </div>
+
+            {resolved.funFacts.length > 0 && (
+              <PreviewSection label={t('rrhh.baseballCard.funFacts')}>
+                <p className="text-sm text-foreground">{resolved.funFacts.join(', ')}</p>
+              </PreviewSection>
+            )}
+
+            {resolved.goals.length > 0 && (
+              <div className="rounded-lg border-l-4 border-emerald-600 bg-emerald-50 p-4">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-700">{t('rrhh.baseballCard.goals')}</p>
+                <ul className="space-y-1">
+                  {resolved.goals.map((g, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-foreground">
+                      <span className="font-bold text-emerald-600">•</span><span>{g}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Editor */}
       {canEdit && editing && (
@@ -244,6 +283,30 @@ export function BaseballCardTab({
           </CardContent>
         </Card>
       )}
+    </div>
+  )
+}
+
+/** A key fact on the emerald sidebar: tiny uppercase label + white value. */
+function Fact({ label, value }: { label: string; value: string }) {
+  if (!value) return null
+  return (
+    <div className="mb-2.5">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-100">{label}</p>
+      <p className="text-sm text-white">{value}</p>
+    </div>
+  )
+}
+
+/** A section on the white panel: emerald accent bar + uppercase label, then content. */
+function PreviewSection({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center gap-1.5">
+        <span className="h-3 w-1 rounded-sm bg-emerald-600" />
+        <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">{label}</p>
+      </div>
+      {children}
     </div>
   )
 }
