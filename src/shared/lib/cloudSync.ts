@@ -359,6 +359,66 @@ export async function fetchEmployeesCloud(): Promise<CloudEmployee[]> {
   }
 }
 
+// ─── Employee payroll settings (tax exemption; see migration 014) ────────────
+//
+// App-local per-employee payroll overrides, shared across the Nomina + RRHH profiles and
+// read by the payroll engine. Best-effort like the rest: localStorage stays the cache.
+
+export interface PayrollSetting {
+  taxExempt: boolean
+  taxExemptReason: string
+}
+
+interface PayrollSettingRow {
+  bamboohr_id: string
+  tax_exempt: boolean | null
+  tax_exempt_reason: string | null
+}
+
+/** Read all per-employee payroll settings (id → setting). Empty if unavailable. */
+export async function fetchPayrollSettings(): Promise<Record<string, PayrollSetting>> {
+  if (!(await isAuthenticated())) return {}
+  try {
+    const { data, error } = await supabase
+      .from('employee_payroll_settings')
+      .select('bamboohr_id, tax_exempt, tax_exempt_reason')
+    if (error || !data) return {}
+    const out: Record<string, PayrollSetting> = {}
+    for (const r of data as PayrollSettingRow[]) {
+      if (!r.bamboohr_id) continue
+      out[r.bamboohr_id] = {
+        taxExempt: r.tax_exempt === true,
+        taxExemptReason: r.tax_exempt_reason ?? '',
+      }
+    }
+    return out
+  } catch (e) {
+    console.warn('[cloudSync] fetchPayrollSettings failed:', e)
+    return {}
+  }
+}
+
+/** Upsert one employee's payroll setting. Best-effort (admin RLS). */
+export async function savePayrollSetting(employeeId: string, setting: PayrollSetting): Promise<void> {
+  if (!employeeId) return
+  if (!(await isAuthenticated())) return
+  try {
+    const { data: session } = await supabase.auth.getSession()
+    await supabase.from('employee_payroll_settings').upsert(
+      {
+        bamboohr_id: employeeId,
+        tax_exempt: setting.taxExempt,
+        tax_exempt_reason: setting.taxExemptReason,
+        updated_at: new Date().toISOString(),
+        updated_by: session.session?.user.id ?? null,
+      },
+      { onConflict: 'bamboohr_id' },
+    )
+  } catch (e) {
+    console.warn('[cloudSync] savePayrollSetting failed:', e)
+  }
+}
+
 // ─── Vacation payments ───────────────────────────────────────────────────────
 
 export interface CloudVacationPayment {

@@ -1,4 +1,14 @@
 {
+  "taxExemption": {
+    "title": "Tax exemption",
+    "toggle": "Exempt from taxes (ISR + TSS)",
+    "description": "The employee pays no ISR or TSS (AFP/SFS). Custom deductions still apply.",
+    "reasonLabel": "Reason for exemption",
+    "reasonPlaceholder": "Why is this employee exempt from taxes?",
+    "exemptYes": "Exempt",
+    "exemptNo": "Pays taxes",
+    "noReason": "No reason given"
+  },
   "suite": {
     "title": "Spectra Suite",
     "subtitle": "Select a module to get started",

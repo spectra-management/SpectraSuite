@@ -28,6 +28,7 @@ import { PAYMENT_METHOD_LABELS } from '@/modules/nomina/lib/pdf/paystubLabels'
 import { VacationInfoSection } from './VacationInfoSection'
 import { useAuth } from '@/shared/context/AuthContext'
 import { isPayrollActive, setEmployeePayrollActive } from '@/modules/nomina/lib/employeePayrollStatus'
+import { TaxExemptionControl } from '@/shared/components/TaxExemptionControl'
 import type { CustomDeduction, PaymentMethod } from '@/shared/types'
 
 const BANK_FIELD_LABELS = {
@@ -294,6 +295,16 @@ export default function EmployeeProfile() {
               <p className="mt-2 text-xs text-muted-foreground">{bankLabels.note}</p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Tax exemption (shared with the RRHH profile) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t('taxExemption.title')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TaxExemptionControl employeeId={employee.id} canEdit={canEditPayroll} />
         </CardContent>
       </Card>
 

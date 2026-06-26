@@ -6,6 +6,7 @@ import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { useVacationPaymentsStore } from '@/shared/store/vacationPaymentsStore'
 import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrStore'
+import { usePayrollSettingsStore } from '@/shared/store/payrollSettingsStore'
 import { logAuditEvent } from '@/shared/lib/audit'
 import { clearAuthSessionKeys } from '@/shared/lib/sessionReset'
 import { SessionTimeoutModal } from '@/shared/components/SessionTimeoutModal'
@@ -228,6 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void usePayrollStore.getState().hydrateFromCloud()
         void useVacationPaymentsStore.getState().hydrateFromCloud()
         void usePendingVacationIsrStore.getState().hydrateFromCloud()
+        void usePayrollSettingsStore.getState().hydrateFromCloud()
         // Load the configured inactivity timeout (company_settings is publicly readable).
         void supabase
           .from('company_settings')

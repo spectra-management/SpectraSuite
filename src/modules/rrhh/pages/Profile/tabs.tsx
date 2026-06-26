@@ -15,6 +15,7 @@ import {
   tenureFrom,
 } from '@/modules/rrhh/lib/format'
 import type { RrhhEmployee } from '@/modules/rrhh/types'
+import { TaxExemptionControl } from '@/shared/components/TaxExemptionControl'
 
 /* ----------------------------- shared bits ------------------------------ */
 
@@ -131,6 +132,10 @@ export function PersonalTab({
           <Field label={t('rrhh.profile.zipcode')} value={employee.zipcode || '—'} />
           <Field label={t('rrhh.profile.country')} value={employee.country || '—'} />
         </dl>
+      </SectionCard>
+
+      <SectionCard title={t('taxExemption.title')}>
+        <TaxExemptionControl employeeId={employee.id} canEdit={canViewSensitive} />
       </SectionCard>
     </div>
   )

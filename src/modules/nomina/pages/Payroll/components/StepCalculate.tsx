@@ -7,6 +7,7 @@ import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrStore'
+import { usePayrollSettingsStore } from '@/shared/store/payrollSettingsStore'
 import { calculatePayroll, findFirstFortnightGross } from '@/modules/nomina/lib/payroll/calculations'
 import { getPayrollRules } from '@/modules/nomina/lib/payroll/rules'
 import { getInitials } from '@/shared/lib/utils'
@@ -38,6 +39,7 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
   const nightShift = useSettingsStore((s) => s.nightShift)
   const history = usePayrollStore((s) => s.history)
   const pendingVacationIsr = usePendingVacationIsrStore((s) => s.pending)
+  const payrollOverrides = usePayrollSettingsStore((s) => s.byId)
 
   // Global run = all countries in one pass; each employee is calculated with its
   // OWN country's tax rules.
@@ -97,6 +99,7 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
           const p = pendingVacationIsr[emp.id]
           return p && p.appliedInPeriod === null ? p.amount : 0
         })(),
+        taxExempt: payrollOverrides[emp.id]?.taxExempt === true,
       })
 
       computedEntries.push({ employee: emp, hours: h, calculation })
@@ -115,7 +118,7 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
     }
 
     return { entries: computedEntries, totals }
-  }, [employeeHours, employees, rules, isGlobal, fiscal, frequency, payrollSettings, startDate, endDate, country, history, nightShift, pendingVacationIsr])
+  }, [employeeHours, employees, rules, isGlobal, fiscal, frequency, payrollSettings, startDate, endDate, country, history, nightShift, pendingVacationIsr, payrollOverrides])
 
   // Per-country rollup for Global mode (native currencies, no conversion).
   const byCountry = useMemo(() => {

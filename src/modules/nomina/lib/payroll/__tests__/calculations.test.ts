@@ -317,6 +317,45 @@ describe('Custom Deductions', () => {
   })
 })
 
+// ─── Tax-exempt employee ──────────────────────────────────────────────────────
+describe('Tax-exempt employee', () => {
+  it('waives AFP, SFS and ISR for a 2nd-quincena earner who would otherwise pay all three', () => {
+    // High earner on the 2nd quincena: normally pays AFP + SFS + a full month ISR.
+    const base = { hourlyRate: 700, regularHours: 80, periodStart: '2026-03-16', firstFortnightGross: 56000 }
+    const taxed = calculatePayroll(makeInput(base))
+    expect(taxed.afpAmount).toBeGreaterThan(0)
+    expect(taxed.sfsAmount).toBeGreaterThan(0)
+    expect(taxed.isrPeriod).toBeGreaterThan(0)
+
+    const exempt = calculatePayroll(makeInput({ ...base, taxExempt: true }))
+    expect(exempt.afpAmount).toBe(0)
+    expect(exempt.sfsAmount).toBe(0)
+    expect(exempt.tssTotal).toBe(0)
+    expect(exempt.isrPeriod).toBe(0)
+    expect(exempt.isrCalculated).toBe(0)
+    expect(exempt.taxableIncome).toBe(0)
+    // Same gross, but net = gross (no statutory deductions).
+    expect(exempt.grossPay).toBe(taxed.grossPay)
+    expect(exempt.netPay).toBe(exempt.grossPay)
+  })
+
+  it('still applies custom deductions and ignores pending vacation ISR', () => {
+    const input = makeInput({
+      hourlyRate: 700,
+      regularHours: 80,
+      periodStart: '2026-03-16',
+      pendingVacationIsr: 1000,
+      taxExempt: true,
+      customDeductions: [{ id: '1', name: 'Loan', type: 'fixed', amount: 1500, recurring: true, active: true }],
+    })
+    const r = calculatePayroll(input)
+    expect(r.vacationIsr).toBe(0)
+    expect(r.customDeductions).toBe(1500)
+    expect(r.totalDeductions).toBe(1500) // only the custom deduction; no TSS/ISR/vacation ISR
+    expect(r.netPay).toBe(roundHalfUp(r.grossPay - 1500))
+  })
+})
+
 // ─── Test 7: Edge Cases ───────────────────────────────────────────────────────
 describe('Edge Cases', () => {
   it('employee with 0 hours → payroll = 0, no crash', () => {

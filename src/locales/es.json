@@ -1,4 +1,14 @@
 {
+  "taxExemption": {
+    "title": "Exoneración de impuestos",
+    "toggle": "Exonerar de impuestos (ISR + TSS)",
+    "description": "El empleado no pagará ISR ni TSS (AFP/SFS). Las deducciones personalizadas se mantienen.",
+    "reasonLabel": "Razón de la exoneración",
+    "reasonPlaceholder": "¿Por qué este empleado no paga impuestos?",
+    "exemptYes": "Exonerado",
+    "exemptNo": "Paga impuestos",
+    "noReason": "Sin razón especificada"
+  },
   "suite": {
     "title": "Spectra Suite",
     "subtitle": "Selecciona un módulo para comenzar",

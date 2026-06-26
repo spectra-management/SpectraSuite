@@ -33,6 +33,9 @@ export interface CalculationInput {
   nightShift?: NightShiftSettings
   // Pending vacation ISR to collect this period. Only applied on the DR 2nd fortnight.
   pendingVacationIsr?: number
+  // Tax-exempt employee: when true, NO statutory deductions are withheld — AFP, SFS and ISR
+  // (and any pending vacation ISR) are all zeroed. Custom deductions (loans, etc.) still apply.
+  taxExempt?: boolean
 }
 
 export interface CalculationResult {

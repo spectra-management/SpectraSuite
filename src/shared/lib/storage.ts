@@ -66,4 +66,6 @@ export const STORAGE_KEYS = {
   GENERATED_DOCUMENTS: 'generated_documents',
   // Cloud-backed employee HR detail (cédula, address, phone, DOB…) for Documentos/RRHH
   EMPLOYEES_HR: 'employees_hr',
+  // Cloud-backed per-employee payroll overrides (tax exemption) shared by Nómina + RRHH
+  EMPLOYEE_PAYROLL_SETTINGS: 'employee_payroll_settings',
 } as const

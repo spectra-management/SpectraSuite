@@ -271,13 +271,16 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
   const holidayBonus = earnings.holidayPay
   const contributoryBase = isDR ? roundHalfUp(grossPay - holidayBonus) : grossPay
 
+  // Tax-exempt employee: AFP, SFS and ISR are all waived (custom deductions still apply).
+  const taxExempt = !!input.taxExempt
+
   // Pension (AFP / Social Security)
-  const afpBase = roundHalfUp(Math.min(contributoryBase, rules.pensionCap ?? contributoryBase))
-  const afpAmount = roundHalfUp(afpBase * (rules.pensionRate / 100))
+  const afpBase = taxExempt ? 0 : roundHalfUp(Math.min(contributoryBase, rules.pensionCap ?? contributoryBase))
+  const afpAmount = taxExempt ? 0 : roundHalfUp(afpBase * (rules.pensionRate / 100))
 
   // Health insurance (SFS / Medicare)
-  const sfsBase = roundHalfUp(Math.min(contributoryBase, rules.healthInsuranceCap ?? contributoryBase))
-  const sfsAmount = roundHalfUp(sfsBase * (rules.healthInsuranceRate / 100))
+  const sfsBase = taxExempt ? 0 : roundHalfUp(Math.min(contributoryBase, rules.healthInsuranceCap ?? contributoryBase))
+  const sfsAmount = taxExempt ? 0 : roundHalfUp(sfsBase * (rules.healthInsuranceRate / 100))
 
   const tssTotal = roundHalfUp(afpAmount + sfsAmount)
 
@@ -331,15 +334,25 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
     isrMonthlyBase = grossPay
   }
 
+  // Tax-exempt: waive ALL income tax (this period and the monthly figures shown).
+  if (taxExempt) {
+    isrMonthlyBase = 0
+    annualTaxable = 0
+    isrMonthly = 0
+    isrRetained = 0
+  }
+
   // isrCalculated kept for compatibility: monthly ISR on DR quincena/full-month runs, per-period otherwise
   const isrCalculated = quincena !== null || isFullMonth ? isrMonthly : isrRetained
-  const isrDeferred = quincena === 1
+  const isrDeferred = !taxExempt && quincena === 1
 
   const customDeds = calculateCustomDeductions(grossPay, input.customDeductions)
 
   // Pending vacation ISR is collected where the month's ISR is retained: the DR 2nd
-  // fortnight, or a full-month run.
-  const vacationIsr = quincena === 2 || isFullMonth ? roundHalfUp(safeNum(input.pendingVacationIsr)) : 0
+  // fortnight, or a full-month run — never for a tax-exempt employee.
+  const vacationIsr = !taxExempt && (quincena === 2 || isFullMonth)
+    ? roundHalfUp(safeNum(input.pendingVacationIsr))
+    : 0
 
   const totalDeductions = roundHalfUp(tssTotal + isrRetained + vacationIsr + customDeds.total)
   const netPay = roundHalfUp(grossPay - totalDeductions)
