@@ -27,6 +27,7 @@ import {
   BillingReports,
 } from '@/modules/facturacion'
 import { DocumentosLayout, DocumentosGenerate, DocumentosTemplates, DocumentosHistory } from '@/modules/documentos'
+import { TableroLayout, BoardsPage, BoardPage } from '@/modules/tablero'
 
 export default function App() {
   return (
@@ -146,6 +147,20 @@ export default function App() {
             <Route path="generate" element={<DocumentosGenerate />} />
             <Route path="templates" element={<DocumentosTemplates />} />
             <Route path="history" element={<DocumentosHistory />} />
+          </Route>
+
+          {/* Tablero module (Trello-like kanban — admins/managers only) */}
+          <Route
+            path="/tablero"
+            element={
+              <ProtectedRoute module="tablero" action="edit">
+                <TableroLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="boards" replace />} />
+            <Route path="boards" element={<BoardsPage />} />
+            <Route path="boards/:boardId" element={<BoardPage />} />
           </Route>
 
           {/* Placeholder modules — Coming Soon */}

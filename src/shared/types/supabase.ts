@@ -3,7 +3,7 @@
 // without pulling the full generated types file.
 
 export type UserRole = 'super_admin' | 'module_admin' | 'viewer' | 'custom'
-export type ModuleId = 'nomina' | 'rrhh' | 'facturacion' | 'gastos' | 'it' | 'documentos'
+export type ModuleId = 'nomina' | 'rrhh' | 'facturacion' | 'gastos' | 'it' | 'documentos' | 'tablero'
 
 export interface ProfileRow {
   id: string

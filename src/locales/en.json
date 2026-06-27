@@ -25,7 +25,8 @@
       "facturacion": "Billing",
       "documentos": "Documents",
       "gastos": "Expenses",
-      "it": "IT"
+      "it": "IT",
+      "tablero": "Tablero"
     },
     "nav": {
       "employees": "Employees",
@@ -49,7 +50,8 @@
       "licenses": "Licenses",
       "maintenance": "Maintenance",
       "assignments": "Assignments",
-      "dashboard": "Dashboard"
+      "dashboard": "Dashboard",
+      "boards": "Boards"
     },
     "settings": {
       "title": "Suite Settings",
@@ -124,7 +126,9 @@
     "employees": "employees",
     "hours": "hours",
     "period": "Period",
-    "frequency": "Frequency"
+    "frequency": "Frequency",
+    "create": "Create",
+    "more": "More"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1471,6 +1475,44 @@
       "bill": "Bill",
       "emptyTitle": "Welcome to Billing",
       "emptyHint": "Create a client and assign employees to start invoicing."
+    }
+  },
+  "tablero": {
+    "brand": "Tablero",
+    "nav": {
+      "boards": "Boards"
+    },
+    "boards": {
+      "title": "Boards",
+      "subtitle": "Organize work across teams with kanban boards.",
+      "new": "New board",
+      "namePlaceholder": "Board name",
+      "rename": "Rename board",
+      "emptyTitle": "No boards yet",
+      "emptyHint": "Create your first board to get started.",
+      "deleteTitle": "Delete board",
+      "deleteConfirm": "Delete \"{{name}}\" and all its lists and cards? This cannot be undone."
+    },
+    "list": {
+      "add": "Add list",
+      "namePlaceholder": "List name",
+      "delete": "Delete list"
+    },
+    "card": {
+      "add": "Add card",
+      "detail": "Card detail",
+      "titlePlaceholder": "Card title",
+      "labels": "Labels",
+      "assignee": "Assignee",
+      "assigneePlaceholder": "Unassigned",
+      "dueDate": "Due date",
+      "description": "Description",
+      "descriptionPlaceholder": "Add a more detailed description...",
+      "checklist": "Checklist",
+      "addChecklist": "Add an item",
+      "comments": "Comments",
+      "addComment": "Write a comment",
+      "delete": "Delete card"
     }
   }
 }

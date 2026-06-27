@@ -25,7 +25,8 @@
       "facturacion": "Facturación",
       "documentos": "Documentos",
       "gastos": "Gastos",
-      "it": "IT"
+      "it": "IT",
+      "tablero": "Tablero"
     },
     "nav": {
       "employees": "Empleados",
@@ -49,7 +50,8 @@
       "licenses": "Licencias",
       "maintenance": "Mantenimiento",
       "assignments": "Asignaciones",
-      "dashboard": "Panel"
+      "dashboard": "Panel",
+      "boards": "Tableros"
     },
     "settings": {
       "title": "Ajustes de la Suite",
@@ -124,7 +126,9 @@
     "employees": "empleados",
     "hours": "horas",
     "period": "Período",
-    "frequency": "Frecuencia"
+    "frequency": "Frecuencia",
+    "create": "Crear",
+    "more": "Más"
   },
   "dashboard": {
     "title": "Panel",
@@ -1471,6 +1475,44 @@
       "bill": "Facturar",
       "emptyTitle": "Bienvenido a Facturación",
       "emptyHint": "Crea un cliente y asigna empleados para empezar a facturar."
+    }
+  },
+  "tablero": {
+    "brand": "Tablero",
+    "nav": {
+      "boards": "Tableros"
+    },
+    "boards": {
+      "title": "Tableros",
+      "subtitle": "Organiza el trabajo de los equipos con tableros kanban.",
+      "new": "Nuevo tablero",
+      "namePlaceholder": "Nombre del tablero",
+      "rename": "Renombrar tablero",
+      "emptyTitle": "Aún no hay tableros",
+      "emptyHint": "Crea tu primer tablero para comenzar.",
+      "deleteTitle": "Eliminar tablero",
+      "deleteConfirm": "¿Eliminar \"{{name}}\" y todas sus listas y tarjetas? Esta acción no se puede deshacer."
+    },
+    "list": {
+      "add": "Agregar lista",
+      "namePlaceholder": "Nombre de la lista",
+      "delete": "Eliminar lista"
+    },
+    "card": {
+      "add": "Agregar tarjeta",
+      "detail": "Detalle de la tarjeta",
+      "titlePlaceholder": "Título de la tarjeta",
+      "labels": "Etiquetas",
+      "assignee": "Responsable",
+      "assigneePlaceholder": "Sin asignar",
+      "dueDate": "Fecha límite",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Agrega una descripción más detallada...",
+      "checklist": "Lista de tareas",
+      "addChecklist": "Agregar un elemento",
+      "comments": "Comentarios",
+      "addComment": "Escribe un comentario",
+      "delete": "Eliminar tarjeta"
     }
   }
 }
