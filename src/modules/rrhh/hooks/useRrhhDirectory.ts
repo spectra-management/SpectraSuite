@@ -13,7 +13,7 @@ import { useSettingsStore } from '@/shared/store/settingsStore'
 import { useRrhhStore } from '@/modules/rrhh/store/rrhhStore'
 import { useRrhhPhotoStore } from '@/modules/rrhh/store/rrhhPhotoStore'
 import { fetchRrhhDirectory } from '@/modules/rrhh/lib/connectors/bamboohr'
-import { fetchPhotoOverrides } from '@/modules/rrhh/lib/photoStorage'
+import { fetchAllPhotoPaths } from '@/modules/rrhh/lib/photoStorage'
 import { syncBambooPhotos } from '@/modules/rrhh/lib/photoSync'
 import { useRrhhAccess } from '@/modules/rrhh/lib/permissions'
 import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
@@ -104,7 +104,7 @@ export function useRrhhDirectory(): UseRrhhDirectory {
       if (canManagePhotos) {
         void syncBambooPhotos(fresh, bamboohr.subdomain).then(async (result) => {
           if (result.synced > 0) {
-            const map = await fetchPhotoOverrides()
+            const map = await fetchAllPhotoPaths()
             if (map) mergeFromCloud(map)
             toast({
               variant: 'success',

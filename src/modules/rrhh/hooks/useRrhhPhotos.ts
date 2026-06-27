@@ -17,7 +17,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRrhhPhotoStore } from '@/modules/rrhh/store/rrhhPhotoStore'
 import {
-  fetchPhotoOverrides,
+  fetchAllPhotoPaths,
   uploadEmployeePhoto,
   removeEmployeePhoto,
   createSignedPhotoUrls,
@@ -57,12 +57,14 @@ export function useRrhhPhotos(): UseRrhhPhotos {
   const signedRef = useRef(signed)
   signedRef.current = signed
 
-  // One-time cloud hydrate of the path overrides. If the fetch can't run (offline / not
+  // One-time cloud hydrate of the photo paths. Loads BOTH manual uploads and synced
+  // BambooHR photos so any photo already persisted in the DB renders from Supabase (signed
+  // URL) instead of being re-fetched from BambooHR. If the fetch can't run (offline / not
   // signed in) we keep the localStorage cache untouched and just mark hydration attempted.
   useEffect(() => {
     if (hydrated) return
     let active = true
-    void fetchPhotoOverrides().then((map) => {
+    void fetchAllPhotoPaths().then((map) => {
       if (!active) return
       if (map) mergeFromCloud(map)
       else markHydrated()

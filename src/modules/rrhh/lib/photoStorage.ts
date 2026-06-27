@@ -116,6 +116,22 @@ export async function fetchPhotoMeta(): Promise<Record<string, PhotoMeta> | null
 }
 
 /**
+ * Fetch the storage PATH of EVERY stored photo (manual uploads AND synced BambooHR photos),
+ * as `employeeId → storagePath`. This is what the avatar layer should hydrate so a photo that
+ * was already persisted in the DB (by a prior BambooHR sync) is shown from Supabase via a
+ * signed URL — instead of re-fetching it from BambooHR on every profile open.
+ * Returns `null` when unreadable (offline / not signed in) so the offline cache is preserved.
+ * Best-effort: never throws.
+ */
+export async function fetchAllPhotoPaths(): Promise<Record<string, string> | null> {
+  const meta = await fetchPhotoMeta()
+  if (!meta) return null
+  const out: Record<string, string> = {}
+  for (const [id, m] of Object.entries(meta)) out[id] = m.storagePath
+  return out
+}
+
+/**
  * Store a photo downloaded from BambooHR for `employeeId` in the private bucket and record
  * it (source='bamboohr' + the version that produced it). Used by the sync. Throws on failure
  * so the caller can count/skip. NEVER call this for an employee whose row is source='manual'
