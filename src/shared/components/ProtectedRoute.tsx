@@ -4,7 +4,9 @@ import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/shared/context/AuthContext'
 import { isSupabaseConfigured } from '@/shared/lib/supabase'
 import AccessDenied from '@/shared/components/AccessDenied'
+import { useModuleVisibilityStore } from '@/shared/store/moduleVisibilityStore'
 import type { ModuleId, PermAction } from '@/shared/types/supabase'
+import type { SuiteModuleId } from '@/shared/lib/suiteModules'
 
 interface Props {
   children: ReactNode
@@ -18,6 +20,7 @@ interface Props {
 
 export function ProtectedRoute({ children, module, action = 'view', requireSuperAdmin }: Props) {
   const { user, profile, loading, isSuperAdmin, hasModuleAccess } = useAuth()
+  const isModuleHidden = useModuleVisibilityStore((s) => s.isHidden)
 
   // If Supabase isn't configured (offline/local build), don't lock the app out.
   if (!isSupabaseConfigured) return <>{children}</>
@@ -39,6 +42,12 @@ export function ProtectedRoute({ children, module, action = 'view', requireSuper
 
   if (module && !hasModuleAccess(module, action)) {
     return <AccessDenied module={module} action={action} />
+  }
+
+  // Super-admin can hide a module from everyone. Hidden → route is unreachable; the
+  // super admin keeps access so they can still open it and toggle it back on in Settings.
+  if (module && !isSuperAdmin && isModuleHidden(module as SuiteModuleId)) {
+    return <Navigate to="/suite" replace />
   }
 
   return <>{children}</>

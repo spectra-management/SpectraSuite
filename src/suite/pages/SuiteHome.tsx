@@ -7,6 +7,7 @@ import { Button } from '@/shared/components/ui/button'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { useAuth } from '@/shared/context/AuthContext'
 import { SUITE_MODULES } from '@/shared/lib/suiteModules'
+import { useModuleVisibilityStore } from '@/shared/store/moduleVisibilityStore'
 import { MODULE_ICONS } from '@/shared/components/moduleIcons'
 import { UserMenu } from '@/shared/components/layout/UserMenu'
 import { ThemeToggle } from '@/shared/components/ThemeToggle'
@@ -28,6 +29,7 @@ export default function SuiteHome() {
   const navigate = useNavigate()
   const company = useSettingsStore((s) => s.company)
   const { user, profile, hasModuleAccess, isSuperAdmin } = useAuth()
+  const isModuleHidden = useModuleVisibilityStore((s) => s.isHidden)
   const currentLang = i18n.language.startsWith('es') ? 'es' : 'en'
 
   useEffect(() => { document.title = 'Spectra Suite' }, [])
@@ -95,7 +97,7 @@ export default function SuiteHome() {
             <p className="mt-1.5 text-sm text-emerald-50/70">{t('suite.subtitle')}</p>
 
             <div className="mt-7 flex flex-wrap gap-2.5">
-              {SUITE_MODULES.filter((m) => hasModuleAccess(m.id)).map((m) => {
+              {SUITE_MODULES.filter((m) => hasModuleAccess(m.id) && !isModuleHidden(m.id)).map((m) => {
                 const Icon = MODULE_ICONS[m.id]
                 return (
                   <button

@@ -60,7 +60,11 @@
       "primaryColor": "Color primario",
       "secondaryColor": "Color secundario",
       "managedNotice": "Los ajustes de la empresa se gestionan a nivel de la Suite.",
-      "goToSuiteSettings": "Ir a Ajustes de la Suite"
+      "goToSuiteSettings": "Ir a Ajustes de la Suite",
+      "moduleVisibility": "Visibilidad de módulos",
+      "moduleVisibilityDesc": "Muestra u oculta módulos en toda la Suite. Los módulos ocultos desaparecen del lanzador y del panel para todos. Solo el súper administrador puede cambiar esto.",
+      "moduleVisible": "Visible",
+      "moduleHidden": "Oculto"
     }
   },
   "nav": {

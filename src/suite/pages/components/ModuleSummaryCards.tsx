@@ -9,6 +9,8 @@ import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { formatCurrency } from '@/shared/lib/utils'
 import { MODULE_ICONS } from '@/shared/components/moduleIcons'
+import { useModuleVisibilityStore } from '@/shared/store/moduleVisibilityStore'
+import type { SuiteModuleId } from '@/shared/lib/suiteModules'
 
 // Module summary cards shown in the dashboard's left column — only for modules
 // the signed-in user can access.
@@ -17,8 +19,12 @@ export function ModuleSummaryCards() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { hasModuleAccess } = useAuth()
+  const isHidden = useModuleVisibilityStore((s) => s.isHidden)
   const employees = useEmployeesStore((s) => s.employees)
   const history = usePayrollStore((s) => s.history)
+
+  // A module's card shows only when the user can access it AND the super admin hasn't hidden it.
+  const visible = (id: SuiteModuleId) => hasModuleAccess(id) && !isHidden(id)
 
   const NominaIcon = MODULE_ICONS.nomina
   const activeCount = useMemo(() => employees.filter((e) => e.status === 'Active').length, [employees])
@@ -32,7 +38,7 @@ export function ModuleSummaryCards() {
   return (
     <div className="space-y-4">
       {/* Nómina — the live module, marked with an emerald ledger rule */}
-      {hasModuleAccess('nomina') && (
+      {visible('nomina') && (
         <Card className="overflow-hidden border-t-2 border-t-emerald-600">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -59,7 +65,7 @@ export function ModuleSummaryCards() {
       )}
 
       {/* RRHH — live */}
-      {hasModuleAccess('rrhh') && (
+      {visible('rrhh') && (
         <ActiveCard
           moduleId="rrhh"
           title={t('suite.modules.rrhh')}
@@ -72,17 +78,17 @@ export function ModuleSummaryCards() {
       )}
 
       {/* Facturación — live */}
-      {hasModuleAccess('facturacion') && (
+      {visible('facturacion') && (
         <ActiveCard moduleId="facturacion" title={t('suite.modules.facturacion')} path="/facturacion" stats={[]} />
       )}
 
       {/* Gastos */}
-      {hasModuleAccess('gastos') && (
+      {visible('gastos') && (
         <ComingSoonCard moduleId="gastos" title={t('suite.modules.gastos')} stats={[]} />
       )}
 
       {/* IT */}
-      {hasModuleAccess('it') && (
+      {visible('it') && (
         <ComingSoonCard moduleId="it" title={t('suite.modules.it')} stats={[]} />
       )}
     </div>

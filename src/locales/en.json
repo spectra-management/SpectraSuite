@@ -60,7 +60,11 @@
       "primaryColor": "Primary color",
       "secondaryColor": "Secondary color",
       "managedNotice": "Company settings are managed at the Suite level.",
-      "goToSuiteSettings": "Go to Suite Settings"
+      "goToSuiteSettings": "Go to Suite Settings",
+      "moduleVisibility": "Module visibility",
+      "moduleVisibilityDesc": "Show or hide modules across the whole Suite. Hidden modules disappear from the launcher and dashboard for everyone. Only the super admin can change this.",
+      "moduleVisible": "Visible",
+      "moduleHidden": "Hidden"
     }
   },
   "nav": {

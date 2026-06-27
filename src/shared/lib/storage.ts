@@ -76,4 +76,6 @@ export const STORAGE_KEYS = {
   RRHH_DOC_FOLDERS: 'rrhh_doc_folders',
   // Documentos module: the country currently selected to scope templates/documents (UI pref)
   DOCUMENTOS_COUNTRY: 'documentos_country',
+  // Suite module visibility: list of hidden module IDs (super-admin only), shared across users
+  MODULE_VISIBILITY: 'module_visibility',
 } as const
