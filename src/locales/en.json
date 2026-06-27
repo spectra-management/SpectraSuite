@@ -1525,5 +1525,36 @@
     "cardHint": "View your personal, job and compensation information.",
     "notLinkedTitle": "Your profile is not linked yet",
     "notLinkedHint": "We could not find an employee record matching your email. Please contact your administrator."
+  },
+  "news": {
+    "title": "News",
+    "navLabel": "News",
+    "empty": "No news yet.",
+    "pinned": "Pinned",
+    "manageTitle": "Manage news",
+    "manageSubtitle": "Post announcements employees see on their portal.",
+    "new": "New post",
+    "edit": "Edit post",
+    "fieldTitle": "Title",
+    "fieldBody": "Message",
+    "pin": "Pin to top",
+    "deleteTitle": "Delete post",
+    "deleteConfirm": "Delete \"{{title}}\"? This cannot be undone."
+  },
+  "rewards": {
+    "title": "Daily rewards",
+    "points": "Points",
+    "streak": "Streak",
+    "totalDays": "Total days",
+    "days": "{{count}} days",
+    "badges": "Badges",
+    "milestoneTitle": "{{count}}-day streak",
+    "hint": "Come back every day to keep your streak and earn points.",
+    "earnedToast": "+{{points}} points for logging in today!",
+    "settingsTitle": "Daily rewards",
+    "settingsDesc": "Reward employees for visiting the portal daily ({{points}} points per day, streaks and badges). Only the super admin can change this.",
+    "settingsToggle": "Enable daily rewards",
+    "stateOn": "Enabled",
+    "stateOff": "Disabled"
   }
 }

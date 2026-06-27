@@ -1525,5 +1525,36 @@
     "cardHint": "Consulta tu información personal, laboral y de compensación.",
     "notLinkedTitle": "Tu perfil aún no está vinculado",
     "notLinkedHint": "No encontramos un registro de empleado que coincida con tu correo. Contacta a tu administrador."
+  },
+  "news": {
+    "title": "Noticias",
+    "navLabel": "Noticias",
+    "empty": "Aún no hay noticias.",
+    "pinned": "Fijada",
+    "manageTitle": "Gestionar noticias",
+    "manageSubtitle": "Publica anuncios que los empleados ven en su portal.",
+    "new": "Nueva noticia",
+    "edit": "Editar noticia",
+    "fieldTitle": "Título",
+    "fieldBody": "Mensaje",
+    "pin": "Fijar arriba",
+    "deleteTitle": "Eliminar noticia",
+    "deleteConfirm": "¿Eliminar \"{{title}}\"? Esta acción no se puede deshacer."
+  },
+  "rewards": {
+    "title": "Premios diarios",
+    "points": "Puntos",
+    "streak": "Racha",
+    "totalDays": "Días totales",
+    "days": "{{count}} días",
+    "badges": "Medallas",
+    "milestoneTitle": "Racha de {{count}} días",
+    "hint": "Vuelve cada día para mantener tu racha y ganar puntos.",
+    "earnedToast": "¡+{{points}} puntos por entrar hoy!",
+    "settingsTitle": "Premios diarios",
+    "settingsDesc": "Premia a los empleados por entrar al portal cada día ({{points}} puntos por día, rachas y medallas). Solo el súper administrador puede cambiar esto.",
+    "settingsToggle": "Activar premios diarios",
+    "stateOn": "Activado",
+    "stateOff": "Desactivado"
   }
 }

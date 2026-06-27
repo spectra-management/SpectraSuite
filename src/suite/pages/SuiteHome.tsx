@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, Plug, UserCircle, ArrowRight } from 'lucide-react'
+import { Banknote, Plug, UserCircle, ArrowRight, Megaphone } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/components/ui/button'
 import { useSettingsStore } from '@/shared/store/settingsStore'
@@ -13,6 +13,8 @@ import { UserMenu } from '@/shared/components/layout/UserMenu'
 import { ThemeToggle } from '@/shared/components/ThemeToggle'
 import { Toaster } from '@/shared/components/ui/toaster'
 import { ModuleSummaryCards } from './components/ModuleSummaryCards'
+import { NewsBoard } from './components/NewsBoard'
+import { RewardsWidget } from './components/RewardsWidget'
 import { TasksWidget } from './components/TasksWidget'
 import { CalendarWidget } from './components/CalendarWidget'
 import { EmailsWidget } from './components/EmailsWidget'
@@ -59,6 +61,18 @@ export default function SuiteHome() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {isManager && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/suite/news')}
+                className="gap-1.5"
+                title={t('news.manageTitle')}
+              >
+                <Megaphone className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('news.navLabel')}</span>
+              </Button>
+            )}
             {isSuperAdmin && (
               <Button
                 variant="outline"
@@ -147,22 +161,28 @@ export default function SuiteHome() {
             </div>
           </>
         ) : (
-          /* Normal users: their Suite is essentially just their own profile. */
-          <div className="mt-8 animate-rise">
-            <button
-              type="button"
-              onClick={() => navigate('/me')}
-              className="group flex w-full max-w-md items-center gap-4 rounded-xl border border-border bg-card p-5 text-left shadow-sm transition-all hover:border-emerald-300 hover:shadow-md"
-            >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10">
-                <UserCircle className="h-6 w-6" strokeWidth={1.75} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-foreground">{t('selfProfile.cardTitle')}</span>
-                <span className="block text-xs text-muted-foreground">{t('selfProfile.cardHint')}</span>
-              </span>
-              <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-600" />
-            </button>
+          /* Normal users: profile shortcut + daily rewards + the news board. */
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="space-y-6 animate-rise">
+              <button
+                type="button"
+                onClick={() => navigate('/me')}
+                className="group flex w-full items-center gap-4 rounded-xl border border-border bg-card p-5 text-left shadow-sm transition-all hover:border-emerald-300 hover:shadow-md"
+              >
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10">
+                  <UserCircle className="h-6 w-6" strokeWidth={1.75} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-foreground">{t('selfProfile.cardTitle')}</span>
+                  <span className="block text-xs text-muted-foreground">{t('selfProfile.cardHint')}</span>
+                </span>
+                <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-600" />
+              </button>
+              <RewardsWidget />
+            </div>
+            <div className="animate-rise-2">
+              <NewsBoard />
+            </div>
           </div>
         )}
       </main>

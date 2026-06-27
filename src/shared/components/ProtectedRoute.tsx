@@ -16,10 +16,12 @@ interface Props {
   action?: PermAction
   /** Restrict to super_admin only (e.g. Suite Settings). */
   requireSuperAdmin?: boolean
+  /** Restrict to managers (super_admin or module_admin), e.g. the news manager. */
+  requireManager?: boolean
 }
 
-export function ProtectedRoute({ children, module, action = 'view', requireSuperAdmin }: Props) {
-  const { user, profile, loading, isSuperAdmin, hasModuleAccess } = useAuth()
+export function ProtectedRoute({ children, module, action = 'view', requireSuperAdmin, requireManager }: Props) {
+  const { user, profile, loading, isSuperAdmin, isManager, hasModuleAccess } = useAuth()
   const isModuleHidden = useModuleVisibilityStore((s) => s.isHidden)
 
   // If Supabase isn't configured (offline/local build), don't lock the app out.
@@ -39,6 +41,8 @@ export function ProtectedRoute({ children, module, action = 'view', requireSuper
   if (profile && profile.is_active === false) return <AccessDenied />
 
   if (requireSuperAdmin && !isSuperAdmin) return <AccessDenied />
+
+  if (requireManager && !isManager) return <AccessDenied />
 
   if (module && !hasModuleAccess(module, action)) {
     return <AccessDenied module={module} action={action} />

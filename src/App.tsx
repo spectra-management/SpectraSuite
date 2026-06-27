@@ -9,6 +9,7 @@ import AccessDenied from '@/shared/components/AccessDenied'
 import SuiteHome from '@/suite/pages/SuiteHome'
 import SuiteSettings from '@/suite/pages/SuiteSettings'
 import SuiteConnectors from '@/suite/pages/SuiteConnectors'
+import SuiteNews from '@/suite/pages/SuiteNews'
 import SelfProfile from '@/suite/pages/SelfProfile'
 import Dashboard from '@/modules/nomina/pages/Dashboard'
 import Employees from '@/modules/nomina/pages/Employees'
@@ -63,6 +64,15 @@ export default function App() {
             element={
               <ProtectedRoute requireSuperAdmin>
                 <SuiteConnectors />
+              </ProtectedRoute>
+            }
+          />
+          {/* News / announcements manager — managers only. */}
+          <Route
+            path="/suite/news"
+            element={
+              <ProtectedRoute requireManager>
+                <SuiteNews />
               </ProtectedRoute>
             }
           />

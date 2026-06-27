@@ -16,6 +16,7 @@ import { UsersPanel } from './components/UsersPanel'
 import { SecuritySettingsPanel } from './components/SecuritySettingsPanel'
 import { RolesPanel } from './components/RolesPanel'
 import { ModuleVisibilityPanel } from './components/ModuleVisibilityPanel'
+import { RewardsSettingsPanel } from './components/RewardsSettingsPanel'
 import { AuditLogPanel } from './components/AuditLogPanel'
 
 export default function SuiteSettings() {
@@ -149,6 +150,7 @@ export default function SuiteSettings() {
         {/* Super-admin only (route is already gated to super_admin) */}
         <SecuritySettingsPanel />
         <ModuleVisibilityPanel />
+        <RewardsSettingsPanel />
         <RolesPanel />
         <UsersPanel />
         <AuditLogPanel />
