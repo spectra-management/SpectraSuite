@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, Plug } from 'lucide-react'
+import { Banknote, Plug, UserCircle, ArrowRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/components/ui/button'
 import { useSettingsStore } from '@/shared/store/settingsStore'
@@ -28,7 +28,7 @@ export default function SuiteHome() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const company = useSettingsStore((s) => s.company)
-  const { user, profile, hasModuleAccess, isSuperAdmin } = useAuth()
+  const { user, profile, hasModuleAccess, isSuperAdmin, isManager } = useAuth()
   const isModuleHidden = useModuleVisibilityStore((s) => s.isHidden)
   const currentLang = i18n.language.startsWith('es') ? 'es' : 'en'
 
@@ -121,28 +121,50 @@ export default function SuiteHome() {
           </div>
         </section>
 
-        {/* 3-column dashboard grid */}
-        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="animate-rise">
-            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('suiteHome.overview')}
-            </h2>
-            <ModuleSummaryCards />
-          </div>
+        {isManager ? (
+          <>
+            {/* 3-column dashboard grid */}
+            <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="animate-rise">
+                <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t('suiteHome.overview')}
+                </h2>
+                <ModuleSummaryCards />
+              </div>
 
-          <div className="min-h-[20rem] animate-rise-2">
-            <TasksWidget />
-          </div>
+              <div className="min-h-[20rem] animate-rise-2">
+                <TasksWidget />
+              </div>
 
-          <div className="min-h-[20rem] animate-rise-3">
-            <CalendarWidget />
-          </div>
-        </div>
+              <div className="min-h-[20rem] animate-rise-3">
+                <CalendarWidget />
+              </div>
+            </div>
 
-        {/* Recent Emails — full-width inbox strip */}
-        <div className="mt-6 animate-rise-3">
-          <EmailsWidget />
-        </div>
+            {/* Recent Emails — full-width inbox strip */}
+            <div className="mt-6 animate-rise-3">
+              <EmailsWidget />
+            </div>
+          </>
+        ) : (
+          /* Normal users: their Suite is essentially just their own profile. */
+          <div className="mt-8 animate-rise">
+            <button
+              type="button"
+              onClick={() => navigate('/me')}
+              className="group flex w-full max-w-md items-center gap-4 rounded-xl border border-border bg-card p-5 text-left shadow-sm transition-all hover:border-emerald-300 hover:shadow-md"
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10">
+                <UserCircle className="h-6 w-6" strokeWidth={1.75} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">{t('selfProfile.cardTitle')}</span>
+                <span className="block text-xs text-muted-foreground">{t('selfProfile.cardHint')}</span>
+              </span>
+              <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-600" />
+            </button>
+          </div>
+        )}
       </main>
       <Toaster />
     </div>

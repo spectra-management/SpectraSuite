@@ -1518,5 +1518,12 @@
       "addComment": "Escribe un comentario",
       "delete": "Eliminar tarjeta"
     }
+  },
+  "selfProfile": {
+    "title": "Mi Perfil",
+    "cardTitle": "Mi Perfil",
+    "cardHint": "Consulta tu información personal, laboral y de compensación.",
+    "notLinkedTitle": "Tu perfil aún no está vinculado",
+    "notLinkedHint": "No encontramos un registro de empleado que coincida con tu correo. Contacta a tu administrador."
   }
 }

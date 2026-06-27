@@ -1518,5 +1518,12 @@
       "addComment": "Write a comment",
       "delete": "Delete card"
     }
+  },
+  "selfProfile": {
+    "title": "My Profile",
+    "cardTitle": "My Profile",
+    "cardHint": "View your personal, job and compensation information.",
+    "notLinkedTitle": "Your profile is not linked yet",
+    "notLinkedHint": "We could not find an employee record matching your email. Please contact your administrator."
   }
 }

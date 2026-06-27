@@ -68,6 +68,8 @@ interface AuthContextValue {
   permissions: ModulePermissionRow[]
   loading: boolean
   isSuperAdmin: boolean
+  /** True for super_admin or module_admin — the "managers" who run the whole Suite. */
+  isManager: boolean
   googleProviderToken: string | null
   /** Roles assigned to the signed-in user (new RBAC). */
   userRoles: AssignedRole[]
@@ -352,6 +354,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const isSuperAdmin = profile?.role === 'super_admin'
+  // "Managers" run the Suite (full module access). Everyone else is a normal employee who
+  // only gets the self-service profile. Mirrors the tablero_can_manage() DB definition.
+  const isManager = profile?.role === 'super_admin' || profile?.role === 'module_admin'
 
   const hasModuleAccess = useCallback(
     (module: ModuleId, action: PermAction = 'view'): boolean => {
@@ -378,6 +383,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     permissions,
     loading,
     isSuperAdmin,
+    isManager,
     googleProviderToken,
     userRoles,
     userPermissions,

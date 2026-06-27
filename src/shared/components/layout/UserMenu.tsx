@@ -68,7 +68,7 @@ export function UserMenu() {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem onSelect={() => navigate('/suite')}>
+        <DropdownMenuItem onSelect={() => navigate('/me')}>
           <UserRound className="h-4 w-4 text-muted-foreground" />
           {t('userMenu.profile')}
         </DropdownMenuItem>

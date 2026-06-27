@@ -53,19 +53,33 @@ type TabId =
   | 'notes'
   | 'documents'
 
-export default function Profile() {
-  const { id } = useParams<{ id: string }>()
+/**
+ * Employee profile. Two modes:
+ *  - Directory mode (default): an admin/manager opens any employee via /rrhh/directory/:id.
+ *  - Self-service mode (`selfMode`): a normal user views THEIR OWN profile. The record is
+ *    passed in (`selfEmployee`, adapted from the DB), they always see their own sensitive
+ *    data, can't edit the photo, and the Notes & Documents tabs are hidden.
+ */
+export default function Profile({
+  selfMode = false,
+  selfEmployee,
+}: { selfMode?: boolean; selfEmployee?: RrhhEmployee } = {}) {
+  const { id: paramId } = useParams<{ id: string }>()
   const { t } = useTranslation()
   const { employees, connected } = useRrhhDirectory()
   const { timeOff } = useRrhhTimeOff()
-  const { canViewSensitive, canManagePhotos } = useRrhhAccess()
+  const access = useRrhhAccess()
+  // Self-service: always sees own sensitive data; never edits the photo.
+  const canViewSensitive = selfMode ? true : access.canViewSensitive
+  const canManagePhotos = selfMode ? false : access.canManagePhotos
   const bamboohr = useSettingsStore((s) => s.bamboohr)
 
   const [activeTab, setActiveTab] = useState<TabId>('personal')
 
+  const id = selfMode ? selfEmployee?.id : paramId
   const employee: RrhhEmployee | undefined = useMemo(
-    () => employees.find((e) => e.id === id),
-    [employees, id],
+    () => (selfMode ? selfEmployee : employees.find((e) => e.id === paramId)),
+    [selfMode, selfEmployee, employees, paramId],
   )
   const directReports = useMemo(
     () => (id ? employees.filter((e) => e.supervisorId === id).length : 0),
@@ -74,15 +88,15 @@ export default function Profile() {
 
   const backButton = (
     <Button variant="ghost" size="sm" asChild>
-      <Link to="/rrhh/directory">
+      <Link to={selfMode ? '/suite' : '/rrhh/directory'}>
         <ArrowLeft className="mr-1 h-4 w-4" />
-        {t('rrhh.common.back')}
+        {selfMode ? t('suite.backToSuite') : t('rrhh.common.back')}
       </Link>
     </Button>
   )
 
-  // Not connected and nothing cached: surface the connect prompt.
-  if (!connected && employees.length === 0) {
+  // Not connected and nothing cached: surface the connect prompt (directory mode only).
+  if (!selfMode && !connected && employees.length === 0) {
     return (
       <div className="space-y-6">
         <div>{backButton}</div>
@@ -108,6 +122,8 @@ export default function Profile() {
   const photoSrc = buildPhotoProxyUrl(bamboohr.subdomain, employee.id, 'large')
 
   // Tab set — sensitive tabs (Compensation, Documents) are hidden entirely without access.
+  // In self-service mode the employee sees everything about themselves EXCEPT Notes &
+  // Documents, which are intentionally withheld from the self view.
   const tabs: RrhhTab[] = [
     { id: 'personal', label: t('rrhh.profile.tabs.personal'), icon: User },
     { id: 'job', label: t('rrhh.profile.tabs.job'), icon: Briefcase },
@@ -117,8 +133,8 @@ export default function Profile() {
       : []),
     { id: 'timeOff', label: t('rrhh.profile.tabs.timeOff'), icon: CalendarDays },
     { id: 'emergency', label: t('rrhh.profile.tabs.emergency'), icon: Phone },
-    { id: 'notes', label: t('rrhh.profile.tabs.notes'), icon: StickyNote },
-    ...(canViewSensitive
+    ...(selfMode ? [] : [{ id: 'notes', label: t('rrhh.profile.tabs.notes'), icon: StickyNote }]),
+    ...(canViewSensitive && !selfMode
       ? [{ id: 'documents', label: t('rrhh.profile.tabs.documents'), icon: Files }]
       : []),
   ]
@@ -168,7 +184,7 @@ export default function Profile() {
       )}
       {effectiveTab === 'job' && <JobTab employee={employee} directReports={directReports} />}
       {effectiveTab === 'baseballCard' && (
-        <BaseballCardTab employee={employee} canEdit={canViewSensitive} photoSrc={photoSrc} />
+        <BaseballCardTab employee={employee} canEdit={canViewSensitive && !selfMode} photoSrc={photoSrc} />
       )}
       {effectiveTab === 'compensation' &&
         (canViewSensitive ? (

@@ -9,6 +9,7 @@ import AccessDenied from '@/shared/components/AccessDenied'
 import SuiteHome from '@/suite/pages/SuiteHome'
 import SuiteSettings from '@/suite/pages/SuiteSettings'
 import SuiteConnectors from '@/suite/pages/SuiteConnectors'
+import SelfProfile from '@/suite/pages/SelfProfile'
 import Dashboard from '@/modules/nomina/pages/Dashboard'
 import Employees from '@/modules/nomina/pages/Employees'
 import EmployeeProfile from '@/modules/nomina/pages/Employees/EmployeeProfile'
@@ -62,6 +63,15 @@ export default function App() {
             element={
               <ProtectedRoute requireSuperAdmin>
                 <SuiteConnectors />
+              </ProtectedRoute>
+            }
+          />
+          {/* Employee self-service profile — any signed-in user (managers and normal users). */}
+          <Route
+            path="/me"
+            element={
+              <ProtectedRoute>
+                <SelfProfile />
               </ProtectedRoute>
             }
           />
