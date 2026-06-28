@@ -30,7 +30,6 @@ interface Props {
 }
 
 export function StepApprove({ startDate, endDate, frequency, country, entries, totals, reopenId, onBack }: Props) {
-  const isDR = country.toLowerCase().includes('dominican')
   const { t, i18n } = useTranslation()
   const addPayroll = usePayrollStore((s) => s.addPayroll)
   const updatePayroll = usePayrollStore((s) => s.updatePayroll)
@@ -209,7 +208,7 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
               <span className="font-semibold text-foreground">{t('dashboard.totalNet')}</span>
               <span className="text-right">
                 <span className="block text-xl font-bold text-emerald-700">{formatCurrency(totals.totalNet, country)}</span>
-                {isDR && <UsdAmount dop={totals.totalNet} className="block" />}
+                <UsdAmount amount={totals.totalNet} country={country} className="block" />
               </span>
             </div>
           </div>

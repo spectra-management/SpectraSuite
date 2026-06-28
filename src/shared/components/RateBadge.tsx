@@ -3,19 +3,27 @@ import { useTranslation } from 'react-i18next'
 import { TrendingUp, Loader2 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useExchangeRateStore } from '@/shared/store/exchangeRateStore'
+import { currencyForCountry } from '@/shared/lib/utils/currency'
 
 /**
- * Small "rate of the day" badge for a corner of the screen. Shows the live USD -> DOP rate
- * and refreshes it once per day. Reads the shared exchange-rate cache.
+ * "Rate of the day" badge for a corner of the screen: the live FX rate for a country's
+ * currency vs USD, refreshed once per day. Pass the country being processed; with no country
+ * it defaults to the Dominican peso (the home market). Renders nothing for USD countries
+ * (no conversion needed).
  */
-export function RateBadge({ className }: { className?: string }) {
+export function RateBadge({ country, className }: { country?: string | null; className?: string }) {
   const { t, i18n } = useTranslation()
   const cache = useExchangeRateStore((s) => s.cache)
   const loading = useExchangeRateStore((s) => s.loading)
+  const rateFor = useExchangeRateStore((s) => s.rateFor)
   const ensureFresh = useExchangeRateStore((s) => s.ensureFresh)
 
   useEffect(() => { void ensureFresh() }, [ensureFresh])
 
+  const cur = currencyForCountry(country ?? 'Dominican Republic')
+  if (cur.code === 'USD') return null // home payroll already in USD
+
+  const rate = rateFor(cur.code)
   const fmtRate = (n: number) =>
     n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const fmtDate = (iso: string) =>
@@ -30,10 +38,10 @@ export function RateBadge({ className }: { className?: string }) {
         <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
         {t('rate.badgeLabel')}
       </div>
-      {cache ? (
+      {cache && rate ? (
         <>
           <p className="text-figure text-sm font-bold text-foreground">
-            RD$ {fmtRate(cache.rate)} <span className="text-xs font-normal text-muted-foreground">/ USD</span>
+            {cur.symbol} {fmtRate(rate)} <span className="text-xs font-normal text-muted-foreground">/ USD</span>
           </p>
           <p className="text-[10px] text-muted-foreground">
             {fmtDate(cache.date)} · {cache.source}

@@ -1,43 +1,47 @@
 import { create } from 'zustand'
 import { storage, STORAGE_KEYS } from '@/shared/lib/storage'
 import { saveAppState, fetchAppState } from '@/shared/lib/cloudSync'
-import { fetchUsdToDop, todayLocal, type ExchangeRate } from '@/shared/lib/exchangeRate'
+import { fetchRates, todayLocal, type RatesSnapshot } from '@/shared/lib/exchangeRate'
 
 /**
- * Daily USD -> DOP exchange-rate cache.
+ * Daily foreign-exchange cache (all payroll currencies vs USD).
  *
- * The rate is fetched live (open.er-api.com, exchangerate.host fallback) at most once per
+ * Rates are fetched live (open.er-api.com, exchangerate.host fallback) at most once per
  * calendar day and cached in localStorage + the shared `app_state` row so every user sees
- * the same daily rate. `ensureFresh()` is safe to call often: it only hits the network when
- * the cached rate is from a previous day (or missing).
+ * the same daily rates. `ensureFresh()` is safe to call often: it only hits the network when
+ * the cached snapshot is from a previous day (or missing).
  */
 interface ExchangeRateState {
-  cache: ExchangeRate | null
+  cache: RatesSnapshot | null
   /** True while a live fetch is in flight. */
   loading: boolean
-  /** DOP per 1 USD, or null if never fetched. */
-  rate: () => number | null
-  /** Convert a peso (DOP) amount to USD, or null when no rate is known. */
-  toUsd: (dop: number) => number | null
-  /** Pull the shared cached rate from the DB (call on login). */
+  /** Units of `code` per 1 USD (e.g. 'DOP' -> ~59), or null if unknown. */
+  rateFor: (code: string) => number | null
+  /** Convert an amount in `code` to USD, or null when the rate is unknown. */
+  toUsd: (amount: number, code: string) => number | null
+  /** Pull the shared cached snapshot from the DB (call on login). */
   hydrate: () => Promise<void>
-  /** Fetch today's rate if the cache is stale/missing; persists locally + to the cloud. */
+  /** Fetch today's rates if the cache is stale/missing; persists locally + to the cloud. */
   ensureFresh: () => Promise<void>
 }
 
 export const useExchangeRateStore = create<ExchangeRateState>((set, get) => ({
-  cache: storage.get<ExchangeRate>(STORAGE_KEYS.EXCHANGE_RATE),
+  cache: storage.get<RatesSnapshot>(STORAGE_KEYS.EXCHANGE_RATE),
   loading: false,
 
-  rate: () => get().cache?.rate ?? null,
-  toUsd: (dop) => {
-    const r = get().cache?.rate
-    return r && r > 0 ? dop / r : null
+  rateFor: (code) => {
+    const r = get().cache?.rates?.[code]
+    return typeof r === 'number' && r > 0 ? r : null
+  },
+  toUsd: (amount, code) => {
+    if (code === 'USD') return amount
+    const r = get().cache?.rates?.[code]
+    return typeof r === 'number' && r > 0 ? amount / r : null
   },
 
   hydrate: async () => {
-    const cloud = await fetchAppState<ExchangeRate>(STORAGE_KEYS.EXCHANGE_RATE)
-    if (cloud && cloud.rate > 0) {
+    const cloud = await fetchAppState<RatesSnapshot>(STORAGE_KEYS.EXCHANGE_RATE)
+    if (cloud && cloud.rates && Object.keys(cloud.rates).length > 0) {
       set({ cache: cloud })
       storage.set(STORAGE_KEYS.EXCHANGE_RATE, cloud)
     }
@@ -46,11 +50,11 @@ export const useExchangeRateStore = create<ExchangeRateState>((set, get) => ({
 
   ensureFresh: async () => {
     const cache = get().cache
-    if (cache && cache.date === todayLocal()) return // already today's rate
+    if (cache && cache.date === todayLocal()) return // already today's rates
     if (get().loading) return
     set({ loading: true })
     try {
-      const fresh = await fetchUsdToDop()
+      const fresh = await fetchRates()
       if (fresh) {
         set({ cache: fresh })
         storage.set(STORAGE_KEYS.EXCHANGE_RATE, fresh)

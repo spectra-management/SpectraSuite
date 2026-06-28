@@ -187,10 +187,12 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
                   <div>
                     <p className="text-muted-foreground">{t('payroll.calculate.grossPay')}</p>
                     <p className="text-figure font-bold text-foreground">{formatCurrency(c.gross, c.country)}</p>
+                    <UsdAmount amount={c.gross} country={c.country} className="block" />
                   </div>
                   <div>
                     <p className="text-muted-foreground">{t('payroll.calculate.netPay')}</p>
                     <p className="text-figure font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(c.net, c.country)}</p>
+                    <UsdAmount amount={c.net} country={c.country} className="block" />
                   </div>
                 </div>
               </div>
@@ -199,10 +201,10 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryCard label={t('payroll.calculate.grossPay')} value={formatCurrency(totals.totalGross, country)} color="text-foreground" subDop={isDR ? totals.totalGross : undefined} />
-          <SummaryCard label={t('payroll.calculate.tss')} value={formatCurrency(totals.totalTss, country)} color="text-orange-600" subDop={isDR ? totals.totalTss : undefined} />
-          <SummaryCard label={t('payroll.calculate.isr')} value={formatCurrency(totals.totalIsr, country)} color="text-red-600" subDop={isDR ? totals.totalIsr : undefined} />
-          <SummaryCard label={t('payroll.calculate.netPay')} value={formatCurrency(totals.totalNet, country)} color="text-emerald-700" highlight subDop={isDR ? totals.totalNet : undefined} />
+          <SummaryCard label={t('payroll.calculate.grossPay')} value={formatCurrency(totals.totalGross, country)} color="text-foreground" subAmount={totals.totalGross} subCountry={country} />
+          <SummaryCard label={t('payroll.calculate.tss')} value={formatCurrency(totals.totalTss, country)} color="text-orange-600" subAmount={totals.totalTss} subCountry={country} />
+          <SummaryCard label={t('payroll.calculate.isr')} value={formatCurrency(totals.totalIsr, country)} color="text-red-600" subAmount={totals.totalIsr} subCountry={country} />
+          <SummaryCard label={t('payroll.calculate.netPay')} value={formatCurrency(totals.totalNet, country)} color="text-emerald-700" highlight subAmount={totals.totalNet} subCountry={country} />
         </div>
       )}
 
@@ -312,12 +314,12 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
   )
 }
 
-function SummaryCard({ label, value, color, highlight, subDop }: { label: string; value: string; color: string; highlight?: boolean; subDop?: number }) {
+function SummaryCard({ label, value, color, highlight, subAmount, subCountry }: { label: string; value: string; color: string; highlight?: boolean; subAmount?: number; subCountry?: string }) {
   return (
     <div className={`rounded-xl border p-4 ${highlight ? 'border-emerald-200 bg-emerald-50' : 'border-border bg-card'}`}>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className={`mt-1 text-lg font-bold ${color}`}>{value}</p>
-      {subDop !== undefined && <UsdAmount dop={subDop} className="mt-0.5 block" />}
+      {subAmount !== undefined && <UsdAmount amount={subAmount} country={subCountry} className="mt-0.5 block" />}
     </div>
   )
 }

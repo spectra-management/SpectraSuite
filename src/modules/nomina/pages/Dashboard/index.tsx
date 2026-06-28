@@ -15,7 +15,8 @@ import { Button } from '@/shared/components/ui/button'
 import { Badge } from '@/shared/components/ui/badge'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { useEmployeesStore } from '@/shared/store/employeesStore'
-import { formatCurrency, formatDate } from '@/shared/lib/utils'
+import { formatDate } from '@/shared/lib/utils'
+import { formatCurrency } from '@/shared/lib/utils/currency'
 import { UsdAmount } from '@/shared/components/UsdAmount'
 import { RateBadge } from '@/shared/components/RateBadge'
 
@@ -23,13 +24,14 @@ interface StatCardProps {
   title: string
   value: string
   sub?: string
-  subDop?: number
+  subAmount?: number
+  subCountry?: string
   icon: React.ComponentType<{ className?: string }>
   colorClass: string
   bgClass: string
 }
 
-function StatCard({ title, value, sub, subDop, icon: Icon, colorClass, bgClass }: StatCardProps) {
+function StatCard({ title, value, sub, subAmount, subCountry, icon: Icon, colorClass, bgClass }: StatCardProps) {
   return (
     <Card>
       <CardContent className="p-6">
@@ -37,7 +39,7 @@ function StatCard({ title, value, sub, subDop, icon: Icon, colorClass, bgClass }
           <div>
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
-            {subDop !== undefined && <UsdAmount dop={subDop} className="mt-0.5 block" />}
+            {subAmount !== undefined && <UsdAmount amount={subAmount} country={subCountry} className="mt-0.5 block" />}
             {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
           </div>
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bgClass}`}>
@@ -99,24 +101,27 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title={t('dashboard.totalGross')}
-              value={formatCurrency(lastPayroll.totals.totalGross)}
-              subDop={lastPayroll.totals.totalGross}
+              value={formatCurrency(lastPayroll.totals.totalGross, lastPayroll.country)}
+              subAmount={lastPayroll.totals.totalGross}
+              subCountry={lastPayroll.country}
               icon={DollarSign}
               colorClass="text-emerald-600"
               bgClass="bg-emerald-50"
             />
             <StatCard
               title={t('dashboard.totalDeductions')}
-              value={formatCurrency(lastPayroll.totals.totalDeductions)}
-              subDop={lastPayroll.totals.totalDeductions}
+              value={formatCurrency(lastPayroll.totals.totalDeductions, lastPayroll.country)}
+              subAmount={lastPayroll.totals.totalDeductions}
+              subCountry={lastPayroll.country}
               icon={TrendingDown}
               colorClass="text-red-500"
               bgClass="bg-red-50"
             />
             <StatCard
               title={t('dashboard.totalNet')}
-              value={formatCurrency(lastPayroll.totals.totalNet)}
-              subDop={lastPayroll.totals.totalNet}
+              value={formatCurrency(lastPayroll.totals.totalNet, lastPayroll.country)}
+              subAmount={lastPayroll.totals.totalNet}
+              subCountry={lastPayroll.country}
               icon={TrendingUp}
               colorClass="text-blue-500"
               bgClass="bg-blue-50"
@@ -180,8 +185,9 @@ export default function Dashboard() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-emerald-700">
-                          {formatCurrency(p.totals.totalNet)}
+                          {formatCurrency(p.totals.totalNet, p.country)}
                         </p>
+                        <UsdAmount amount={p.totals.totalNet} country={p.country} className="block" />
                         <Badge variant="secondary" className="text-xs">
                           {t(`history.status.${p.status}`)}
                         </Badge>

@@ -16,7 +16,8 @@ import { useBankAccountsStore } from '@/shared/store/bankAccountsStore'
 import { toast } from '@/shared/hooks/useToast'
 import { logAuditEvent } from '@/shared/lib/audit'
 import { useAuth } from '@/shared/context/AuthContext'
-import { formatCurrency, formatDate } from '@/shared/lib/utils'
+import { formatDate } from '@/shared/lib/utils'
+import { formatCurrency } from '@/shared/lib/utils/currency'
 import { UsdAmount } from '@/shared/components/UsdAmount'
 import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/modules/nomina/lib/pdf/generatePdf'
 import { generatePayrollCSV, downloadCSV } from '@/modules/nomina/lib/pdf/generateCsv'
@@ -324,12 +325,12 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
         </td>
         <td className="px-6 py-4 text-right text-muted-foreground">{payroll.totals.employeeCount}</td>
         <td className="px-6 py-4 text-right font-medium text-foreground">
-          {formatCurrency(payroll.totals.totalGross)}
-          <UsdAmount dop={payroll.totals.totalGross} className="mt-0.5 block" />
+          {formatCurrency(payroll.totals.totalGross, payroll.country)}
+          <UsdAmount amount={payroll.totals.totalGross} country={payroll.country} className="mt-0.5 block" />
         </td>
         <td className="px-6 py-4 text-right font-semibold text-emerald-700">
-          {formatCurrency(payroll.totals.totalNet)}
-          <UsdAmount dop={payroll.totals.totalNet} className="mt-0.5 block" />
+          {formatCurrency(payroll.totals.totalNet, payroll.country)}
+          <UsdAmount amount={payroll.totals.totalNet} country={payroll.country} className="mt-0.5 block" />
         </td>
         <td className="px-6 py-4">
           <Badge variant={statusVariant(payroll.status)}>
@@ -401,9 +402,9 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
                           <span className="block text-muted-foreground font-normal">{entry.employee.workEmail}</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right text-muted-foreground">{formatCurrency(entry.calculation.grossPay)}</td>
-                      <td className="px-4 py-2.5 text-right text-red-600">{formatCurrency(entry.calculation.totalDeductions)}</td>
-                      <td className="px-4 py-2.5 text-right font-bold text-emerald-700">{formatCurrency(entry.calculation.netPay)}</td>
+                      <td className="px-4 py-2.5 text-right text-muted-foreground">{formatCurrency(entry.calculation.grossPay, payroll.country)}</td>
+                      <td className="px-4 py-2.5 text-right text-red-600">{formatCurrency(entry.calculation.totalDeductions, payroll.country)}</td>
+                      <td className="px-4 py-2.5 text-right font-bold text-emerald-700">{formatCurrency(entry.calculation.netPay, payroll.country)}</td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-1 justify-end">
                           <Button variant="ghost" size="sm" onClick={() => handleDownloadPdf(idx)} className="h-6 text-xs px-2">
