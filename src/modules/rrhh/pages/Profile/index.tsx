@@ -180,7 +180,7 @@ export default function Profile({
 
       {/* Tab content (each tab owns its own loading/error state). */}
       {effectiveTab === 'personal' && (
-        <PersonalTab employee={employee} canViewSensitive={canViewSensitive} />
+        <PersonalTab employee={employee} canViewSensitive={canViewSensitive} showTaxExemption={!selfMode} />
       )}
       {effectiveTab === 'job' && <JobTab employee={employee} directReports={directReports} />}
       {effectiveTab === 'baseballCard' && (

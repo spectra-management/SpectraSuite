@@ -12,13 +12,12 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
-// Resolve the initial theme: explicit localStorage choice wins, else the OS
-// preference. Mirrors the inline no-flash script in index.html.
+// Resolve the initial theme: an explicit localStorage choice wins, otherwise default to
+// LIGHT (the OS preference is intentionally ignored). Mirrors the inline no-flash script
+// in index.html.
 function initialTheme(): Theme {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === 'light' || stored === 'dark') return stored
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    return localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
   } catch {
     return 'light'
   }
@@ -36,16 +35,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(theme)
     try { localStorage.setItem(STORAGE_KEY, theme) } catch { /* ignore */ }
   }, [theme])
-
-  // Follow OS changes only while the user hasn't made an explicit choice.
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const onChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem(STORAGE_KEY)) setThemeState(e.matches ? 'dark' : 'light')
-    }
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
 
   const setTheme = useCallback((t: Theme) => setThemeState(t), [])
   const toggleTheme = useCallback(() => setThemeState((t) => (t === 'dark' ? 'light' : 'dark')), [])

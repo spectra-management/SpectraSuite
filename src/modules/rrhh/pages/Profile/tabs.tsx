@@ -95,9 +95,12 @@ export function RestrictedCard() {
 export function PersonalTab({
   employee,
   canViewSensitive,
+  showTaxExemption = true,
 }: {
   employee: RrhhEmployee
   canViewSensitive: boolean
+  /** Tax-exemption is an admin/payroll control — hidden in the employee self-service view. */
+  showTaxExemption?: boolean
 }) {
   const { t } = useTranslation()
   return (
@@ -141,9 +144,11 @@ export function PersonalTab({
         </dl>
       </SectionCard>
 
-      <SectionCard title={t('taxExemption.title')}>
-        <TaxExemptionControl employeeId={employee.id} canEdit={canViewSensitive} />
-      </SectionCard>
+      {showTaxExemption && (
+        <SectionCard title={t('taxExemption.title')}>
+          <TaxExemptionControl employeeId={employee.id} canEdit={canViewSensitive} />
+        </SectionCard>
+      )}
     </div>
   )
 }
