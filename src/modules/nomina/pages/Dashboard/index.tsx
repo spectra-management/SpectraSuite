@@ -16,17 +16,20 @@ import { Badge } from '@/shared/components/ui/badge'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
+import { UsdAmount } from '@/shared/components/UsdAmount'
+import { RateBadge } from '@/shared/components/RateBadge'
 
 interface StatCardProps {
   title: string
   value: string
   sub?: string
+  subDop?: number
   icon: React.ComponentType<{ className?: string }>
   colorClass: string
   bgClass: string
 }
 
-function StatCard({ title, value, sub, icon: Icon, colorClass, bgClass }: StatCardProps) {
+function StatCard({ title, value, sub, subDop, icon: Icon, colorClass, bgClass }: StatCardProps) {
   return (
     <Card>
       <CardContent className="p-6">
@@ -34,6 +37,7 @@ function StatCard({ title, value, sub, icon: Icon, colorClass, bgClass }: StatCa
           <div>
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
+            {subDop !== undefined && <UsdAmount dop={subDop} className="mt-0.5 block" />}
             {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
           </div>
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bgClass}`}>
@@ -82,9 +86,12 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('dashboard.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{t('dashboard.title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
+        </div>
+        <RateBadge className="shrink-0" />
       </div>
 
       {lastPayroll ? (
@@ -93,7 +100,7 @@ export default function Dashboard() {
             <StatCard
               title={t('dashboard.totalGross')}
               value={formatCurrency(lastPayroll.totals.totalGross)}
-              sub={t('dashboard.lastPeriod')}
+              subDop={lastPayroll.totals.totalGross}
               icon={DollarSign}
               colorClass="text-emerald-600"
               bgClass="bg-emerald-50"
@@ -101,7 +108,7 @@ export default function Dashboard() {
             <StatCard
               title={t('dashboard.totalDeductions')}
               value={formatCurrency(lastPayroll.totals.totalDeductions)}
-              sub={t('dashboard.lastPeriod')}
+              subDop={lastPayroll.totals.totalDeductions}
               icon={TrendingDown}
               colorClass="text-red-500"
               bgClass="bg-red-50"
@@ -109,7 +116,7 @@ export default function Dashboard() {
             <StatCard
               title={t('dashboard.totalNet')}
               value={formatCurrency(lastPayroll.totals.totalNet)}
-              sub={t('dashboard.lastPeriod')}
+              subDop={lastPayroll.totals.totalNet}
               icon={TrendingUp}
               colorClass="text-blue-500"
               bgClass="bg-blue-50"

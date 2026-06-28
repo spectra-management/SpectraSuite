@@ -80,4 +80,6 @@ export const STORAGE_KEYS = {
   MODULE_VISIBILITY: 'module_visibility',
   // Daily-rewards system on/off (super-admin only), shared across users
   REWARDS_ENABLED: 'rewards_enabled',
+  // Cached daily USD->DOP exchange rate (live, refreshed daily), shared across users
+  EXCHANGE_RATE: 'exchange_rate_usd_dop',
 } as const

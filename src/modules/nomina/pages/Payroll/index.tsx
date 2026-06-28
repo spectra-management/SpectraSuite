@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { usePayrollStore } from '@/shared/store/payrollStore'
+import { RateBadge } from '@/shared/components/RateBadge'
 import { PayrollStepper } from './components/PayrollStepper'
 import { StepPeriod } from './components/StepPeriod'
 import { StepHours } from './components/StepHours'
@@ -66,9 +67,12 @@ export default function Payroll() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('payroll.title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('payroll.subtitle')}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{t('payroll.title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('payroll.subtitle')}</p>
+        </div>
+        <RateBadge className="shrink-0" />
       </div>
 
       <PayrollStepper steps={steps} currentStep={step} />

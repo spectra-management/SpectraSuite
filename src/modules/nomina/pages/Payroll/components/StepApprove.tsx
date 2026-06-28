@@ -12,6 +12,7 @@ import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrSto
 import { toast } from '@/shared/hooks/useToast'
 import { logAuditEvent } from '@/shared/lib/audit'
 import { formatCurrency } from '@/shared/lib/utils/currency'
+import { UsdAmount } from '@/shared/components/UsdAmount'
 import { generatePdfBlob, downloadBlob } from '@/modules/nomina/lib/pdf/generatePdf'
 import { generatePayrollCSV, downloadCSV } from '@/modules/nomina/lib/pdf/generateCsv'
 import type { PayrollEntry, PayrollTotals } from '@/shared/types'
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export function StepApprove({ startDate, endDate, frequency, country, entries, totals, reopenId, onBack }: Props) {
+  const isDR = country.toLowerCase().includes('dominican')
   const { t, i18n } = useTranslation()
   const addPayroll = usePayrollStore((s) => s.addPayroll)
   const updatePayroll = usePayrollStore((s) => s.updatePayroll)
@@ -205,7 +207,10 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
             <div className="h-px bg-muted" />
             <div className="flex items-center justify-between">
               <span className="font-semibold text-foreground">{t('dashboard.totalNet')}</span>
-              <span className="text-xl font-bold text-emerald-700">{formatCurrency(totals.totalNet, country)}</span>
+              <span className="text-right">
+                <span className="block text-xl font-bold text-emerald-700">{formatCurrency(totals.totalNet, country)}</span>
+                {isDR && <UsdAmount dop={totals.totalNet} className="block" />}
+              </span>
             </div>
           </div>
 

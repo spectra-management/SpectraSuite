@@ -1562,5 +1562,9 @@
     "settingsToggle": "Enable daily rewards",
     "stateOn": "Enabled",
     "stateOff": "Disabled"
+  },
+  "rate": {
+    "badgeLabel": "Rate of the day",
+    "unavailable": "Rate unavailable"
   }
 }

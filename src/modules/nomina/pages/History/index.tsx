@@ -17,6 +17,7 @@ import { toast } from '@/shared/hooks/useToast'
 import { logAuditEvent } from '@/shared/lib/audit'
 import { useAuth } from '@/shared/context/AuthContext'
 import { formatCurrency, formatDate } from '@/shared/lib/utils'
+import { UsdAmount } from '@/shared/components/UsdAmount'
 import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/modules/nomina/lib/pdf/generatePdf'
 import { generatePayrollCSV, downloadCSV } from '@/modules/nomina/lib/pdf/generateCsv'
 import type { PayrollPeriod, SendResult, CompanySettings, EmailTemplate } from '@/shared/types'
@@ -322,8 +323,14 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
           {payroll.processedDate ? formatDate(payroll.processedDate) : '—'}
         </td>
         <td className="px-6 py-4 text-right text-muted-foreground">{payroll.totals.employeeCount}</td>
-        <td className="px-6 py-4 text-right font-medium text-foreground">{formatCurrency(payroll.totals.totalGross)}</td>
-        <td className="px-6 py-4 text-right font-semibold text-emerald-700">{formatCurrency(payroll.totals.totalNet)}</td>
+        <td className="px-6 py-4 text-right font-medium text-foreground">
+          {formatCurrency(payroll.totals.totalGross)}
+          <UsdAmount dop={payroll.totals.totalGross} className="mt-0.5 block" />
+        </td>
+        <td className="px-6 py-4 text-right font-semibold text-emerald-700">
+          {formatCurrency(payroll.totals.totalNet)}
+          <UsdAmount dop={payroll.totals.totalNet} className="mt-0.5 block" />
+        </td>
         <td className="px-6 py-4">
           <Badge variant={statusVariant(payroll.status)}>
             {t(`history.status.${payroll.status}`)}

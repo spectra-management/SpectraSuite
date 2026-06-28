@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Calculator } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
+import { UsdAmount } from '@/shared/components/UsdAmount'
 import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
@@ -198,10 +199,10 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryCard label={t('payroll.calculate.grossPay')} value={formatCurrency(totals.totalGross, country)} color="text-foreground" />
-          <SummaryCard label={t('payroll.calculate.tss')} value={formatCurrency(totals.totalTss, country)} color="text-orange-600" />
-          <SummaryCard label={t('payroll.calculate.isr')} value={formatCurrency(totals.totalIsr, country)} color="text-red-600" />
-          <SummaryCard label={t('payroll.calculate.netPay')} value={formatCurrency(totals.totalNet, country)} color="text-emerald-700" highlight />
+          <SummaryCard label={t('payroll.calculate.grossPay')} value={formatCurrency(totals.totalGross, country)} color="text-foreground" subDop={isDR ? totals.totalGross : undefined} />
+          <SummaryCard label={t('payroll.calculate.tss')} value={formatCurrency(totals.totalTss, country)} color="text-orange-600" subDop={isDR ? totals.totalTss : undefined} />
+          <SummaryCard label={t('payroll.calculate.isr')} value={formatCurrency(totals.totalIsr, country)} color="text-red-600" subDop={isDR ? totals.totalIsr : undefined} />
+          <SummaryCard label={t('payroll.calculate.netPay')} value={formatCurrency(totals.totalNet, country)} color="text-emerald-700" highlight subDop={isDR ? totals.totalNet : undefined} />
         </div>
       )}
 
@@ -311,11 +312,12 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
   )
 }
 
-function SummaryCard({ label, value, color, highlight }: { label: string; value: string; color: string; highlight?: boolean }) {
+function SummaryCard({ label, value, color, highlight, subDop }: { label: string; value: string; color: string; highlight?: boolean; subDop?: number }) {
   return (
     <div className={`rounded-xl border p-4 ${highlight ? 'border-emerald-200 bg-emerald-50' : 'border-border bg-card'}`}>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className={`mt-1 text-lg font-bold ${color}`}>{value}</p>
+      {subDop !== undefined && <UsdAmount dop={subDop} className="mt-0.5 block" />}
     </div>
   )
 }

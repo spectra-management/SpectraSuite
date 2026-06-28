@@ -1562,5 +1562,9 @@
     "settingsToggle": "Activar premios diarios",
     "stateOn": "Activado",
     "stateOff": "Desactivado"
+  },
+  "rate": {
+    "badgeLabel": "Tasa del día",
+    "unavailable": "Tasa no disponible"
   }
 }

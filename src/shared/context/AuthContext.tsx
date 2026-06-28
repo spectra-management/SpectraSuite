@@ -11,6 +11,7 @@ import { useBaseballCardStore } from '@/shared/store/baseballCardStore'
 import { useCountryFiscalStore } from '@/shared/store/countryFiscalStore'
 import { useModuleVisibilityStore } from '@/shared/store/moduleVisibilityStore'
 import { useRewardsStore } from '@/shared/store/rewardsStore'
+import { useExchangeRateStore } from '@/shared/store/exchangeRateStore'
 import { logAuditEvent } from '@/shared/lib/audit'
 import { clearAuthSessionKeys } from '@/shared/lib/sessionReset'
 import { SessionTimeoutModal } from '@/shared/components/SessionTimeoutModal'
@@ -241,6 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void useCountryFiscalStore.getState().hydrateFromCloud()
         void useModuleVisibilityStore.getState().hydrateFromCloud()
         void useRewardsStore.getState().hydrateEnabled()
+        void useExchangeRateStore.getState().hydrate()
         // Load the configured inactivity timeout (company_settings is publicly readable).
         void supabase
           .from('company_settings')

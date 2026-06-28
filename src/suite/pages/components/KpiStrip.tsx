@@ -5,6 +5,7 @@ import { Users, Wallet, Building2, FileClock, type LucideIcon } from 'lucide-rea
 import { Card } from '@/shared/components/ui/card'
 import { cn } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/lib/utils'
+import { UsdAmount } from '@/shared/components/UsdAmount'
 import { useAuth } from '@/shared/context/AuthContext'
 import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
@@ -18,6 +19,8 @@ interface Kpi {
   icon: LucideIcon
   to?: string
   module?: 'nomina' | 'rrhh' | 'facturacion'
+  /** Peso amount to also show as a USD equivalent under the value. */
+  subDop?: number
 }
 
 /**
@@ -52,7 +55,7 @@ export function KpiStrip() {
 
   const kpis: Kpi[] = [
     { key: 'employees', label: t('suiteHome.kpi.activeEmployees'), value: String(activeCount), icon: Users, to: '/rrhh/directory', module: 'rrhh' },
-    { key: 'payroll', label: t('suiteHome.kpi.lastPayroll'), value: lastRun ? formatCurrency(lastRun.totals.totalNet) : '—', icon: Wallet, to: '/nomina/history', module: 'nomina' },
+    { key: 'payroll', label: t('suiteHome.kpi.lastPayroll'), value: lastRun ? formatCurrency(lastRun.totals.totalNet) : '—', icon: Wallet, to: '/nomina/history', module: 'nomina', subDop: lastRun ? lastRun.totals.totalNet : undefined },
     { key: 'clients', label: t('suiteHome.kpi.clients'), value: String(clientCount), icon: Building2, to: '/facturacion/clients', module: 'facturacion' },
     { key: 'drafts', label: t('suiteHome.kpi.draftInvoices'), value: String(draftCount), icon: FileClock, to: '/facturacion/invoices', module: 'facturacion' },
   ]
@@ -79,6 +82,7 @@ export function KpiStrip() {
             </span>
             <div className="min-w-0">
               <p className="text-figure truncate text-xl font-bold leading-tight text-foreground">{k.value}</p>
+              {k.subDop !== undefined && <UsdAmount dop={k.subDop} className="block truncate" />}
               <p className="truncate text-xs text-muted-foreground">{k.label}</p>
             </div>
           </Card>
