@@ -468,7 +468,8 @@
     "resendPayStubs": "Resend Pay Stubs",
     "noHistory": "No payroll history yet",
     "sendingProgress": "Sending pay stubs… {{done}}/{{total}}",
-    "filterAllCountries": "All Countries"
+    "filterAllCountries": "All Countries",
+    "rateUsed": "Rate used: US$ 1 = {{symbol}} {{rate}} ({{date}})"
   },
   "connectors": {
     "title": "Connectors",

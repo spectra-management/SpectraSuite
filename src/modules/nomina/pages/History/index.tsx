@@ -17,7 +17,7 @@ import { toast } from '@/shared/hooks/useToast'
 import { logAuditEvent } from '@/shared/lib/audit'
 import { useAuth } from '@/shared/context/AuthContext'
 import { formatDate } from '@/shared/lib/utils'
-import { formatCurrency } from '@/shared/lib/utils/currency'
+import { formatCurrency, currencyForCountry } from '@/shared/lib/utils/currency'
 import { UsdAmount } from '@/shared/components/UsdAmount'
 import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/modules/nomina/lib/pdf/generatePdf'
 import { generatePayrollCSV, downloadCSV } from '@/modules/nomina/lib/pdf/generateCsv'
@@ -326,11 +326,11 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
         <td className="px-6 py-4 text-right text-muted-foreground">{payroll.totals.employeeCount}</td>
         <td className="px-6 py-4 text-right font-medium text-foreground">
           {formatCurrency(payroll.totals.totalGross, payroll.country)}
-          <UsdAmount amount={payroll.totals.totalGross} country={payroll.country} className="mt-0.5 block" />
+          <UsdAmount amount={payroll.totals.totalGross} country={payroll.country} rate={payroll.exchangeRate?.rate} className="mt-0.5 block" />
         </td>
         <td className="px-6 py-4 text-right font-semibold text-emerald-700">
           {formatCurrency(payroll.totals.totalNet, payroll.country)}
-          <UsdAmount amount={payroll.totals.totalNet} country={payroll.country} className="mt-0.5 block" />
+          <UsdAmount amount={payroll.totals.totalNet} country={payroll.country} rate={payroll.exchangeRate?.rate} className="mt-0.5 block" />
         </td>
         <td className="px-6 py-4">
           <Badge variant={statusVariant(payroll.status)}>
@@ -382,6 +382,15 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
       {expanded && (
         <tr>
           <td colSpan={7} className="px-6 pb-4">
+            {payroll.exchangeRate && (
+              <p className="mb-2 text-xs text-muted-foreground">
+                {t('history.rateUsed', {
+                  symbol: currencyForCountry(payroll.country).symbol,
+                  rate: payroll.exchangeRate.rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  date: payroll.exchangeRate.date,
+                })}
+              </p>
+            )}
             <div className="rounded-xl border border-border overflow-hidden">
               <table className="w-full text-xs">
                 <thead>

@@ -26,12 +26,13 @@ interface StatCardProps {
   sub?: string
   subAmount?: number
   subCountry?: string
+  subRate?: number
   icon: React.ComponentType<{ className?: string }>
   colorClass: string
   bgClass: string
 }
 
-function StatCard({ title, value, sub, subAmount, subCountry, icon: Icon, colorClass, bgClass }: StatCardProps) {
+function StatCard({ title, value, sub, subAmount, subCountry, subRate, icon: Icon, colorClass, bgClass }: StatCardProps) {
   return (
     <Card>
       <CardContent className="p-6">
@@ -39,7 +40,7 @@ function StatCard({ title, value, sub, subAmount, subCountry, icon: Icon, colorC
           <div>
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
-            {subAmount !== undefined && <UsdAmount amount={subAmount} country={subCountry} className="mt-0.5 block" />}
+            {subAmount !== undefined && <UsdAmount amount={subAmount} country={subCountry} rate={subRate} className="mt-0.5 block" />}
             {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
           </div>
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bgClass}`}>
@@ -104,6 +105,7 @@ export default function Dashboard() {
               value={formatCurrency(lastPayroll.totals.totalGross, lastPayroll.country)}
               subAmount={lastPayroll.totals.totalGross}
               subCountry={lastPayroll.country}
+              subRate={lastPayroll.exchangeRate?.rate}
               icon={DollarSign}
               colorClass="text-emerald-600"
               bgClass="bg-emerald-50"
@@ -113,6 +115,7 @@ export default function Dashboard() {
               value={formatCurrency(lastPayroll.totals.totalDeductions, lastPayroll.country)}
               subAmount={lastPayroll.totals.totalDeductions}
               subCountry={lastPayroll.country}
+              subRate={lastPayroll.exchangeRate?.rate}
               icon={TrendingDown}
               colorClass="text-red-500"
               bgClass="bg-red-50"
@@ -122,6 +125,7 @@ export default function Dashboard() {
               value={formatCurrency(lastPayroll.totals.totalNet, lastPayroll.country)}
               subAmount={lastPayroll.totals.totalNet}
               subCountry={lastPayroll.country}
+              subRate={lastPayroll.exchangeRate?.rate}
               icon={TrendingUp}
               colorClass="text-blue-500"
               bgClass="bg-blue-50"
@@ -187,7 +191,7 @@ export default function Dashboard() {
                         <p className="text-sm font-semibold text-emerald-700">
                           {formatCurrency(p.totals.totalNet, p.country)}
                         </p>
-                        <UsdAmount amount={p.totals.totalNet} country={p.country} className="block" />
+                        <UsdAmount amount={p.totals.totalNet} country={p.country} rate={p.exchangeRate?.rate} className="block" />
                         <Badge variant="secondary" className="text-xs">
                           {t(`history.status.${p.status}`)}
                         </Badge>

@@ -23,6 +23,8 @@ interface Kpi {
   subAmount?: number
   /** Country whose currency `subAmount` is in (drives the USD conversion). */
   subCountry?: string
+  /** Fixed rate (units per USD) frozen with the run; falls back to the live rate if omitted. */
+  subRate?: number
 }
 
 /**
@@ -57,7 +59,7 @@ export function KpiStrip() {
 
   const kpis: Kpi[] = [
     { key: 'employees', label: t('suiteHome.kpi.activeEmployees'), value: String(activeCount), icon: Users, to: '/rrhh/directory', module: 'rrhh' },
-    { key: 'payroll', label: t('suiteHome.kpi.lastPayroll'), value: lastRun ? formatCurrency(lastRun.totals.totalNet, lastRun.country) : '—', icon: Wallet, to: '/nomina/history', module: 'nomina', subAmount: lastRun ? lastRun.totals.totalNet : undefined, subCountry: lastRun?.country },
+    { key: 'payroll', label: t('suiteHome.kpi.lastPayroll'), value: lastRun ? formatCurrency(lastRun.totals.totalNet, lastRun.country) : '—', icon: Wallet, to: '/nomina/history', module: 'nomina', subAmount: lastRun ? lastRun.totals.totalNet : undefined, subCountry: lastRun?.country, subRate: lastRun?.exchangeRate?.rate },
     { key: 'clients', label: t('suiteHome.kpi.clients'), value: String(clientCount), icon: Building2, to: '/facturacion/clients', module: 'facturacion' },
     { key: 'drafts', label: t('suiteHome.kpi.draftInvoices'), value: String(draftCount), icon: FileClock, to: '/facturacion/invoices', module: 'facturacion' },
   ]
@@ -84,7 +86,7 @@ export function KpiStrip() {
             </span>
             <div className="min-w-0">
               <p className="text-figure truncate text-xl font-bold leading-tight text-foreground">{k.value}</p>
-              {k.subAmount !== undefined && <UsdAmount amount={k.subAmount} country={k.subCountry} className="block truncate" />}
+              {k.subAmount !== undefined && <UsdAmount amount={k.subAmount} country={k.subCountry} rate={k.subRate} className="block truncate" />}
               <p className="truncate text-xs text-muted-foreground">{k.label}</p>
             </div>
           </Card>

@@ -468,7 +468,8 @@
     "resendPayStubs": "Reenviar comprobantes",
     "noHistory": "No hay historial de nómina aún",
     "sendingProgress": "Enviando comprobantes… {{done}}/{{total}}",
-    "filterAllCountries": "Todos los Países"
+    "filterAllCountries": "Todos los Países",
+    "rateUsed": "Tasa usada: US$ 1 = {{symbol}} {{rate}} ({{date}})"
   },
   "connectors": {
     "title": "Conectores",

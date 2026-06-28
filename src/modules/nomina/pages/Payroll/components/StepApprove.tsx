@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { CheckCircle2, Loader2, DollarSign, Users, TrendingDown, FileText, Table } from 'lucide-react'
@@ -11,8 +11,10 @@ import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
 import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrStore'
 import { toast } from '@/shared/hooks/useToast'
 import { logAuditEvent } from '@/shared/lib/audit'
-import { formatCurrency } from '@/shared/lib/utils/currency'
+import { formatCurrency, currencyForCountry } from '@/shared/lib/utils/currency'
 import { UsdAmount } from '@/shared/components/UsdAmount'
+import { useExchangeRateStore } from '@/shared/store/exchangeRateStore'
+import type { PayrollExchangeRate } from '@/shared/types'
 import { generatePdfBlob, downloadBlob } from '@/modules/nomina/lib/pdf/generatePdf'
 import { generatePayrollCSV, downloadCSV } from '@/modules/nomina/lib/pdf/generateCsv'
 import type { PayrollEntry, PayrollTotals } from '@/shared/types'
@@ -38,6 +40,10 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
   const divisionById = Object.fromEntries(Object.entries(hrById).map(([id, e]) => [id, e.division ?? '']))
   const markVacationIsrApplied = usePendingVacationIsrStore((s) => s.markApplied)
   const navigate = useNavigate()
+  const fxCache = useExchangeRateStore((s) => s.cache)
+  const rateFor = useExchangeRateStore((s) => s.rateFor)
+  const ensureFreshFx = useExchangeRateStore((s) => s.ensureFresh)
+  useEffect(() => { void ensureFreshFx() }, [ensureFreshFx])
   const [approving, setApproving] = useState(false)
   const [approved, setApproved] = useState(false)
   const [generatingReport, setGeneratingReport] = useState(false)
@@ -47,6 +53,13 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
   const handleApprove = async () => {
     setApproving(true)
     await new Promise((r) => setTimeout(r, 600))
+    // Freeze the day's USD rate into the run so historical USD totals are stable.
+    const fxCode = currencyForCountry(country).code
+    const fxRate = rateFor(fxCode)
+    const exchangeRate: PayrollExchangeRate | undefined =
+      fxCode !== 'USD' && fxRate && fxCache
+        ? { code: fxCode, rate: fxRate, date: fxCache.date, source: fxCache.source }
+        : undefined
     const runFields = {
       startDate,
       endDate,
@@ -56,6 +69,7 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
       processedDate: new Date().toISOString().split('T')[0],
       entries,
       totals,
+      ...(exchangeRate ? { exchangeRate } : {}),
     }
     if (reopenId) {
       // Re-approving a reopened run: update it in place (same id), don't create a new one.

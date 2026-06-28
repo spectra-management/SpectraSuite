@@ -59,6 +59,18 @@ export interface EmployeeHoursEntry {
   nightHours?: number
 }
 
+/** USD exchange rate captured at the moment a payroll run was finalized (frozen for history). */
+export interface PayrollExchangeRate {
+  /** Currency code of the run (DOP, MXN, …). */
+  code: string
+  /** Units of `code` per 1 USD on the day the run was finalized. */
+  rate: number
+  /** Day the rate was captured (YYYY-MM-DD). */
+  date: string
+  /** Provider that supplied it (open.er-api.com / exchangerate.host). */
+  source: string
+}
+
 export interface PayrollPeriod {
   id: string
   startDate: string
@@ -69,6 +81,8 @@ export interface PayrollPeriod {
   entries: PayrollEntry[]
   totals: PayrollTotals
   country?: string
+  /** USD rate frozen at finalize time, so historical USD totals reflect that day's rate. */
+  exchangeRate?: PayrollExchangeRate
 }
 
 export interface PayrollEntry {
