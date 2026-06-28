@@ -36,7 +36,7 @@ export function ModuleSummaryCards() {
   }, [history])
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {/* Nómina — the live module, marked with an emerald ledger rule */}
       {visible('nomina') && (
         <Card className="overflow-hidden border-t-2 border-t-emerald-600">

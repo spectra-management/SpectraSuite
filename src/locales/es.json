@@ -1018,6 +1018,12 @@
       "minutes": "hace {{n}} min",
       "hours": "hace {{n}} h",
       "yesterday": "Ayer"
+    },
+    "kpi": {
+      "activeEmployees": "Empleados activos",
+      "lastPayroll": "Última nómina (neto)",
+      "clients": "Clientes",
+      "draftInvoices": "Facturas en borrador"
     }
   },
   "audit": {

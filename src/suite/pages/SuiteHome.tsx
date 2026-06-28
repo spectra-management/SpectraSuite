@@ -13,6 +13,7 @@ import { UserMenu } from '@/shared/components/layout/UserMenu'
 import { ThemeToggle } from '@/shared/components/ThemeToggle'
 import { Toaster } from '@/shared/components/ui/toaster'
 import { ModuleSummaryCards } from './components/ModuleSummaryCards'
+import { KpiStrip } from './components/KpiStrip'
 import { NewsBoard } from './components/NewsBoard'
 import { RewardsWidget } from './components/RewardsWidget'
 import { TasksWidget } from './components/TasksWidget'
@@ -137,20 +138,22 @@ export default function SuiteHome() {
 
         {isManager ? (
           <>
-            {/* 3-column dashboard grid */}
-            <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="animate-rise">
+            {/* KPI strip — fast read of the business */}
+            <div className="mt-8 animate-rise">
+              <KpiStrip />
+            </div>
+
+            {/* Overview (wide) + compact Tasks / Upcoming column */}
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2 animate-rise-2">
                 <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t('suiteHome.overview')}
                 </h2>
                 <ModuleSummaryCards />
               </div>
 
-              <div className="min-h-[20rem] animate-rise-2">
+              <div className="space-y-6 animate-rise-3">
                 <TasksWidget />
-              </div>
-
-              <div className="min-h-[20rem] animate-rise-3">
                 <CalendarWidget />
               </div>
             </div>
