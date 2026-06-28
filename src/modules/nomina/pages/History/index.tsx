@@ -276,6 +276,8 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
         company,
         lang,
         divisionById,
+        country: payroll.country,
+        exchangeRate: payroll.exchangeRate,
       })
       const blob = await generatePdfBlob(element)
       downloadBlob(blob, `ManagerReport_${payroll.startDate}_${payroll.endDate}.pdf`)
@@ -288,7 +290,7 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
   }
 
   const handleManagerReportCsv = () => {
-    const csv = generatePayrollCSV(payroll.startDate, payroll.endDate, payroll.entries)
+    const csv = generatePayrollCSV(payroll.startDate, payroll.endDate, payroll.entries, payroll.exchangeRate)
     downloadCSV(csv, `ManagerReport_${payroll.startDate}_${payroll.endDate}.csv`)
   }
 

@@ -6,8 +6,9 @@ import {
   Image,
   StyleSheet,
 } from '@react-pdf/renderer'
-import type { PayrollEntry, PayrollTotals, CompanySettings } from '@/shared/types'
+import type { PayrollEntry, PayrollTotals, CompanySettings, PayrollExchangeRate } from '@/shared/types'
 import { roundHalfUp, safeNum } from '@/modules/nomina/lib/payroll/calculations'
+import { currencyForCountry } from '@/shared/lib/utils/currency'
 import { logoSrc } from './logo'
 
 const EMERALD = '#059669'
@@ -45,6 +46,7 @@ const S = StyleSheet.create({
   summaryLabel: { fontSize: 7, color: GRAY_500, marginBottom: 3 },
   summaryValue: { fontSize: 11, fontFamily: 'Roboto', fontWeight: 700, color: GRAY_900 },
   summaryValueEmph: { fontSize: 11, fontFamily: 'Roboto', fontWeight: 700, color: EMERALD },
+  summaryUsd: { fontSize: 7.5, color: GRAY_500, marginTop: 2 },
   summaryBreakRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
   summaryBreakLabel: { fontSize: 7, color: GRAY_500 },
   summaryBreakValue: { fontSize: 7, fontFamily: 'Roboto', fontWeight: 700, color: RED },
@@ -78,9 +80,6 @@ const S = StyleSheet.create({
   footerText: { fontSize: 7, color: GRAY_500 },
 })
 
-function fmt(n: number): string {
-  return `RD$ ${roundHalfUp(safeNum(n), 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
 function num(n: number): string {
   return roundHalfUp(safeNum(n), 2).toFixed(2)
 }
@@ -131,6 +130,10 @@ export interface ManagerReportProps {
   lang: 'en' | 'es'
   /** employeeId → client (BambooHR division), for the "payroll by client" summary. */
   divisionById?: Record<string, string>
+  /** Country whose currency the amounts are in (drives the currency symbol). */
+  country?: string
+  /** USD rate frozen with the run; when present, totals also show the USD equivalent. */
+  exchangeRate?: PayrollExchangeRate
 }
 
 const RL = {
@@ -138,6 +141,7 @@ const RL = {
     title: 'PAYROLL MANAGER REPORT',
     period: 'Pay Period',
     generated: 'Generated',
+    rate: 'Rate',
     rnc: 'RNC',
     execSummary: 'EXECUTIVE SUMMARY',
     totalEmp: 'Employees Processed',
@@ -175,6 +179,7 @@ const RL = {
     title: 'REPORTE GERENCIAL DE NÓMINA',
     period: 'Período de Pago',
     generated: 'Generado',
+    rate: 'Tasa',
     rnc: 'RNC',
     execSummary: 'RESUMEN EJECUTIVO',
     totalEmp: 'Empleados Procesados',
@@ -219,11 +224,21 @@ export function ManagerReportDocument({
   company,
   lang,
   divisionById = {},
+  country,
+  exchangeRate,
 }: ManagerReportProps) {
   const l = RL[lang]
   const today = new Date().toLocaleDateString(lang === 'es' ? 'es-DO' : 'en-US')
   const deptRows = buildClientSummary(entries, divisionById, l.noClient)
   const logo = logoSrc(company.logoBase64)
+
+  // Country-aware currency + optional frozen-rate USD equivalents.
+  const cur = currencyForCountry(country)
+  const fmt = (n: number): string =>
+    `${cur.symbol} ${roundHalfUp(safeNum(n), 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const rate = exchangeRate && exchangeRate.code !== 'USD' && exchangeRate.rate > 0 ? exchangeRate.rate : null
+  const fmtUsd = (n: number): string =>
+    rate ? `US$ ${roundHalfUp(safeNum(n) / rate, 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''
 
   // Column flex widths for employee detail table
   const cName = 3.5, cDept = 2, cReg = 1.2, cOT = 1.2, cHol = 1.2
@@ -255,6 +270,12 @@ export function ManagerReportDocument({
               <Text style={S.metaLabel}>{l.generated}:</Text>
               <Text style={S.metaValue}>{today}</Text>
             </View>
+            {rate && (
+              <View style={S.metaRow}>
+                <Text style={S.metaLabel}>{l.rate}:</Text>
+                <Text style={S.metaValue}>US$ 1 = {cur.symbol} {rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -268,10 +289,12 @@ export function ManagerReportDocument({
           <View style={S.summaryCard}>
             <Text style={S.summaryLabel}>{l.totalGross}</Text>
             <Text style={S.summaryValue}>{fmt(totals.totalGross)}</Text>
+            {rate && <Text style={S.summaryUsd}>{fmtUsd(totals.totalGross)}</Text>}
           </View>
           <View style={S.summaryCard}>
             <Text style={S.summaryLabel}>{l.totalDed}</Text>
             <Text style={S.summaryValue}>{fmt(totals.totalDeductions)}</Text>
+            {rate && <Text style={S.summaryUsd}>{fmtUsd(totals.totalDeductions)}</Text>}
             <View style={S.summaryBreakRow}>
               <Text style={S.summaryBreakLabel}>{l.totalTss}</Text>
               <Text style={S.summaryBreakValue}>{fmt(totals.totalTss)}</Text>
@@ -284,6 +307,7 @@ export function ManagerReportDocument({
           <View style={S.summaryCardEmph}>
             <Text style={S.summaryLabel}>{l.totalNet}</Text>
             <Text style={S.summaryValueEmph}>{fmt(totals.totalNet)}</Text>
+            {rate && <Text style={S.summaryUsd}>{fmtUsd(totals.totalNet)}</Text>}
           </View>
         </View>
 

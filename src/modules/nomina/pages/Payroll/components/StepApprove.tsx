@@ -50,16 +50,20 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
 
   const lang = (i18n.language?.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
+  // The day's USD rate snapshot for this run's currency (undefined for USD / no rate yet).
+  const buildExchangeRate = (): PayrollExchangeRate | undefined => {
+    const fxCode = currencyForCountry(country).code
+    const fxRate = rateFor(fxCode)
+    return fxCode !== 'USD' && fxRate && fxCache
+      ? { code: fxCode, rate: fxRate, date: fxCache.date, source: fxCache.source }
+      : undefined
+  }
+
   const handleApprove = async () => {
     setApproving(true)
     await new Promise((r) => setTimeout(r, 600))
     // Freeze the day's USD rate into the run so historical USD totals are stable.
-    const fxCode = currencyForCountry(country).code
-    const fxRate = rateFor(fxCode)
-    const exchangeRate: PayrollExchangeRate | undefined =
-      fxCode !== 'USD' && fxRate && fxCache
-        ? { code: fxCode, rate: fxRate, date: fxCache.date, source: fxCache.source }
-        : undefined
+    const exchangeRate = buildExchangeRate()
     const runFields = {
       startDate,
       endDate,
@@ -109,6 +113,7 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
       const { ManagerReportDocument } = await import('@/modules/nomina/lib/pdf/managerReportPdf')
       const element = React.createElement(ManagerReportDocument, {
         startDate, endDate, frequency, entries, totals, company, lang, divisionById,
+        country, exchangeRate: buildExchangeRate(),
       })
       const blob = await generatePdfBlob(element)
       downloadBlob(blob, `ManagerReport_${startDate}_${endDate}.pdf`)
@@ -121,7 +126,7 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
   }
 
   const handleManagerReportCsv = () => {
-    const csv = generatePayrollCSV(startDate, endDate, entries)
+    const csv = generatePayrollCSV(startDate, endDate, entries, buildExchangeRate())
     downloadCSV(csv, `ManagerReport_${startDate}_${endDate}.csv`)
   }
 
