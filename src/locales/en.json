@@ -1567,5 +1567,12 @@
   "rate": {
     "badgeLabel": "Rate of the day",
     "unavailable": "Rate unavailable"
+  },
+  "help": {
+    "open": "Help & manual",
+    "title": "Help Center",
+    "subtitle": "Your guide to Spectra Suite — showing only what you can access.",
+    "search": "Search the manual…",
+    "noResults": "No matching topics."
   }
 }

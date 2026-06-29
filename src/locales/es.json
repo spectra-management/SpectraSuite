@@ -1567,5 +1567,12 @@
   "rate": {
     "badgeLabel": "Tasa del día",
     "unavailable": "Tasa no disponible"
+  },
+  "help": {
+    "open": "Ayuda y manual",
+    "title": "Centro de ayuda",
+    "subtitle": "Tu guía de Spectra Suite — muestra solo lo que puedes acceder.",
+    "search": "Buscar en el manual…",
+    "noResults": "No hay temas que coincidan."
   }
 }

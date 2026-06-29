@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
 import { AuthProvider } from '@/shared/context/AuthContext'
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute'
+import { HelpCenter } from '@/shared/components/HelpCenter'
 import { Layout } from '@/shared/components/layout/Layout'
 import { ModuleShell } from '@/shared/components/layout/ModuleShell'
 import Login from './pages/Login'
@@ -204,6 +205,7 @@ export default function App() {
           {/* Unknown → Suite home */}
           <Route path="*" element={<Navigate to="/suite" replace />} />
         </Routes>
+        <HelpCenter />
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

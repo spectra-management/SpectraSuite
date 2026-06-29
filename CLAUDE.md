@@ -139,5 +139,15 @@ The vacation module (Código Laboral RD) is NOT implemented in v1. Architecture 
 - Employee profile has a reserved section for vacation info
 - Do NOT implement vacation calculation logic
 
+## User Manual (KEEP UPDATED — NON-NEGOTIABLE)
+The in-app user manual lives in `src/shared/help/manualContent.ts` and is shown by the
+Help Center ("?" floating button, `src/shared/components/HelpCenter.tsx`). It is bilingual
+(EN/ES) and access-gated: each section declares `access` (everyone / manager / superadmin /
+{module}) and the Help Center shows only the sections the signed-in user can access.
+
+Whenever you add or change a feature, UPDATE the relevant section in `manualContent.ts`
+(both EN and ES) in the same change, so the manual always matches how the system works.
+Add a new section when you add a new module/area, with the correct `access`.
+
 ## Environment Variables
 See `.env.example` for all required variables. Never commit actual keys.
