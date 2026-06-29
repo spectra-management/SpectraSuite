@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Banknote, Plug, UserCircle, ArrowRight, Megaphone } from 'lucide-react'
+import { Banknote, Plug, UserCircle, ArrowRight, Megaphone, CalendarDays } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/components/ui/button'
 import { useSettingsStore } from '@/shared/store/settingsStore'
@@ -16,6 +16,7 @@ import { ModuleSummaryCards } from './components/ModuleSummaryCards'
 import { KpiStrip } from './components/KpiStrip'
 import { NewsBoard } from './components/NewsBoard'
 import { RewardsWidget } from './components/RewardsWidget'
+import { TodayHighlights } from './components/TodayHighlights'
 import { TasksWidget } from './components/TasksWidget'
 import { CalendarWidget } from './components/CalendarWidget'
 import { EmailsWidget } from './components/EmailsWidget'
@@ -62,6 +63,16 @@ export default function SuiteHome() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/calendar')}
+              className="gap-1.5"
+              title={t('calendar.title')}
+            >
+              <CalendarDays className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('calendar.navLabel')}</span>
+            </Button>
             {isManager && (
               <Button
                 variant="outline"
@@ -182,6 +193,7 @@ export default function SuiteHome() {
                 <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-600" />
               </button>
               <RewardsWidget />
+              <TodayHighlights />
             </div>
             <div className="animate-rise-2">
               <NewsBoard />

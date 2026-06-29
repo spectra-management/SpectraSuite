@@ -12,6 +12,7 @@ import SuiteSettings from '@/suite/pages/SuiteSettings'
 import SuiteConnectors from '@/suite/pages/SuiteConnectors'
 import SuiteNews from '@/suite/pages/SuiteNews'
 import SelfProfile from '@/suite/pages/SelfProfile'
+import CompanyCalendar from '@/suite/pages/CompanyCalendar'
 import Dashboard from '@/modules/nomina/pages/Dashboard'
 import Employees from '@/modules/nomina/pages/Employees'
 import EmployeeProfile from '@/modules/nomina/pages/Employees/EmployeeProfile'
@@ -74,6 +75,15 @@ export default function App() {
             element={
               <ProtectedRoute requireManager>
                 <SuiteNews />
+              </ProtectedRoute>
+            }
+          />
+          {/* Company calendar — any signed-in user (activities + everyone's birthdays). */}
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <CompanyCalendar />
               </ProtectedRoute>
             }
           />

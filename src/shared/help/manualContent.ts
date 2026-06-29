@@ -11,7 +11,7 @@
 
 import {
   Rocket, UserCircle, Trophy, Banknote, Users, ReceiptText, FileText, Kanban,
-  Megaphone, ShieldCheck, type LucideIcon,
+  Megaphone, ShieldCheck, CalendarDays, type LucideIcon,
 } from 'lucide-react'
 import type { ModuleId } from '@/shared/types/supabase'
 
@@ -127,6 +127,35 @@ export const MANUAL: ManualSection[] = [
         heading: t('News board', 'Tablero de noticias'),
         items: [
           t('Announcements posted by managers appear here, with pinned items first.', 'Los anuncios publicados por los managers aparecen aquí, con los fijados primero.'),
+        ],
+      },
+    ],
+  },
+
+  // ── Company calendar ───────────────────────────────────────────────────────
+  {
+    id: 'company-calendar',
+    icon: CalendarDays,
+    access: { kind: 'everyone' },
+    title: t('Company calendar', 'Calendario de la empresa'),
+    intro: t(
+      'A shared calendar with company activities and everyone\'s birthdays.',
+      'Un calendario compartido con las actividades de la empresa y los cumpleaños de todos.',
+    ),
+    blocks: [
+      {
+        heading: t('Viewing', 'Ver'),
+        items: [
+          t('Open "Calendar" from the home header, or "Open calendar" from the Today widget.', 'Abre "Calendario" desde el encabezado del inicio, o "Abrir calendario" desde el widget de Hoy.'),
+          t('The month grid shows birthdays (cake icon) and events on each day; use the arrows to change month.', 'La cuadrícula del mes muestra cumpleaños (icono de pastel) y eventos en cada día; usa las flechas para cambiar de mes.'),
+          t('The "Today" widget on your home highlights who has a birthday today and today\'s events.', 'El widget "Hoy" en tu inicio destaca quién cumple años hoy y los eventos del día.'),
+        ],
+      },
+      {
+        heading: t('Managing events (managers)', 'Gestionar eventos (managers)'),
+        items: [
+          t('Managers can add an event with "Add event" or by clicking a day, and edit/delete by clicking an event.', 'Los managers pueden agregar un evento con "Agregar evento" o haciendo clic en un día, y editar/eliminar haciendo clic en un evento.'),
+          t('Birthdays come automatically from employee records and cannot be edited here.', 'Los cumpleaños vienen automáticamente de los registros de empleados y no se editan aquí.'),
         ],
       },
     ],

@@ -1574,5 +1574,24 @@
     "subtitle": "Tu guía de Spectra Suite — muestra solo lo que puedes acceder.",
     "search": "Buscar en el manual…",
     "noResults": "No hay temas que coincidan."
+  },
+  "calendar": {
+    "navLabel": "Calendario",
+    "title": "Calendario de la empresa",
+    "subtitle": "Actividades y cumpleaños de toda la empresa.",
+    "today": "Hoy",
+    "birthdaysToday": "Cumpleaños de hoy",
+    "eventsToday": "Eventos de hoy",
+    "noBirthdaysToday": "No hay cumpleaños hoy.",
+    "noEventsToday": "No hay eventos hoy.",
+    "openFull": "Abrir calendario",
+    "prev": "Mes anterior",
+    "next": "Mes siguiente",
+    "todayBtn": "Hoy",
+    "addEvent": "Agregar evento",
+    "editEvent": "Editar evento",
+    "eventTitle": "Título",
+    "eventDate": "Fecha",
+    "eventDescription": "Descripción"
   }
 }
