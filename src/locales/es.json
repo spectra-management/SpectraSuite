@@ -1270,7 +1270,10 @@
       "emptyHint": "Sincroniza el directorio primero para construir la jerarquía.",
       "expandAll": "Expandir todo",
       "collapseAll": "Contraer todo",
-      "rootsNote": "Cúpula de la organización"
+      "rootsNote": "Cúpula de la organización",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "zoomReset": "Restablecer zoom"
     },
     "timeOff": {
       "title": "Ausencias",

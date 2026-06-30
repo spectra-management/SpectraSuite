@@ -152,3 +152,26 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background-color: hsl(215 20% 40%);
 }
+
+/* ─── Org chart (top-down tree with elbow connectors) ───────────────────────── */
+.org-line { stroke: hsl(var(--border)); }
+.org-root { display: flex; justify-content: center; gap: 1.5rem; }
+.org-ul { display: flex; justify-content: center; position: relative; padding-top: 28px; }
+/* vertical drop from a parent card down to its children's bus */
+.org-ul::before {
+  content: ''; position: absolute; top: 0; left: 50%; width: 0; height: 28px;
+  border-left: 2px solid hsl(var(--border));
+}
+.org-li { position: relative; display: flex; flex-direction: column; align-items: center; padding: 0 12px; }
+.org-ul > .org-li { padding-top: 28px; }
+/* horizontal bus + vertical drop into each child */
+.org-ul > .org-li::before, .org-ul > .org-li::after {
+  content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 28px;
+  border-top: 2px solid hsl(var(--border));
+}
+.org-ul > .org-li::after { right: auto; left: 50%; border-left: 2px solid hsl(var(--border)); }
+.org-ul > .org-li:only-child::before, .org-ul > .org-li:only-child::after { display: none; }
+.org-ul > .org-li:first-child::before { border: 0 none; }
+.org-ul > .org-li:last-child::after { border-top: 0 none; }
+.org-ul > .org-li:last-child::before { border-right: 2px solid hsl(var(--border)); border-top-right-radius: 10px; }
+.org-ul > .org-li:first-child::after { border-top-left-radius: 10px; }

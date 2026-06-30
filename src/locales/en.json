@@ -1270,7 +1270,10 @@
       "emptyHint": "Sync the directory first to build the reporting hierarchy.",
       "expandAll": "Expand all",
       "collapseAll": "Collapse all",
-      "rootsNote": "Top of organization"
+      "rootsNote": "Top of organization",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "zoomReset": "Reset zoom"
     },
     "timeOff": {
       "title": "Time Off",
