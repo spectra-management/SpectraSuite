@@ -218,6 +218,201 @@ Examples:
 - **company_birthdays():** function exposing **only** name + birth month/day (no year, no
   sensitive data) to any authenticated user.
 
+### 5.4 Data model (ER diagram)
+
+The main tables and how they relate. Notes:
+- **Solid relationships** are enforced foreign keys. **`(by employee id)`** relationships are
+  *logical* links via a TEXT employee id (BambooHR id) — not DB-enforced foreign keys, since
+  the employee directory is keyed by the external BambooHR id.
+- `employees.supervisor_id` is a **self-reference** (employee → their supervisor) that drives
+  the org chart.
+- `payroll_runs.data` is a **JSONB** snapshot of the whole run (entries, totals, frozen FX
+  rate); it is not normalized into rows.
+- `app_state` is a **KV (JSONB)** table for shared config blobs (no relationships).
+- `rrhh_employee_photos` is created manually in Supabase (not in a migration); it stores the
+  Storage path + source/version per employee.
+
+```mermaid
+erDiagram
+  AUTH_USERS ||--|| PROFILES : "is"
+  PROFILES ||--o{ USER_ROLES : "assigned"
+  ROLES ||--o{ USER_ROLES : "grants"
+  ROLES ||--o{ ROLE_PERMISSIONS : "has"
+  PROFILES ||--o{ USER_MODULE_PERMISSIONS : "legacy perms"
+  PROFILES ||--o{ AUDIT_LOG : "acted"
+
+  EMPLOYEES ||--o| EMPLOYEE_PAYROLL_SETTINGS : "tax exemption"
+  EMPLOYEES ||--o| EMPLOYEE_BASEBALL_CARDS : "card"
+  EMPLOYEES ||--o| RRHH_EMPLOYEE_PHOTOS : "photo"
+  EMPLOYEES ||--o{ EMPLOYEES : "supervises (supervisor_id)"
+
+  BILLING_CLIENTS ||--o{ BILLING_INVOICES : "billed"
+  BILLING_CLIENTS ||--o{ BILLING_TITLE_RATES : "rates"
+  BILLING_CLIENTS ||--o{ BILLING_CLIENT_EMPLOYEES : "assigns"
+  EMPLOYEES ||--o{ BILLING_CLIENT_EMPLOYEES : "(by employee id)"
+
+  TABLERO_BOARDS ||--o{ TABLERO_LISTS : "has"
+  TABLERO_BOARDS ||--o{ TABLERO_CARDS : "has"
+  TABLERO_LISTS ||--o{ TABLERO_CARDS : "contains"
+
+  AUTH_USERS ||--o| PORTAL_REWARDS : "daily rewards"
+  AUTH_USERS ||--o{ PORTAL_NEWS : "authored"
+  AUTH_USERS ||--o{ COMPANY_EVENTS : "created"
+  PROFILES ||--o{ VACATION_PAYMENTS : "approved"
+
+  AUTH_USERS {
+    uuid id PK
+  }
+  PROFILES {
+    uuid id PK "= auth.users.id"
+    text email
+    text role "super_admin|module_admin|viewer|custom"
+    bool is_active
+  }
+  ROLES {
+    uuid id PK
+    text name
+  }
+  ROLE_PERMISSIONS {
+    uuid role_id FK
+    text module
+    bool can_view
+    bool can_edit
+    bool can_approve
+    bool can_admin
+  }
+  USER_ROLES {
+    uuid user_id FK
+    uuid role_id FK
+  }
+  USER_MODULE_PERMISSIONS {
+    uuid user_id FK
+    text module
+  }
+  AUDIT_LOG {
+    uuid id PK
+    text action
+    text category
+  }
+
+  EMPLOYEES {
+    text bamboohr_id PK "external BambooHR id"
+    text supervisor_id FK "self -> bamboohr_id"
+    text work_email "links the user (by email)"
+    text first_name
+    text last_name
+    text status
+    text country
+    numeric pay_rate
+    text date_of_birth
+  }
+  EMPLOYEE_PAYROLL_SETTINGS {
+    text bamboohr_id PK
+    bool tax_exempt
+    text exempt_reason
+  }
+  EMPLOYEE_BASEBALL_CARDS {
+    text bamboohr_id PK
+    jsonb data
+  }
+  RRHH_EMPLOYEE_PHOTOS {
+    text employee_id PK
+    text storage_path
+    text source "manual|bamboohr"
+    text bamboohr_version
+  }
+
+  PAYROLL_RUNS {
+    uuid id PK
+    text local_id
+    text country
+    text status
+    numeric total_net
+    jsonb data "full run snapshot + frozen FX"
+  }
+  VACATION_PAYMENTS {
+    uuid id PK
+    uuid approved_by FK
+  }
+
+  BILLING_CLIENTS {
+    uuid id PK
+    text name
+    text division
+  }
+  BILLING_INVOICES {
+    uuid id PK
+    uuid client_id FK
+    text status "draft|finalized"
+    numeric total
+    text currency_country "USD"
+  }
+  BILLING_TITLE_RATES {
+    uuid id PK
+    uuid client_id FK
+    text job_title
+    numeric rate
+  }
+  BILLING_CLIENT_EMPLOYEES {
+    uuid id PK
+    uuid client_id FK
+    text employee_id "(by employee id)"
+  }
+
+  TABLERO_BOARDS {
+    uuid id PK
+    text name
+  }
+  TABLERO_LISTS {
+    uuid id PK
+    uuid board_id FK
+    text name
+  }
+  TABLERO_CARDS {
+    uuid id PK
+    uuid board_id FK
+    uuid list_id FK
+    text title
+    jsonb labels_checklist_comments
+  }
+
+  PORTAL_NEWS {
+    uuid id PK
+    text title
+    bool pinned
+  }
+  PORTAL_REWARDS {
+    uuid user_id PK "= auth.users.id"
+    int points
+    int streak
+    date last_check_in
+  }
+  COMPANY_EVENTS {
+    uuid id PK
+    text title
+    date event_date
+  }
+
+  COMPANY_SETTINGS {
+    uuid id PK
+    text name
+    text rnc
+    int session_timeout_minutes
+  }
+  APP_STATE {
+    text key PK
+    jsonb value "shared config blobs"
+  }
+  INTEGRATIONS {
+    uuid id PK
+    text provider
+  }
+```
+
+**Standalone (no relationships):** `COMPANY_SETTINGS`, `APP_STATE`, `INTEGRATIONS` are config
+tables read across the app. `company_birthdays()` (a function, not a table) reads `EMPLOYEES`
+and exposes only name + birth month/day to everyone.
+
 ---
 
 ## 6. Authentication, roles & RBAC
@@ -399,6 +594,7 @@ Documentos (`/documentos`), Tablero kanban (`/tablero`), y el **portal del emple
   la fuente de verdad** que se lee de vuelta al iniciar sesión. Gana la nube.
 - **Toda la configuración vive en la base de datos** (tablas dedicadas + `app_state` JSONB),
   compartida entre usuarios.
+- El **modelo de datos** (tablas y relaciones, diagrama ER) está en la **sección 5.4**.
 
 **Cómo funciona (esquema):** ver el diagrama de la sección 4.1. En resumen: el navegador
 sincroniza vía **proxies `/api/*`** que agregan las credenciales del lado del servidor (la API
