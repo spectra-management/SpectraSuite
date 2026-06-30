@@ -220,17 +220,15 @@ Examples:
 
 ### 5.4 Data model (ER diagram)
 
-The main tables and how they relate. Notes:
-- **Solid relationships** are enforced foreign keys. **`(by employee id)`** relationships are
-  *logical* links via a TEXT employee id (BambooHR id) — not DB-enforced foreign keys, since
-  the employee directory is keyed by the external BambooHR id.
-- `employees.supervisor_id` is a **self-reference** (employee → their supervisor) that drives
-  the org chart.
-- `payroll_runs.data` is a **JSONB** snapshot of the whole run (entries, totals, frozen FX
-  rate); it is not normalized into rows.
-- `app_state` is a **KV (JSONB)** table for shared config blobs (no relationships).
-- `rrhh_employee_photos` is created manually in Supabase (not in a migration); it stores the
-  Storage path + source/version per employee.
+The data model is split by domain so each diagram stays readable. Notes:
+- **Solid relationships** are enforced foreign keys. **`(by employee id)`** links are *logical*
+  (via a TEXT BambooHR employee id), not DB-enforced FKs.
+- `employees.supervisor_id` is a **self-reference** (employee → supervisor) driving the org chart.
+- `payroll_runs.data` is a **JSONB** snapshot of the whole run (entries, totals, frozen FX rate).
+- `app_state` is a **KV (JSONB)** table for shared config (no relationships).
+- `rrhh_employee_photos` is created manually in Supabase (not in a migration).
+
+#### Identity & access (RBAC)
 
 ```mermaid
 erDiagram
@@ -240,45 +238,19 @@ erDiagram
   ROLES ||--o{ ROLE_PERMISSIONS : "has"
   PROFILES ||--o{ USER_MODULE_PERMISSIONS : "legacy perms"
   PROFILES ||--o{ AUDIT_LOG : "acted"
-
-  EMPLOYEES ||--o| EMPLOYEE_PAYROLL_SETTINGS : "tax exemption"
-  EMPLOYEES ||--o| EMPLOYEE_BASEBALL_CARDS : "card"
-  EMPLOYEES ||--o| RRHH_EMPLOYEE_PHOTOS : "photo"
-  EMPLOYEES ||--o{ EMPLOYEES : "supervises (supervisor_id)"
-
-  BILLING_CLIENTS ||--o{ BILLING_INVOICES : "billed"
-  BILLING_CLIENTS ||--o{ BILLING_TITLE_RATES : "rates"
-  BILLING_CLIENTS ||--o{ BILLING_CLIENT_EMPLOYEES : "assigns"
-  EMPLOYEES ||--o{ BILLING_CLIENT_EMPLOYEES : "(by employee id)"
-
-  TABLERO_BOARDS ||--o{ TABLERO_LISTS : "has"
-  TABLERO_BOARDS ||--o{ TABLERO_CARDS : "has"
-  TABLERO_LISTS ||--o{ TABLERO_CARDS : "contains"
-
-  AUTH_USERS ||--o| PORTAL_REWARDS : "daily rewards"
-  AUTH_USERS ||--o{ PORTAL_NEWS : "authored"
-  AUTH_USERS ||--o{ COMPANY_EVENTS : "created"
-  PROFILES ||--o{ VACATION_PAYMENTS : "approved"
-
-  AUTH_USERS {
-    uuid id PK
-  }
   PROFILES {
     uuid id PK "= auth.users.id"
     text email
     text role "super_admin|module_admin|viewer|custom"
     bool is_active
   }
-  ROLES {
-    uuid id PK
-    text name
-  }
+  ROLES { uuid id PK
+    text name }
   ROLE_PERMISSIONS {
     uuid role_id FK
     text module
     bool can_view
     bool can_edit
-    bool can_approve
     bool can_admin
   }
   USER_ROLES {
@@ -294,11 +266,20 @@ erDiagram
     text action
     text category
   }
+```
 
+#### Employees & HR
+
+```mermaid
+erDiagram
+  EMPLOYEES ||--o| EMPLOYEE_PAYROLL_SETTINGS : "tax exemption"
+  EMPLOYEES ||--o| EMPLOYEE_BASEBALL_CARDS : "card"
+  EMPLOYEES ||--o| RRHH_EMPLOYEE_PHOTOS : "photo"
+  EMPLOYEES ||--o{ EMPLOYEES : "supervises (supervisor_id)"
   EMPLOYEES {
     text bamboohr_id PK "external BambooHR id"
     text supervisor_id FK "self -> bamboohr_id"
-    text work_email "links the user (by email)"
+    text work_email "links the user by email"
     text first_name
     text last_name
     text status
@@ -321,20 +302,29 @@ erDiagram
     text source "manual|bamboohr"
     text bamboohr_version
   }
+```
 
+#### Payroll & billing
+
+```mermaid
+erDiagram
+  BILLING_CLIENTS ||--o{ BILLING_INVOICES : "billed"
+  BILLING_CLIENTS ||--o{ BILLING_TITLE_RATES : "rates"
+  BILLING_CLIENTS ||--o{ BILLING_CLIENT_EMPLOYEES : "assigns"
+  EMPLOYEES ||--o{ BILLING_CLIENT_EMPLOYEES : "(by employee id)"
+  PROFILES ||--o{ VACATION_PAYMENTS : "approved"
   PAYROLL_RUNS {
     uuid id PK
     text local_id
     text country
     text status
     numeric total_net
-    jsonb data "full run snapshot + frozen FX"
+    jsonb data "full run + frozen FX"
   }
   VACATION_PAYMENTS {
     uuid id PK
     uuid approved_by FK
   }
-
   BILLING_CLIENTS {
     uuid id PK
     text name
@@ -358,7 +348,21 @@ erDiagram
     uuid client_id FK
     text employee_id "(by employee id)"
   }
+```
 
+> `PAYROLL_RUNS` stores each finalized run as a JSONB snapshot (not normalized into rows), so
+> it has no foreign keys to the billing/employee tables.
+
+#### Boards & employee portal
+
+```mermaid
+erDiagram
+  TABLERO_BOARDS ||--o{ TABLERO_LISTS : "has"
+  TABLERO_BOARDS ||--o{ TABLERO_CARDS : "has"
+  TABLERO_LISTS ||--o{ TABLERO_CARDS : "contains"
+  AUTH_USERS ||--o| PORTAL_REWARDS : "daily rewards"
+  AUTH_USERS ||--o{ PORTAL_NEWS : "authored"
+  AUTH_USERS ||--o{ COMPANY_EVENTS : "created"
   TABLERO_BOARDS {
     uuid id PK
     text name
@@ -375,7 +379,6 @@ erDiagram
     text title
     jsonb labels_checklist_comments
   }
-
   PORTAL_NEWS {
     uuid id PK
     text title
@@ -391,21 +394,6 @@ erDiagram
     uuid id PK
     text title
     date event_date
-  }
-
-  COMPANY_SETTINGS {
-    uuid id PK
-    text name
-    text rnc
-    int session_timeout_minutes
-  }
-  APP_STATE {
-    text key PK
-    jsonb value "shared config blobs"
-  }
-  INTEGRATIONS {
-    uuid id PK
-    text provider
   }
 ```
 

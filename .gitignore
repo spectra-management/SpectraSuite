@@ -30,3 +30,7 @@ e2e/.results/
 e2e/.report/
 test-results/
 playwright-report/
+
+# Generated documentation PDF (reproducible via `npm run docs:pdf`)
+Spectra-Suite-Documentation.pdf
+verify-*.png
