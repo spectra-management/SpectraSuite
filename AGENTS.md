@@ -80,6 +80,32 @@ decile exactamente qué número debe verificar él y contra qué (ver sección 5
 
 ---
 
+## 2a. Verificación visual de UI con Playwright (OBLIGATORIA para cambios de UI)
+
+Para CUALQUIER tarea que cambie la interfaz (componentes, páginas, estilos, layout), además de
+los tests unitarios, antes de dar la tarea por terminada debés verificar el render real en el
+navegador con Playwright:
+
+1. **Levantá la app con Playwright.** `npm run test:e2e` arranca el dev server solo y corre los
+   specs de `e2e/`. (La primera vez en una máquina nueva: `npm run e2e:install` para bajar el
+   navegador.) Si ya tenés un dev server corriendo, apuntá a él con `PW_BASE_URL`.
+2. **Navegá a la pantalla afectada.** Escribí o extendé un spec en `e2e/` que vaya a la ruta que
+   tocaste (usá `e2e/smoke.spec.ts` como plantilla). Si la pantalla está detrás del login, corré
+   sin variables de Supabase (la app omite auth cuando no hay `VITE_SUPABASE_*`) o iniciá sesión
+   dentro del spec.
+3. **Sacá un screenshot** con el helper `screenshot(page, 'nombre')` (de `e2e/helpers.ts`). Queda
+   en `e2e/screenshots/nombre.png`.
+4. **Revisá la imagen vos mismo.** Abrí el PNG y confirmá que renderiza bien: sin pantalla en
+   blanco ni error, sin elementos encimados/cortados, contenido correcto, y consistente con el
+   resto de Spectra Suite (claro/oscuro, ES/EN).
+5. **Recién entonces** considerá la tarea terminada. Si el screenshot muestra algo mal, arreglalo
+   y repetí — no le pases una UI rota al usuario.
+
+Los screenshots de revisión viven en `e2e/screenshots/` (ignorados por git; son artefactos). La
+config está en `playwright.config.ts`; los specs de Playwright (`e2e/`) están excluidos de Vitest.
+
+---
+
 ## 3. Reglas duras de seguridad (NUNCA las violes, aunque el usuario lo pida en el momento)
 
 Estas existen porque el sistema maneja sueldos y facturación de gente real. Si el usuario pide algo

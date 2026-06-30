@@ -23,3 +23,10 @@ npm-debug.log*
 
 # Local Supabase DB connection string (never commit)
 .supabase-db-url
+
+# Playwright (e2e) — keep config/specs, ignore generated artifacts & screenshots
+e2e/screenshots/
+e2e/.results/
+e2e/.report/
+test-results/
+playwright-report/
