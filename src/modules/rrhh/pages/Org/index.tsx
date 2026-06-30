@@ -46,7 +46,9 @@ function OrgCard({
   return (
     <div
       className={cn(
-        'org-card relative w-[190px] rounded-xl border bg-card px-3 pb-2.5 pt-9 text-center shadow-sm transition-shadow hover:shadow-md',
+        // relative + z-10 keeps the card and its photo ABOVE the connector lines
+        // (which are ::before/::after pseudo-elements painted after the content).
+        'org-card relative z-10 w-[190px] rounded-xl border bg-card px-3 pb-2.5 pt-9 text-center shadow-sm transition-shadow hover:shadow-md',
         isRoot || isMe ? 'border-emerald-400 ring-1 ring-emerald-200 dark:ring-emerald-500/30' : 'border-border',
       )}
       title={total > 0 ? `${employee.displayName} · ${total}` : employee.displayName}
@@ -122,7 +124,9 @@ export default function OrgChart() {
   const subdomain = useSettingsStore((s) => s.bamboohr.subdomain)
   const { employee: me } = useCurrentEmployee()
 
-  const roots = useMemo(() => buildOrgChart(employees), [employees])
+  // Only active employees belong in the org chart (hide Inactive / Terminated).
+  const activeEmployees = useMemo(() => employees.filter((e) => e.status === 'Active'), [employees])
+  const roots = useMemo(() => buildOrgChart(activeEmployees), [activeEmployees])
   const allExpandableIds = useMemo(() => collectExpandableIds(roots, new Set<string>()), [roots])
 
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(allExpandableIds))
@@ -168,7 +172,7 @@ export default function OrgChart() {
   if (!connected && employees.length === 0) {
     return <div className="space-y-6">{header}<NotConnectedCard /></div>
   }
-  if (employees.length === 0) {
+  if (activeEmployees.length === 0) {
     return <div className="space-y-6">{header}<EmptyStateCard title={t('rrhh.org.empty')} hint={t('rrhh.org.emptyHint')} /></div>
   }
 
