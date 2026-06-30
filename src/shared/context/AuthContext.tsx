@@ -3,6 +3,7 @@ import type { Session, User, AuthChangeEvent } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured, signInWithGoogle } from '@/shared/lib/supabase'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
+import { useEmployeesStore } from '@/shared/store/employeesStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { useVacationPaymentsStore } from '@/shared/store/vacationPaymentsStore'
 import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrStore'
@@ -234,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void useSettingsStore.getState().hydrateConnectorsFromCloud()
         void useSettingsStore.getState().hydrateSettingsFromCloud()
         void useEmployeeHrStore.getState().hydrateFromCloud()
+        void useEmployeesStore.getState().hydrateFromCloud()
         void usePayrollStore.getState().hydrateFromCloud()
         void useVacationPaymentsStore.getState().hydrateFromCloud()
         void usePendingVacationIsrStore.getState().hydrateFromCloud()

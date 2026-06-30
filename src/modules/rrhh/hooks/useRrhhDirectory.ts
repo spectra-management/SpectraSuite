@@ -6,7 +6,7 @@
  * re-fetches from BambooHR (read-only) and updates the localStorage-backed store.
  */
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from '@/shared/hooks/useToast'
 import { useSettingsStore } from '@/shared/store/settingsStore'
@@ -74,11 +74,16 @@ export function useRrhhDirectory(): UseRrhhDirectory {
   const lastSync = useRrhhStore((s) => s.lastSync)
   const setEmployees = useRrhhStore((s) => s.setEmployees)
   const setLastSync = useRrhhStore((s) => s.setLastSync)
+  const hydrateFromCloud = useRrhhStore((s) => s.hydrateFromCloud)
   const mergeFromCloud = useRrhhPhotoStore((s) => s.mergeFromCloud)
   const { canManagePhotos } = useRrhhAccess()
 
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Load the directory from the DB on mount, so a fresh device (e.g. a phone) shows
+  // employees without first running a BambooHR sync. Best-effort; preserves local data.
+  useEffect(() => { void hydrateFromCloud() }, [hydrateFromCloud])
 
   const connected = !!bamboohr.subdomain && !!bamboohr.apiKey
 
