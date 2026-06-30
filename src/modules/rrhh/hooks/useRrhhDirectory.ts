@@ -48,6 +48,7 @@ function toCloudEmployee(e: RrhhEmployee): CloudEmployee {
     maritalStatus: e.maritalStatus,
     nationality: e.nationality,
     supervisor: e.supervisor,
+    supervisorId: e.supervisorId,
     employeeNumber: e.employeeNumber,
     payRate: e.payRate,
     payRateCurrency: e.payRateCurrency,

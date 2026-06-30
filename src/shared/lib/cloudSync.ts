@@ -271,6 +271,8 @@ interface EmployeeRow {
   marital_status: string
   nationality: string
   supervisor: string
+  /** Supervisor's BambooHR employee id (org chart). Added in migration 020. */
+  supervisor_id?: string
   employee_number: string
 }
 
@@ -301,6 +303,7 @@ function toRow(e: CloudEmployee): EmployeeRow {
     marital_status: e.maritalStatus,
     nationality: e.nationality,
     supervisor: e.supervisor,
+    supervisor_id: e.supervisorId,
     employee_number: e.employeeNumber,
   }
 }
@@ -333,6 +336,7 @@ function fromRow(r: EmployeeRow): CloudEmployee {
     maritalStatus: r.marital_status ?? '',
     nationality: r.nationality ?? '',
     supervisor: r.supervisor ?? '',
+    supervisorId: r.supervisor_id ?? '',
     employeeNumber: r.employee_number ?? '',
   }
 }

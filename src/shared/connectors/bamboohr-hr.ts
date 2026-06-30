@@ -37,6 +37,8 @@ export interface HrEmployeeDetail {
   maritalStatus: string
   nationality: string
   supervisor: string
+  /** Supervisor's BambooHR employee id (drives the org chart). '' if none. */
+  supervisorId: string
   employeeNumber: string
 }
 
@@ -77,6 +79,7 @@ interface BambooHrReportRow {
   maritalStatus?: string
   nationality?: string
   supervisor?: string
+  supervisorEId?: string
   employeeNumber?: string
 }
 
@@ -107,6 +110,7 @@ const REPORT_FIELDS = [
   'maritalStatus',
   'nationality',
   'supervisor',
+  'supervisorEId',
   'employeeNumber',
 ]
 
@@ -233,6 +237,7 @@ export async function fetchHrDirectory(
     maritalStatus: e.maritalStatus ?? '',
     nationality: e.nationality ?? '',
     supervisor: e.supervisor ?? '',
+    supervisorId: e.supervisorEId ?? '',
     employeeNumber: e.employeeNumber ?? '',
     }
   })
@@ -269,6 +274,7 @@ export function toCloudEmployee(base: BaseEmployeeFields, hr: HrEmployeeDetail |
     maritalStatus: hr?.maritalStatus ?? '',
     nationality: hr?.nationality ?? '',
     supervisor: hr?.supervisor ?? '',
+    supervisorId: hr?.supervisorId ?? '',
     employeeNumber: hr?.employeeNumber ?? '',
     payRate: base.payRate,
     payRateCurrency: base.payRateCurrency ?? '',

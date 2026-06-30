@@ -16,7 +16,7 @@ const hr: HrEmployeeDetail = {
   nationalId: '001-1234567-8', address: 'Calle 1 #2', city: 'Santo Domingo', state: 'D.N.',
   zipcode: '10101', mobilePhone: '809-555-1234', workPhone: '', homePhone: '',
   dateOfBirth: '1990-05-20', gender: 'Female', maritalStatus: 'Single', nationality: 'Dominican',
-  supervisor: 'Ana Gómez', employeeNumber: 'E-42',
+  supervisor: 'Ana Gómez', supervisorId: '7', employeeNumber: 'E-42',
 }
 
 const company: CompanySettings = {

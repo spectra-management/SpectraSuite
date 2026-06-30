@@ -36,7 +36,7 @@ function toRrhhEmployee(c: CloudEmployee): RrhhEmployee {
     hireDate: c.hireDate,
     status,
     supervisor: c.supervisor,
-    supervisorId: '',
+    supervisorId: c.supervisorId,
     workEmail: c.workEmail,
     personalEmail: '',
     mobilePhone: c.mobilePhone,
