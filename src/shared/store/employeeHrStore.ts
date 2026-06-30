@@ -14,6 +14,9 @@ import type { CloudEmployee } from '@/shared/connectors/bamboohr-hr'
  */
 interface EmployeeHrState {
   byId: Record<string, CloudEmployee>
+  /** True once a cloud-hydrate attempt has finished (success, empty, or unreachable). Lets
+   *  consumers distinguish "still loading" from "loaded but no match" (e.g. self-profile). */
+  hydrated: boolean
   getEmployee: (id: string) => CloudEmployee | undefined
   /** Called after a BambooHR sync: merge (preserving manual fields) + push to the cloud. */
   setFromSync: (employees: CloudEmployee[]) => void
@@ -52,6 +55,7 @@ function mergePreservingManual(fresh: CloudEmployee, old: CloudEmployee | undefi
 
 export const useEmployeeHrStore = create<EmployeeHrState>((set, get) => ({
   byId: storage.get<Record<string, CloudEmployee>>(STORAGE_KEYS.EMPLOYEES_HR) ?? {},
+  hydrated: false,
 
   getEmployee: (id) => get().byId[id],
 
@@ -72,13 +76,16 @@ export const useEmployeeHrStore = create<EmployeeHrState>((set, get) => ({
 
   hydrateFromCloud: async () => {
     const cloud = await fetchEmployeesCloud()
-    if (cloud.length === 0) return // unreachable / not permitted / empty — keep local cache
+    // Mark the attempt as finished regardless of outcome, so consumers (e.g. the self-service
+    // profile) can show a "not linked" message instead of spinning forever when there's no
+    // data / no match.
+    if (cloud.length === 0) { set({ hydrated: true }); return } // unreachable / empty — keep cache
     // Merge, preserving manual fields: a cédula typed by hand that only made it to
     // localStorage (e.g. the cloud write was blocked by RLS) must survive the hydrate
     // instead of being wiped by an empty cloud value.
     const prev = get().byId
     const byId = indexById(cloud.map((e) => mergePreservingManual(e, prev[e.id])))
     storage.set(STORAGE_KEYS.EMPLOYEES_HR, byId)
-    set({ byId })
+    set({ byId, hydrated: true })
   },
 }))
