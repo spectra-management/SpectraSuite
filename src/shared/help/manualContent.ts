@@ -49,7 +49,7 @@ export const MANUAL: ManualSection[] = [
     access: { kind: 'everyone' },
     title: t('Getting started', 'Primeros pasos'),
     intro: t(
-      'Spectra Suite brings payroll, HR, billing, documents and more into one place. What you see depends on your role.',
+      'Spectra Suite brings payroll, HR, invoicing, documents and more into one place. What you see depends on your role.',
       'Spectra Suite reúne nómina, RRHH, facturación, documentos y más en un solo lugar. Lo que ves depende de tu rol.',
     ),
     blocks: [
@@ -244,9 +244,9 @@ export const MANUAL: ManualSection[] = [
     id: 'facturacion',
     icon: ReceiptText,
     access: { kind: 'module', module: 'facturacion' },
-    title: t('Billing (Facturación)', 'Facturación'),
+    title: t('Invoicing (Facturación)', 'Facturación'),
     intro: t(
-      'Bill clients for staff labor, using finalized payroll data. All billing is in USD.',
+      'Bill clients for staff labor, using finalized payroll data. All invoicing is in USD.',
       'Factura a los clientes por el trabajo del personal, usando datos de nómina finalizados. Toda la facturación es en USD.',
     ),
     blocks: [
