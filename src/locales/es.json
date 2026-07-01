@@ -1452,7 +1452,18 @@
       "billTo": "Facturar a",
       "remitTo": "Enviar pago a",
       "subtotal": "Subtotal",
-      "generatedBy": "Generado por Spectra Suite"
+      "generatedBy": "Generado por Spectra Suite",
+      "date": "Fecha",
+      "payClass": "Concepto",
+      "totalHours": "Horas Totales",
+      "hourlyRate": "Tarifa por Hora",
+      "totals": "Totales",
+      "invoiceTotal": "Total de Factura",
+      "remitIntro": "Enviar el pago a:",
+      "hoursDetailTitle": "Detalle de Horas",
+      "worked": "Horas Trabajadas",
+      "baseHours": "Horas Base",
+      "overtimeHours": "Horas Extra"
     },
     "reports": {
       "title": "Reportes",

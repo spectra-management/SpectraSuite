@@ -261,6 +261,15 @@ export const MANUAL: ManualSection[] = [
         items: [
           t('Create an invoice for a client and period; it pulls the finalized payroll for that range.', 'Crea una factura para un cliente y período; toma la nómina finalizada de ese rango.'),
           t('Invoices are draft until finalized; finalizing assigns the invoice number.', 'Las facturas están en borrador hasta finalizarse; al finalizar se asigna el número de factura.'),
+          t('The invoice number is the client prefix + the invoice date (MMDDYYYY), e.g. RM02162026. Set each client\'s prefix in Clients.', 'El número de factura es el prefijo del cliente + la fecha (MMDDYYYY), ej. RM02162026. Define el prefijo de cada cliente en Clientes.'),
+          t('Add incentives/bonuses per employee before finalizing (KPI Bonus, Team Contest, etc.).', 'Agrega incentivos/bonos por empleado antes de finalizar (KPI Bonus, Team Contest, etc.).'),
+        ],
+      },
+      {
+        heading: t('Invoice PDF', 'PDF de la factura'),
+        items: [
+          t('The PDF groups Base Pay and Overtime by role/rate, lists bonuses per person, and shows the Invoice Total.', 'El PDF agrupa Base Pay y Overtime por rol/tarifa, lista los bonos por persona y muestra el Total de Factura.'),
+          t('A second "Hours Detail" page lists each employee\'s total worked, base and overtime hours.', 'Una segunda página de "Detalle de Horas" lista por empleado las horas trabajadas, base y extra.'),
         ],
       },
     ],

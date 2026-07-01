@@ -337,8 +337,15 @@ export const useBillingStore = create<BillingState>((set, get) => ({
     const client = get().clients.find((c) => c.id === invoice.clientId)
     if (!client) return undefined
 
+    // Number = client prefix + invoice date (MMDDYYYY), e.g. "RM02162026". Add a -N suffix
+    // only if the same client already has that number (several invoices dated the same day).
+    const base = formatInvoiceNumber(client.invoicePrefix, invoice.issueDate)
+    const taken = new Set(
+      get().invoices.filter((i) => i.clientId === client.id && i.status === 'finalized' && i.id !== id).map((i) => i.number),
+    )
+    let number = base
+    for (let n = 2; taken.has(number); n++) number = `${base}-${n}`
     const seq = client.nextInvoiceSeq
-    const number = formatInvoiceNumber(client.invoicePrefix, seq)
     const ts = nowIso()
     const subtotal = sumLineItems(invoice.lineItems)
 

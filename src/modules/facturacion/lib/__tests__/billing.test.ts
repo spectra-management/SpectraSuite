@@ -44,10 +44,10 @@ function seedPayroll(status: 'draft' | 'approved' | 'sent') {
 }
 
 describe('formatInvoiceNumber', () => {
-  it('pads sequence and uppercases prefix', () => {
-    expect(formatInvoiceNumber('rm', 1)).toBe('RM-0001')
-    expect(formatInvoiceNumber('RM', 42)).toBe('RM-0042')
-    expect(formatInvoiceNumber('', 7)).toBe('INV-0007')
+  it('is client prefix + invoice date as MMDDYYYY', () => {
+    expect(formatInvoiceNumber('rm', '2026-02-16')).toBe('RM02162026')
+    expect(formatInvoiceNumber('RM', '2026-12-01')).toBe('RM12012026')
+    expect(formatInvoiceNumber('', '2026-02-16')).toBe('INV02162026')
   })
 })
 

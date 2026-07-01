@@ -90,11 +90,15 @@ export default function InvoiceDetail() {
     try {
       const labels: InvoicePdfLabels = {
         invoice: t('facturacion.pdf.invoice'), number: t('facturacion.pdf.number'), issueDate: t('facturacion.pdf.issueDate'),
-        period: t('facturacion.pdf.period'), billTo: t('facturacion.pdf.billTo'), remitTo: t('facturacion.pdf.remitTo'),
-        employee: t('facturacion.lines.employee'), description: t('facturacion.lines.description'), qty: t('facturacion.lines.qty'),
-        rate: t('facturacion.lines.rate'), amount: t('common.amount'), subtotal: t('facturacion.pdf.subtotal'),
-        total: t('common.total'), notes: t('facturacion.clients.notes'), draftWatermark: t('facturacion.invoices.draft'),
-        generated: t('facturacion.pdf.generatedBy'),
+        period: t('facturacion.pdf.period'), billTo: t('facturacion.pdf.billTo'),
+        date: t('facturacion.pdf.date'), description: t('facturacion.lines.description'),
+        payClass: t('facturacion.pdf.payClass'), totalHours: t('facturacion.pdf.totalHours'),
+        hourlyRate: t('facturacion.pdf.hourlyRate'), total: t('common.total'),
+        totals: t('facturacion.pdf.totals'), invoiceTotal: t('facturacion.pdf.invoiceTotal'),
+        remitIntro: t('facturacion.pdf.remitIntro'), draftWatermark: t('facturacion.invoices.draft'),
+        generated: t('facturacion.pdf.generatedBy'), hoursDetailTitle: t('facturacion.pdf.hoursDetailTitle'),
+        employee: t('facturacion.lines.employee'), worked: t('facturacion.pdf.worked'),
+        baseHours: t('facturacion.pdf.baseHours'), overtimeHours: t('facturacion.pdf.overtimeHours'),
       }
       // Lazy-load the document (and react-pdf) only when a PDF is actually requested.
       const { InvoiceDocument } = await import('@/modules/facturacion/lib/invoicePdf')
