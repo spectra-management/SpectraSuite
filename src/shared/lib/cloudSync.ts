@@ -165,7 +165,7 @@ export async function savePayrollRunCloud(run: PayrollPeriod): Promise<void> {
       local_id: run.id,
       period_start: run.startDate,
       period_end: run.endDate,
-      pay_date: run.processedDate ?? null,
+      pay_date: run.payDate ?? run.processedDate ?? null,
       country: run.country ?? 'Dominican Republic',
       frequency: run.frequency,
       status: run.status,

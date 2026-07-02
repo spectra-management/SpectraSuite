@@ -10,7 +10,9 @@ import { usePayrollStore } from '@/shared/store/payrollStore'
 import { usePendingVacationIsrStore } from '@/shared/store/pendingVacationIsrStore'
 import { usePayrollSettingsStore } from '@/shared/store/payrollSettingsStore'
 import { useCountryFiscalStore } from '@/shared/store/countryFiscalStore'
+import { useDependentsStore } from '@/shared/store/dependentsStore'
 import { calculatePayroll, findFirstFortnightGross } from '@/modules/nomina/lib/payroll/calculations'
+import { withDependentDeductions } from '@/modules/nomina/lib/payroll/dependentDeductions'
 import { getPayrollRules } from '@/modules/nomina/lib/payroll/rules'
 import { getInitials } from '@/shared/lib/utils'
 import { formatCurrency } from '@/shared/lib/utils/currency'
@@ -43,6 +45,7 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
   const pendingVacationIsr = usePendingVacationIsrStore((s) => s.pending)
   const payrollOverrides = usePayrollSettingsStore((s) => s.byId)
   const countryConfigs = useCountryFiscalStore((s) => s.byCountry)
+  const dependentsByEmployee = useDependentsStore((s) => s.byEmployee)
 
   // Global run = all countries in one pass; each employee is calculated with its
   // OWN country's tax rules.
@@ -88,7 +91,13 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
         regularHours: h.regularHours,
         otHours: h.otHours,
         holidayHours: h.holidayHours,
-        customDeductions: emp.customDeductions?.filter((d) => d.active) ?? [],
+        // Manual deductions + the auto rows derived from RRHH insurance dependents
+        // (monthly cost prorated per period; auto replaces same-named manual rows).
+        customDeductions: withDependentDeductions(
+          emp.customDeductions?.filter((d) => d.active) ?? [],
+          dependentsByEmployee[emp.id] ?? [],
+          frequency,
+        ),
         rules: empRules,
         frequency,
         otRatePercent: payrollSettings.otRatePercent,
@@ -121,7 +130,7 @@ export function StepCalculate({ employeeHours, startDate, endDate, frequency, co
     }
 
     return { entries: computedEntries, totals }
-  }, [employeeHours, employees, rules, isGlobal, fiscal, frequency, payrollSettings, startDate, endDate, country, history, nightShift, pendingVacationIsr, payrollOverrides, countryConfigs])
+  }, [employeeHours, employees, rules, isGlobal, fiscal, frequency, payrollSettings, startDate, endDate, country, history, nightShift, pendingVacationIsr, payrollOverrides, countryConfigs, dependentsByEmployee])
 
   // Per-country rollup for Global mode (native currencies, no conversion).
   const byCountry = useMemo(() => {

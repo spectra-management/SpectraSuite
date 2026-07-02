@@ -11,6 +11,7 @@ import { usePayrollSettingsStore } from '@/shared/store/payrollSettingsStore'
 import { useBaseballCardStore } from '@/shared/store/baseballCardStore'
 import { useCountryFiscalStore } from '@/shared/store/countryFiscalStore'
 import { useModuleVisibilityStore } from '@/shared/store/moduleVisibilityStore'
+import { useDependentsStore } from '@/shared/store/dependentsStore'
 import { useRewardsStore } from '@/shared/store/rewardsStore'
 import { useExchangeRateStore } from '@/shared/store/exchangeRateStore'
 import { logAuditEvent } from '@/shared/lib/audit'
@@ -243,6 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void useBaseballCardStore.getState().hydrateFromCloud()
         void useCountryFiscalStore.getState().hydrateFromCloud()
         void useModuleVisibilityStore.getState().hydrateFromCloud()
+        void useDependentsStore.getState().hydrateFromCloud()
         void useRewardsStore.getState().hydrateEnabled()
         void useExchangeRateStore.getState().hydrate()
         // Load the configured inactivity timeout (company_settings is publicly readable).

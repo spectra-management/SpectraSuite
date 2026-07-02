@@ -36,11 +36,12 @@ async function buildStubElement(
   endDate: string,
   lang: EmailTemplate['payStubLanguage'],
   country?: string,
+  payDate?: string,
 ) {
   const PayStubDocument = await loadPayStub()
   const paymentMethod = usePaymentMethodsStore.getState().getMethod(entry.employee.id)
   const bankAccount = useBankAccountsStore.getState().getAccount(entry.employee.id)
-  return React.createElement(PayStubDocument, { entry, company, startDate, endDate, lang, country, paymentMethod, bankAccount })
+  return React.createElement(PayStubDocument, { entry, company, startDate, endDate, lang, country, paymentMethod, bankAccount, payDate })
 }
 
 function statusVariant(status: PayrollPeriod['status']): 'default' | 'secondary' | 'info' | 'warning' {
@@ -87,6 +88,7 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
         payroll.endDate,
         emailTemplate.payStubLanguage,
         payroll.country,
+        payroll.payDate,
       )
       const blob = await generatePdfBlob(element)
       const fname = `Paystub_${entry.employee.firstName}_${entry.employee.lastName}_${payroll.startDate}_${payroll.endDate}.pdf`
@@ -115,6 +117,8 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
         payroll.startDate,
         payroll.endDate,
         emailTemplate.payStubLanguage,
+        payroll.country,
+        payroll.payDate,
       )
       const blob = await generatePdfBlob(element)
       const pdfBase64 = await blobToBase64(blob)
@@ -183,6 +187,7 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
           payroll.endDate,
           emailTemplate.payStubLanguage,
           payroll.country,
+          payroll.payDate,
         )
         const blob = await generatePdfBlob(element)
         const pdfBase64 = await blobToBase64(blob)
@@ -251,6 +256,7 @@ function PayrollRow({ payroll }: { payroll: PayrollPeriod }) {
           payroll.endDate,
           emailTemplate.payStubLanguage,
           payroll.country,
+          payroll.payDate,
         )
         const blob = await generatePdfBlob(element)
         const fname = `Paystub_${entry.employee.firstName}_${entry.employee.lastName}_${payroll.startDate}_${payroll.endDate}.pdf`

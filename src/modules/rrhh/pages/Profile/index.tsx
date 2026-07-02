@@ -11,6 +11,7 @@ import {
   StickyNote,
   Files,
   CreditCard,
+  HeartPulse,
 } from 'lucide-react'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
@@ -36,6 +37,7 @@ import {
   RestrictedCard,
 } from './tabs'
 import { BaseballCardTab } from './BaseballCardTab'
+import { DependentsTab } from './DependentsTab'
 
 function statusVariant(status: RrhhEmployeeStatus): 'default' | 'secondary' | 'destructive' {
   if (status === 'Active') return 'default'
@@ -50,6 +52,7 @@ type TabId =
   | 'compensation'
   | 'timeOff'
   | 'emergency'
+  | 'dependents'
   | 'notes'
   | 'documents'
 
@@ -133,6 +136,10 @@ export default function Profile({
       : []),
     { id: 'timeOff', label: t('rrhh.profile.tabs.timeOff'), icon: CalendarDays },
     { id: 'emergency', label: t('rrhh.profile.tabs.emergency'), icon: Phone },
+    // Insurance dependents: employees see their own (read-only); otherwise sensitive-access only.
+    ...(canViewSensitive || selfMode
+      ? [{ id: 'dependents', label: t('rrhh.profile.tabs.dependents'), icon: HeartPulse }]
+      : []),
     ...(selfMode ? [] : [{ id: 'notes', label: t('rrhh.profile.tabs.notes'), icon: StickyNote }]),
     ...(canViewSensitive && !selfMode
       ? [{ id: 'documents', label: t('rrhh.profile.tabs.documents'), icon: Files }]
@@ -196,6 +203,12 @@ export default function Profile({
       {effectiveTab === 'emergency' && (
         <EmergencyTab employeeId={employee.id} enabled={effectiveTab === 'emergency'} />
       )}
+      {effectiveTab === 'dependents' &&
+        (canViewSensitive || selfMode ? (
+          <DependentsTab employee={employee} canEdit={canViewSensitive && !selfMode} />
+        ) : (
+          <RestrictedCard />
+        ))}
       {effectiveTab === 'notes' && <NotesTab />}
       {effectiveTab === 'documents' &&
         (canViewSensitive ? (

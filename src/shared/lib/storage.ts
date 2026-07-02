@@ -74,6 +74,8 @@ export const STORAGE_KEYS = {
   COUNTRY_FISCAL: 'country_fiscal_configs',
   // RRHH app-local document folders: custom folders + per-document folder moves (over BambooHR)
   RRHH_DOC_FOLDERS: 'rrhh_doc_folders',
+  // RRHH per-employee insurance dependents (TSS adicionales + seguro complementario)
+  INSURANCE_DEPENDENTS: 'insurance_dependents',
   // Documentos module: the country currently selected to scope templates/documents (UI pref)
   DOCUMENTOS_COUNTRY: 'documentos_country',
   // Suite module visibility: list of hidden module IDs (super-admin only), shared across users

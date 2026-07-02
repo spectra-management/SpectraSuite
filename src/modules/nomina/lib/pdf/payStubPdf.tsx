@@ -120,6 +120,8 @@ interface Props {
   bankAccount?: BankAccount
   otRatePercent?: number
   holidayRatePercent?: number
+  /** Pay date shown in the header (YYYY-MM-DD). Defaults to the generation date. */
+  payDate?: string
 }
 
 export function PayStubDocument({
@@ -132,6 +134,7 @@ export function PayStubDocument({
   bankAccount,
   otRatePercent = 35,
   holidayRatePercent = 100,
+  payDate,
 }: Props) {
   const { employee: emp, calculation: c, hours: h } = entry
   // Every worked hour is paid at 100% in regular pay, so the "Regular Hours" line shows
@@ -151,7 +154,12 @@ export function PayStubDocument({
   const methodLabel = paymentMethod === 'transfer' && bankAccount?.bank
     ? [PAYMENT_METHOD_LABELS[lang].transfer, bankAccount.bank, acctMask].filter(Boolean).join(' · ')
     : PAYMENT_METHOD_LABELS[lang][paymentMethod]
-  const today = new Date().toLocaleDateString(lang === 'es' ? 'es-DO' : 'en-US')
+  const dateLocale = lang === 'es' ? 'es-DO' : 'en-US'
+  const today = new Date().toLocaleDateString(dateLocale)
+  // T00:00:00 keeps the YYYY-MM-DD date from shifting a day in negative-UTC timezones.
+  const payDateDisplay = payDate
+    ? new Date(`${payDate}T00:00:00`).toLocaleDateString(dateLocale)
+    : today
 
 
   // Country-specific labels and currency. US uses its statutory names (Medicare/SS/Federal);
@@ -199,7 +207,7 @@ export function PayStubDocument({
             </View>
             <View style={S.metaRow}>
               <Text style={S.metaLabel}>{l.payDate}:</Text>
-              <Text style={S.metaValue}>{today}</Text>
+              <Text style={S.metaValue}>{payDateDisplay}</Text>
             </View>
           </View>
         </View>

@@ -380,6 +380,8 @@
     },
     "approve": {
       "title": "Aprobar Nómina",
+      "payDate": "Fecha de pago",
+      "payDateHint": "Fecha que se imprime en los comprobantes — no tiene que ser la fecha de procesamiento.",
       "confirmMessage": "¿Estás seguro de que deseas aprobar esta nómina? Esto generará los comprobantes y permitirá enviarlos a los empleados.",
       "approve": "Aprobar Nómina",
       "approved": "Nómina Aprobada",
@@ -1234,13 +1236,45 @@
         "emergency": "Emergencia",
         "notes": "Notas",
         "documents": "Documentos",
-        "baseballCard": "Baseball Card"
+        "baseballCard": "Baseball Card",
+        "dependents": "Dependientes"
       },
       "emergency": {
         "title": "Contactos de Emergencia",
         "primary": "Principal",
         "email": "Correo",
         "none": "No hay contactos de emergencia registrados para este empleado."
+      },
+      "dependents": {
+        "group": {
+          "tss": "Dependientes TSS (adicionales)",
+          "complementary": "Seguro Complementario"
+        },
+        "add": "Agregar dependiente",
+        "addTitle": "Agregar Dependiente",
+        "editTitle": "Editar Dependiente",
+        "none": "No hay dependientes registrados en esta cobertura.",
+        "deleteConfirm": "¿Eliminar al dependiente \"{{name}}\"?",
+        "note": "Los costos mensuales alimentan Nómina automáticamente: el total de cada cobertura se convierte en la deducción \"Dependent TSS\" / \"Complementary Insurance\" del empleado, prorrateada por período de pago (quincenal ÷ 2, semanal ÷ 4, mes completo × 1). Cuando una cobertura tiene dependientes con costo, su deducción automática reemplaza cualquier deducción manual con el mismo nombre.",
+        "cols": {
+          "name": "Nombre",
+          "relationship": "Parentesco",
+          "nationalId": "Cédula",
+          "birthDate": "Fecha de Nacimiento",
+          "gender": "Sexo",
+          "monthlyCost": "Costo Mensual",
+          "coverage": "Cobertura"
+        },
+        "rel": {
+          "spouse": "Cónyuge",
+          "child": "Hijo(a)",
+          "parent": "Padre/Madre",
+          "other": "Otro"
+        },
+        "gender": {
+          "F": "Femenino",
+          "M": "Masculino"
+        }
       },
       "notes": {
         "title": "Notas",

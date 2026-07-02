@@ -5,6 +5,7 @@ import { CheckCircle2, Loader2, DollarSign, Users, TrendingDown, FileText, Table
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Button } from '@/shared/components/ui/button'
+import { Input } from '@/shared/components/ui/input'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { useEmployeeHrStore } from '@/shared/store/employeeHrStore'
@@ -47,6 +48,8 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
   const [approving, setApproving] = useState(false)
   const [approved, setApproved] = useState(false)
   const [generatingReport, setGeneratingReport] = useState(false)
+  // Pay date printed on the paystubs — editable, defaults to today.
+  const [payDate, setPayDate] = useState(() => new Date().toISOString().split('T')[0])
 
   const lang = (i18n.language?.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
@@ -71,6 +74,7 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
       country,
       status: 'approved' as const,
       processedDate: new Date().toISOString().split('T')[0],
+      ...(payDate ? { payDate } : {}),
       entries,
       totals,
       ...(exchangeRate ? { exchangeRate } : {}),
@@ -203,6 +207,16 @@ export function StepApprove({ startDate, endDate, frequency, country, entries, t
               <span className="text-muted-foreground">Frequency</span>
               <span className="font-medium text-foreground">{frequency}</span>
             </div>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground">{t('payroll.approve.payDate')}</span>
+              <Input
+                type="date"
+                value={payDate}
+                onChange={(e) => setPayDate(e.target.value)}
+                className="h-8 w-40 text-sm"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">{t('payroll.approve.payDateHint')}</p>
             <div className="h-px bg-muted" />
             <SummaryRow
               icon={Users}

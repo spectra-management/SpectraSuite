@@ -39,6 +39,31 @@ export interface CustomDeduction {
   active: boolean
 }
 
+/** Which insurance coverage a dependent is enrolled in (RRHH dependents section). */
+export type DependentCoverage = 'tss' | 'complementary'
+
+export type DependentRelationship = 'spouse' | 'child' | 'parent' | 'other'
+
+/**
+ * Insurance dependent on an employee's record (RRHH), mirroring the accounting
+ * report "Detalle dependientes adicionales". The per-coverage monthly costs feed
+ * the auto "Dependent TSS" / "Complementary Insurance" payroll deductions.
+ */
+export interface InsuranceDependent {
+  id: string
+  /** Full name as it appears on the ARS/TSS report. */
+  name: string
+  relationship: DependentRelationship
+  /** Cédula / identity document (may be empty for minors). */
+  nationalId: string
+  /** YYYY-MM-DD */
+  birthDate: string
+  gender: 'M' | 'F' | ''
+  coverage: DependentCoverage
+  /** Monthly cost deducted for this dependent (0 = no cost / unknown). */
+  monthlyCost: number
+}
+
 export interface HubstaffUser {
   id: string
   name: string
@@ -78,6 +103,8 @@ export interface PayrollPeriod {
   frequency: 'biweekly' | 'weekly' | 'full_month'
   status: 'draft' | 'approved' | 'sent'
   processedDate?: string
+  /** Pay date shown on paystubs (YYYY-MM-DD). Editable at approval; falls back to the generation date. */
+  payDate?: string
   entries: PayrollEntry[]
   totals: PayrollTotals
   country?: string

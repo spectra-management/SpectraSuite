@@ -4,11 +4,14 @@ import { useTranslation } from 'react-i18next'
 import { Download, Mail, Loader2, X } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/shared/components/ui/dialog'
 import { Button } from '@/shared/components/ui/button'
+import { Input } from '@/shared/components/ui/input'
 import { useSettingsStore } from '@/shared/store/settingsStore'
 import { usePayrollStore } from '@/shared/store/payrollStore'
 import { useCountryFiscalStore } from '@/shared/store/countryFiscalStore'
 import { calculatePayroll, formatCurrencyWithSymbol, findFirstFortnightGross } from '@/modules/nomina/lib/payroll/calculations'
+import { withDependentDeductions } from '@/modules/nomina/lib/payroll/dependentDeductions'
 import { getPayrollRules } from '@/modules/nomina/lib/payroll/rules'
+import { useDependentsStore } from '@/shared/store/dependentsStore'
 import { generatePdfBlob, downloadBlob, blobToBase64 } from '@/modules/nomina/lib/pdf/generatePdf'
 import { logoSrc } from '@/modules/nomina/lib/pdf/logo'
 import { getPaystubLang, PAYSTUB_LABELS, PAYMENT_METHOD_LABELS } from '@/modules/nomina/lib/pdf/paystubLabels'
@@ -69,7 +72,10 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
 
   const [downloading, setDownloading] = useState(false)
   const [sending, setSending] = useState(false)
+  // Pay date printed on the stub — editable, defaults to today (not tied to processing date).
+  const [payDate, setPayDate] = useState(() => new Date().toISOString().split('T')[0])
 
+  const dependents = useDependentsStore((s) => s.byEmployee[employee.id])
   const countryConfigs = useCountryFiscalStore((s) => s.byCountry)
   const rules = useMemo(
     () => getPayrollRules(country, frequency, fiscal, payrollSettings, countryConfigs),
@@ -89,7 +95,11 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
     regularHours: hoursEntry.regularHours,
     otHours: hoursEntry.otHours,
     holidayHours: hoursEntry.holidayHours,
-    customDeductions: employee.customDeductions?.filter((d) => d.active) ?? [],
+    customDeductions: withDependentDeductions(
+      employee.customDeductions?.filter((d) => d.active) ?? [],
+      dependents ?? [],
+      frequency,
+    ),
     rules,
     frequency,
     otRatePercent: payrollSettings.otRatePercent,
@@ -98,7 +108,7 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
     firstFortnightGross: findFirstFortnightGross(history, country, startDate, employee.id),
     nightHours: hoursEntry.nightHours,
     nightShift,
-  }), [employee, effectiveRate, hoursEntry, rules, payrollSettings, frequency, startDate, country, history, nightShift])
+  }), [employee, effectiveRate, hoursEntry, rules, payrollSettings, frequency, startDate, country, history, nightShift, dependents])
 
   const entry = useMemo(() => ({
     employee,
@@ -136,6 +146,7 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
       bankAccount,
       otRatePercent: payrollSettings.otRatePercent,
       holidayRatePercent: payrollSettings.holidayRatePercent,
+      payDate,
     })
   }
 
@@ -250,10 +261,15 @@ export function SinglePaystubModal({ employee, hoursEntry, startDate, endDate, f
                 <span className="font-medium text-muted-foreground">{L.dateRange}:</span>{' '}
                 {startDate} – {endDate}
               </p>
-              <p className="text-xs text-muted-foreground">
-                <span className="font-medium text-muted-foreground">{L.payDate}:</span>{' '}
-                {new Date().toLocaleDateString()}
-              </p>
+              <div className="mt-0.5 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+                <span className="font-medium text-muted-foreground">{L.payDate}:</span>
+                <Input
+                  type="date"
+                  value={payDate}
+                  onChange={(e) => setPayDate(e.target.value)}
+                  className="h-6 w-32 px-1.5 text-xs"
+                />
+              </div>
             </div>
           </div>
 

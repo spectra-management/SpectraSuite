@@ -380,6 +380,8 @@
     },
     "approve": {
       "title": "Approve Payroll",
+      "payDate": "Pay Date",
+      "payDateHint": "Date printed on the pay stubs — it does not have to be the processing date.",
       "confirmMessage": "Are you sure you want to approve this payroll? This will generate pay stubs and allow sending to employees.",
       "approve": "Approve Payroll",
       "approved": "Payroll Approved",
@@ -1234,13 +1236,45 @@
         "emergency": "Emergency",
         "notes": "Notes",
         "documents": "Documents",
-        "baseballCard": "Baseball Card"
+        "baseballCard": "Baseball Card",
+        "dependents": "Dependents"
       },
       "emergency": {
         "title": "Emergency Contacts",
         "primary": "Primary",
         "email": "Email",
         "none": "No emergency contacts on record for this employee."
+      },
+      "dependents": {
+        "group": {
+          "tss": "TSS Dependents (additional)",
+          "complementary": "Complementary Insurance"
+        },
+        "add": "Add dependent",
+        "addTitle": "Add Dependent",
+        "editTitle": "Edit Dependent",
+        "none": "No dependents on record for this coverage.",
+        "deleteConfirm": "Remove dependent \"{{name}}\"?",
+        "note": "The monthly costs feed Payroll automatically: each coverage's total becomes the employee's \"Dependent TSS\" / \"Complementary Insurance\" deduction, prorated per pay period (biweekly ÷ 2, weekly ÷ 4, full month × 1). When a coverage has dependents with cost, its auto deduction replaces any manually configured one with the same name.",
+        "cols": {
+          "name": "Name",
+          "relationship": "Relationship",
+          "nationalId": "ID (Cédula)",
+          "birthDate": "Date of Birth",
+          "gender": "Gender",
+          "monthlyCost": "Monthly Cost",
+          "coverage": "Coverage"
+        },
+        "rel": {
+          "spouse": "Spouse",
+          "child": "Child",
+          "parent": "Parent",
+          "other": "Other"
+        },
+        "gender": {
+          "F": "Female",
+          "M": "Male"
+        }
       },
       "notes": {
         "title": "Notes",

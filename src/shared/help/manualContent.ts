@@ -179,12 +179,20 @@ export const MANUAL: ManualSection[] = [
           t('Step 2 — Hours: review/adjust each employee\'s regular, overtime and holiday hours.', 'Paso 2 — Horas: revisa/ajusta las horas regulares, extra y de feriado de cada empleado.'),
           t('Step 3 — Calculate: review gross, TSS, ISR and net totals before approving.', 'Paso 3 — Calcular: revisa los totales de bruto, TSS, ISR y neto antes de aprobar.'),
           t('Step 4 — Approve: finalize the run. Approved runs are saved to the database.', 'Paso 4 — Aprobar: finaliza la corrida. Las corridas aprobadas se guardan en la base de datos.'),
+          t('The Pay Date shown on the paystubs is editable at approval (defaults to today) — it does not have to be the processing date. The single-stub preview also lets you set it.', 'La Fecha de Pago que aparece en los comprobantes es editable al aprobar (por defecto hoy) — no tiene que ser la fecha de procesamiento. La vista previa de comprobante individual también permite ajustarla.'),
         ],
       },
       {
         heading: t('Hours & rates', 'Horas y tarifas'),
         items: [
           t('Total hours pay at 100% of the rate; overtime adds a 50% differential; holidays add 100%.', 'El total de horas se paga al 100% de la tarifa; el OT agrega 50% de diferencial; los feriados agregan 100%.'),
+        ],
+      },
+      {
+        heading: t('Deductions', 'Deducciones'),
+        items: [
+          t('Custom deductions (fixed or % of gross) are configured per employee in Employees.', 'Las deducciones personalizadas (fijas o % del bruto) se configuran por empleado en Empleados.'),
+          t('Insurance dependents registered in RRHH feed the "Dependent TSS" and "Complementary Insurance" deductions automatically: the monthly cost is prorated per pay period and replaces any same-named manual deduction.', 'Los dependientes de seguro registrados en RRHH alimentan las deducciones "Dependent TSS" y "Seguro Complementario" automáticamente: el costo mensual se prorratea por período de pago y reemplaza cualquier deducción manual con el mismo nombre.'),
         ],
       },
       {
@@ -234,6 +242,14 @@ export const MANUAL: ManualSection[] = [
         items: [
           t('Documents are organized in folders; you can create folders and move documents within the app.', 'Los documentos se organizan en carpetas; puedes crear carpetas y mover documentos dentro de la app.'),
           t('Tax exemption can be set per employee (admin/payroll only).', 'La exención de impuestos se puede configurar por empleado (solo admin/nómina).'),
+        ],
+      },
+      {
+        heading: t('Insurance dependents', 'Dependientes de seguro'),
+        items: [
+          t('The Dependents tab on the employee profile tracks who is covered, in two groups: TSS Dependents (additional) and Complementary Insurance.', 'La pestaña Dependientes del perfil del empleado registra quién está cubierto, en dos grupos: Dependientes TSS (adicionales) y Seguro Complementario.'),
+          t('Each dependent records name, relationship, ID (cédula), date of birth, gender and monthly cost. Users with sensitive-data access can add, edit and remove them; employees see their own dependents read-only.', 'Cada dependiente registra nombre, parentesco, cédula, fecha de nacimiento, sexo y costo mensual. Los usuarios con acceso a datos sensibles pueden agregarlos, editarlos y eliminarlos; los empleados ven sus propios dependientes en solo lectura.'),
+          t('The monthly costs feed Payroll automatically: each coverage\'s total becomes the employee\'s "Dependent TSS" / "Complementary Insurance" deduction, prorated per pay period (biweekly ÷ 2, weekly ÷ 4, full month × 1) and replacing any same-named manual deduction.', 'Los costos mensuales alimentan Nómina automáticamente: el total de cada cobertura se convierte en la deducción "Dependent TSS" / "Seguro Complementario" del empleado, prorrateada por período de pago (quincenal ÷ 2, semanal ÷ 4, mes completo × 1) y reemplazando cualquier deducción manual con el mismo nombre.'),
         ],
       },
     ],
