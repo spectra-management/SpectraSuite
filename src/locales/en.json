@@ -95,6 +95,21 @@
         "afp": "AFP (2.87%)",
         "totalTss": "Total TSS"
       }
+    },
+    "otras": {
+      "title": "Other Remunerations Report",
+      "note": "Overtime and holiday premiums paid in the month — the non-contributory extra pay excluded from the TSS contributory salary. Only employees with OT or holiday pay are listed.",
+      "empty": "No overtime or holiday pay for {{period}}.",
+      "totals": "TOTALS",
+      "cols": {
+        "cedula": "ID (Cédula)",
+        "name": "Full Name",
+        "otHours": "OT Hours",
+        "otPay": "Overtime",
+        "holidayHours": "Holiday Hrs",
+        "holidayPay": "Holidays",
+        "total": "Total Other Remunerations"
+      }
     }
   },
   "common": {

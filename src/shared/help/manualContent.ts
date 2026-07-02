@@ -208,6 +208,7 @@ export const MANUAL: ManualSection[] = [
           t('Open History to review past runs, expand a run for the per-employee breakdown, and export the manager report (PDF/CSV).', 'Abre el Historial para revisar corridas pasadas, expandir una corrida para el desglose por empleado y exportar el reporte gerencial (PDF/CSV).'),
           t('An approved run can be reopened and edited by an admin (audited).', 'Una corrida aprobada puede reabrirse y editarse por un admin (queda auditado).'),
           t('The Reports section has the TSS Payment Report: pick a month and get each employee\'s contributory salary (all earnings except overtime and holiday premiums), SFS, AFP and total TSS, exportable to PDF/CSV.', 'La sección Reportes tiene el Reporte de Pago TSS: elige un mes y obtén el salario cotizable de cada empleado (todos los ingresos excepto recargos de horas extras y feriados), SFS, AFP y total TSS, exportable a PDF/CSV.'),
+          t('The Other Remunerations Report is its complement: the month\'s overtime and holiday premiums per employee (hours and amounts), exportable to PDF/CSV.', 'El Reporte de Otras Remuneraciones es su complemento: los recargos de horas extras y feriados del mes por empleado (horas y montos), exportable a PDF/CSV.'),
         ],
       },
     ],

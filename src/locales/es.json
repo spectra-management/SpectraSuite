@@ -95,6 +95,21 @@
         "afp": "AFP (2.87%)",
         "totalTss": "Total TSS"
       }
+    },
+    "otras": {
+      "title": "Reporte de Otras Remuneraciones",
+      "note": "Recargos de horas extras y feriados pagados en el mes — el pago extra no cotizable excluido del salario cotizable TSS. Solo se listan empleados con horas extras o feriados.",
+      "empty": "No hay horas extras ni feriados para {{period}}.",
+      "totals": "TOTALES",
+      "cols": {
+        "cedula": "Cédula",
+        "name": "Nombre Completo",
+        "otHours": "Hrs Extras",
+        "otPay": "Horas Extras",
+        "holidayHours": "Hrs Feriado",
+        "holidayPay": "Feriados",
+        "total": "Total Otras Remuneraciones"
+      }
     }
   },
   "common": {
