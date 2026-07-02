@@ -72,9 +72,30 @@
     "employees": "Employees",
     "payroll": "Process Payroll",
     "history": "History",
+    "reports": "Reports",
     "connectors": "Connectors",
     "settings": "Settings",
     "noPermission": "You don't have permission for this."
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Payroll reports for accounting and statutory filings.",
+    "tss": {
+      "title": "TSS Payment Report",
+      "note": "Contributory salary (salario cotizable) = all earnings except the overtime and holiday premiums. Dominican Republic runs only, aggregated per employee over the selected month.",
+      "empty": "No approved payroll runs for {{period}}.",
+      "runsIncluded": "{{count}} approved run(s) included for {{period}}.",
+      "totals": "TOTALS",
+      "employeeCount": "{{count}} employee(s)",
+      "cols": {
+        "cedula": "ID (Cédula)",
+        "name": "Full Name",
+        "cotizable": "Contributory Salary",
+        "sfs": "SFS (3.04%)",
+        "afp": "AFP (2.87%)",
+        "totalTss": "Total TSS"
+      }
+    }
   },
   "common": {
     "save": "Save",

@@ -266,11 +266,14 @@ export function calculatePayroll(input: CalculationInput): CalculationResult {
   // Period gross including the nocturnal incentive.
   const grossPay = roundHalfUp(earnings.grossPay + nightIncentiveAmount)
 
-  // The DR holiday premium is a NON-cotizable bonus: AFP/SFS and the ISR base are
-  // computed on income EXCLUDING the holiday bonus (worked holiday hours are already
-  // paid as regular hours, which ARE cotizable). Other countries use the full gross.
-  const holidayBonus = earnings.holidayPay
-  const contributoryBase = isDR ? roundHalfUp(grossPay - holidayBonus) : grossPay
+  // DR "salario cotizable": the overtime and holiday PREMIUMS are non-cotizable extra
+  // pay, so AFP/SFS and the ISR base are computed on income EXCLUDING both bonuses
+  // (worked OT/holiday hours are already paid at 100% inside regular pay, which IS
+  // cotizable — only the 35%/100% surcharges are excluded). Other countries use the
+  // full gross.
+  const contributoryBase = isDR
+    ? roundHalfUp(grossPay - earnings.holidayPay - earnings.otPay)
+    : grossPay
 
   // Tax-exempt employee: all statutory deductions and ISR are waived (custom deductions
   // still apply).

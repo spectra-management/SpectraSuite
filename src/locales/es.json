@@ -72,9 +72,30 @@
     "employees": "Empleados",
     "payroll": "Procesar Nómina",
     "history": "Historial",
+    "reports": "Reportes",
     "connectors": "Conectores",
     "settings": "Configuración",
     "noPermission": "No tienes permiso para esto."
+  },
+  "reports": {
+    "title": "Reportes",
+    "subtitle": "Reportes de nómina para contabilidad y obligaciones fiscales.",
+    "tss": {
+      "title": "Reporte de Pago TSS",
+      "note": "Salario cotizable = todos los ingresos excepto los recargos de horas extras y feriados. Solo corridas de República Dominicana, agregadas por empleado en el mes seleccionado.",
+      "empty": "No hay nóminas aprobadas para {{period}}.",
+      "runsIncluded": "{{count}} corrida(s) aprobada(s) incluida(s) para {{period}}.",
+      "totals": "TOTALES",
+      "employeeCount": "{{count}} empleado(s)",
+      "cols": {
+        "cedula": "Cédula",
+        "name": "Nombre Completo",
+        "cotizable": "Salario Cotizable",
+        "sfs": "SFS (3.04%)",
+        "afp": "AFP (2.87%)",
+        "totalTss": "Total TSS"
+      }
+    }
   },
   "common": {
     "save": "Guardar",

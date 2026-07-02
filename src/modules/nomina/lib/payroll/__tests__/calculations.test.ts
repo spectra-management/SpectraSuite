@@ -183,6 +183,31 @@ describe('TSS Caps', () => {
   })
 })
 
+// ─── Salario cotizable (DR TSS base) ─────────────────────────────────────────
+describe('Salario cotizable: DR TSS base excludes OT and holiday premiums', () => {
+  it('AFP/SFS base = gross − OT premium − holiday premium', () => {
+    // 80 reg + 10 OT + 8 holiday hrs @ RD$100, OT +35%, holiday +100%:
+    // regular pay (all hours @100%) = 9,800; OT premium = 350; holiday premium = 800
+    // gross = 10,950 → cotizable = 9,800 (under both caps, so base = cotizable)
+    const input = makeInput({
+      hourlyRate: 100,
+      regularHours: 80,
+      otHours: 10,
+      holidayHours: 8,
+      otRatePercent: 35,
+      holidayRatePercent: 100,
+    })
+    const result = calculatePayroll(input)
+    expect(result.grossPay).toBe(10950)
+    expect(result.otPay).toBe(350)
+    expect(result.holidayPay).toBe(800)
+    expect(result.afpBase).toBe(9800)
+    expect(result.sfsBase).toBe(9800)
+    expect(result.afpAmount).toBe(roundHalfUp(9800 * 0.0287))
+    expect(result.sfsAmount).toBe(roundHalfUp(9800 * 0.0304))
+  })
+})
+
 // ─── Test 4: OT calculation ───────────────────────────────────────────────────
 describe('Overtime Calculation', () => {
   it('50 hrs/week, threshold 44, OT 50%: all hours at 100% + 6 OT hours at +50% differential', () => {

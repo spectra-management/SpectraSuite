@@ -18,6 +18,7 @@ import Employees from '@/modules/nomina/pages/Employees'
 import EmployeeProfile from '@/modules/nomina/pages/Employees/EmployeeProfile'
 import Payroll from '@/modules/nomina/pages/Payroll'
 import History from '@/modules/nomina/pages/History'
+import Reports from '@/modules/nomina/pages/Reports'
 import Settings from '@/modules/nomina/pages/Settings'
 import { RrhhLayout, Directory, Profile, OrgChart, TimeOff, Departments } from '@/modules/rrhh'
 import {
@@ -119,6 +120,7 @@ export default function App() {
               }
             />
             <Route path="history" element={<History />} />
+            <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 
